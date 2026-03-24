@@ -1,5 +1,6 @@
 export const routes = {
   home: "/",
+  login: "/login",
   architectureDiagram: "/synapse-architecture-diagram.html",
 } as const;
 
