@@ -1,26 +1,34 @@
 @import "tailwindcss";
+@import "../styles/synapse-theme.css";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: var(--synapse-bg-mid);
+  --foreground: var(--synapse-fg);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-synapse-bg-deep: var(--synapse-bg-deep);
+  --color-synapse-bg-mid: var(--synapse-bg-mid);
+  --color-synapse-bg-top: var(--synapse-bg-top);
+  --color-synapse-fg: var(--synapse-fg);
+  --color-synapse-fg-heading: var(--synapse-fg-heading);
+  --color-synapse-cyan: var(--synapse-cyan);
+  --color-synapse-teal: var(--synapse-teal);
+  --color-synapse-teal-mid: var(--synapse-teal-mid);
+  --color-synapse-gold: var(--synapse-gold);
+  --color-synapse-cream: var(--synapse-cream);
+  --color-synapse-border-subtle: var(--synapse-border-subtle);
+  --font-sans: var(--font-synapse-sans), "Segoe UI", system-ui, sans-serif;
+  --font-mono: var(--font-synapse-mono), ui-monospace, monospace;
 }
 
 body {
-  background: var(--background);
+  min-height: 100vh;
+  background: var(--synapse-gradient-bg);
+  background-attachment: fixed;
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
+  overflow-x: hidden;
 }

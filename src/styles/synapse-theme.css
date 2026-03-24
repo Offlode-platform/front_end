@@ -1,0 +1,348 @@
+/**
+ * Synapse Engine / architecture diagram design tokens and layout primitives.
+ * Use these classes in React components; static diagram: /synapse-architecture-diagram.html
+ */
+
+:root {
+  --synapse-bg-deep: #010a0d;
+  --synapse-bg-mid: #030f14;
+  --synapse-bg-top: #0a2a33;
+  --synapse-fg: #e8f0f2;
+  --synapse-fg-heading: #f0f7f9;
+  --synapse-cyan: #62bed0;
+  --synapse-teal: #357e92;
+  --synapse-teal-mid: #4a9bad;
+  --synapse-gold: #d4a054;
+  --synapse-cream: #f0e6d3;
+  --synapse-border-subtle: rgba(255, 255, 255, 0.06);
+  --synapse-surface: rgba(255, 255, 255, 0.02);
+  --synapse-gradient-bg: radial-gradient(
+    ellipse at 50% 30%,
+    var(--synapse-bg-top) 0%,
+    var(--synapse-bg-mid) 70%,
+    var(--synapse-bg-deep) 100%
+  );
+}
+
+@keyframes synapse-fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes synapse-fade-in-down {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.synapse-mono {
+  font-family: var(--font-synapse-mono), ui-monospace, monospace;
+}
+
+.synapse-header {
+  text-align: center;
+  margin-bottom: 50px;
+  animation: synapse-fade-in-down 0.8s ease forwards;
+}
+
+.synapse-header .synapse-brand {
+  font-size: 18px;
+  color: var(--synapse-cyan);
+  letter-spacing: 6px;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.synapse-header h1 {
+  font-size: 42px;
+  font-weight: 700;
+  color: var(--synapse-fg-heading);
+  margin: 0 0 6px;
+  letter-spacing: 2px;
+}
+
+.synapse-header .synapse-sub {
+  font-size: 16px;
+  color: var(--synapse-teal);
+  font-weight: 400;
+  letter-spacing: 1px;
+}
+
+.synapse-header .synapse-line {
+  width: 80px;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--synapse-teal),
+    transparent
+  );
+  margin: 16px auto 0;
+}
+
+.synapse-layers {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.synapse-layer {
+  cursor: pointer;
+  transition: all 0.4s ease;
+  position: relative;
+  opacity: 0;
+  animation: synapse-fade-in-up 0.6s ease forwards;
+}
+
+.synapse-layer:hover {
+  transform: scale(1.01);
+}
+
+.synapse-layer:hover .synapse-layer-header .synapse-label {
+  opacity: 1;
+}
+
+.synapse-layer:hover .synapse-items {
+  max-height: 200px;
+}
+
+.synapse-layer:hover .synapse-items .synapse-tag {
+  color: rgba(255, 255, 255, 0.65);
+}
+
+.synapse-layer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  transition: margin 0.3s ease;
+}
+
+.synapse-layer:hover .synapse-layer-header {
+  margin-bottom: 14px;
+}
+
+.synapse-layer-header .synapse-left {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.synapse-layer-header .synapse-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  opacity: 0.7;
+  transition: opacity 0.3s;
+}
+
+.synapse-layer-header .synapse-subtitle {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.35);
+  font-weight: 400;
+}
+
+.synapse-layer-header .synapse-ln {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.2);
+  letter-spacing: 1px;
+}
+
+.synapse-items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  max-height: 32px;
+  overflow: hidden;
+  transition: max-height 0.5s ease;
+}
+
+.synapse-tag {
+  font-size: 11px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--synapse-border-subtle);
+  border-radius: 6px;
+  padding: 5px 12px;
+  letter-spacing: 0.3px;
+  transition: all 0.3s ease;
+}
+
+.synapse-arrow-down {
+  display: flex;
+  justify-content: center;
+  padding: 2px 0;
+  z-index: 2;
+  position: relative;
+}
+
+.synapse-arrow-down svg {
+  width: 10px;
+  height: 8px;
+}
+
+.synapse-closed-loop {
+  display: flex;
+  justify-content: center;
+  margin: 36px auto 0;
+  opacity: 0;
+  animation: synapse-fade-in-up 0.8s ease 1.2s forwards;
+}
+
+.synapse-closed-loop-inner {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: rgba(53, 126, 146, 0.08);
+  border: 1px solid rgba(53, 126, 146, 0.2);
+  border-radius: 12px;
+  padding: 14px 28px;
+}
+
+.synapse-closed-loop .synapse-cl-label {
+  font-size: 10px;
+  letter-spacing: 3px;
+  color: var(--synapse-teal);
+  font-weight: 600;
+}
+
+.synapse-closed-loop .synapse-cl-item {
+  color: var(--synapse-cyan);
+  font-size: 11px;
+}
+
+.synapse-closed-loop .synapse-cl-arrow {
+  color: rgba(255, 255, 255, 0.2);
+  font-size: 11px;
+  margin: 0 4px;
+}
+
+.synapse-data-flow {
+  max-width: 760px;
+  margin: 36px auto 0;
+  opacity: 0;
+  animation: synapse-fade-in-up 0.8s ease 1.4s forwards;
+}
+
+.synapse-data-flow .synapse-df-title {
+  font-size: 10px;
+  letter-spacing: 3px;
+  color: var(--synapse-gold);
+  font-weight: 600;
+  text-align: center;
+  margin-bottom: 14px;
+}
+
+.synapse-data-flow .synapse-df-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.synapse-data-flow .synapse-df-item {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.4);
+  background: var(--synapse-surface);
+  border: 1px solid var(--synapse-border-subtle);
+  border-radius: 8px;
+  padding: 10px 16px;
+  text-align: center;
+  letter-spacing: 0.3px;
+}
+
+.synapse-infra {
+  max-width: 760px;
+  margin: 36px auto 0;
+  opacity: 0;
+  animation: synapse-fade-in-up 0.8s ease 1.6s forwards;
+}
+
+.synapse-infra .synapse-i-title {
+  font-size: 10px;
+  letter-spacing: 3px;
+  color: rgba(255, 255, 255, 0.3);
+  font-weight: 600;
+  text-align: center;
+  margin-bottom: 14px;
+}
+
+.synapse-infra .synapse-i-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+}
+
+.synapse-infra .synapse-i-item {
+  background: var(--synapse-surface);
+  border: 1px solid var(--synapse-border-subtle);
+  border-radius: 8px;
+  padding: 12px 16px;
+  text-align: center;
+}
+
+.synapse-infra .synapse-i-label {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.55);
+  font-weight: 500;
+  margin-bottom: 3px;
+}
+
+.synapse-infra .synapse-i-sub {
+  font-size: 9px;
+  color: rgba(255, 255, 255, 0.2);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.synapse-laws {
+  max-width: 660px;
+  margin: 44px auto 0;
+  text-align: center;
+  opacity: 0;
+  animation: synapse-fade-in-up 0.8s ease 1.8s forwards;
+}
+
+.synapse-laws .synapse-sep {
+  height: 1px;
+  margin: 0 auto 20px;
+}
+
+.synapse-laws .synapse-text {
+  font-size: 11px;
+  line-height: 2.2;
+  color: rgba(255, 255, 255, 0.35);
+  letter-spacing: 0.5px;
+}
+
+.synapse-laws .synapse-num {
+  color: var(--synapse-gold);
+}
+
+.synapse-laws .synapse-footer {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.2);
+  margin-top: 8px;
+  letter-spacing: 1px;
+}
+
+.synapse-laws .synapse-glyph {
+  font-size: 12px;
+  color: var(--synapse-cyan);
+  letter-spacing: 2px;
+  font-weight: 500;
+  margin-top: 16px;
+}
