@@ -3,6 +3,7 @@
 import { QueryClientProvider } from "@tanstack/react-query";
 import { useState, type ReactNode } from "react";
 import { makeQueryClient } from "@/lib/react-query/query-client";
+import "@/stores/auth-store";
 import { SonnerToaster } from "./sonner-toaster";
 
 type AppProvidersProps = {
