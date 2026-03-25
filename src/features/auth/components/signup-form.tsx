@@ -76,9 +76,7 @@ export function SignupForm() {
         }
       }
 
-      router.push(
-        `${routes.twoFaBootstrapSetup}?email=${encodeURIComponent(email.trim())}`
-      );
+      router.push(routes.login);
     } catch (err) {
       setError(formatError(err));
     } finally {
