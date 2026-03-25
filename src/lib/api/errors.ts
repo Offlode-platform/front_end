@@ -10,6 +10,14 @@ function isFastApiValidationBody(
   return Array.isArray(detail);
 }
 
+function getDetailStringMessage(body: unknown): string | undefined {
+  if (body === null || typeof body !== "object") return undefined;
+  if (!("detail" in body)) return undefined;
+  const detail = (body as { detail?: unknown }).detail;
+  if (typeof detail === "string" && detail.trim()) return detail;
+  return undefined;
+}
+
 export function getFirstValidationMessage(body: unknown): string | undefined {
   if (!isFastApiValidationBody(body)) return undefined;
   const first = body.detail[0];
@@ -58,8 +66,13 @@ function axiosErrorToApiRequestError(error: AxiosError): ApiRequestError {
   if (typeof body === "string" && body.trim()) {
     message = body;
   } else {
+    const detailString = getDetailStringMessage(body);
+    if (detailString) {
+      message = detailString;
+    } else {
     const v = getFirstValidationMessage(body);
     if (v) message = v;
+    }
   }
 
   return new ApiRequestError(message, status, body);
