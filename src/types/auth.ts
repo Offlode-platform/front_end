@@ -10,6 +10,26 @@ export type LoginRequest = {
   two_factor_code?: string;
 };
 
+export type SignupRequest = {
+  organization_name: string;
+  organization_slug: string;
+  user_name: string;
+  email: string;
+  password: string;
+};
+
+export type SignupResponse = {
+  organization_id: string;
+  user_id: string;
+  role: string;
+  two_factor: {
+    secret: string;
+    otpauth_url: string;
+    setup_token: string;
+    expires_in: number;
+  };
+};
+
 export type Bootstrap2faSetupRequest = {
   email: string;
   password: string;

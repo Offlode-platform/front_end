@@ -8,6 +8,8 @@ import type {
   LoginRequest,
   MagicLinkRequest,
   Setup2faResponse,
+  SignupRequest,
+  SignupResponse,
   TokenResponse,
   Verify2faRequest,
 } from "@/types/auth";
@@ -21,6 +23,12 @@ export const authApi = {
   login(body: LoginRequest) {
     return readData(
       publicApi.post<TokenResponse>(apiPaths.auth.login, body)
+    );
+  },
+
+  signup(body: SignupRequest) {
+    return readData(
+      publicApi.post<SignupResponse>(apiPaths.auth.signup, body)
     );
   },
 

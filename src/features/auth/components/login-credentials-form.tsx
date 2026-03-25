@@ -300,7 +300,13 @@ export function LoginCredentialsForm() {
       <div className="login-footer">
         <p>
           Don&apos;t have an account?{" "}
-          <a href="#" onClick={(e) => e.preventDefault()}>
+          <a
+            href="#"
+            onClick={(e) => {
+              e.preventDefault();
+              router.push(routes.signup);
+            }}
+          >
             Start free trial
           </a>
         </p>

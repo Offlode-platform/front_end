@@ -12,6 +12,7 @@ import type {
   LoginRequest,
   MagicLinkRequest,
   Setup2faResponse,
+  SignupResponse,
   TokenResponse,
   Verify2faRequest,
 } from "@/types/auth";
@@ -44,6 +45,9 @@ type AuthState = PersistedAuth & {
   requestMagicLink: (payload: MagicLinkRequest) => Promise<string>;
   isTokenExpired: () => boolean;
   clearTwoFaBootstrap: () => void;
+  setTwoFaBootstrapFromSignup: (
+    payload: SignupResponse["two_factor"]
+  ) => void;
 };
 
 function tokenResponseToState(
@@ -90,6 +94,16 @@ export const useAuthStore = create<AuthState>()(
           twoFaSecret: null,
           twoFaOtpAuthUrl: null,
           twoFaSetupExpiresAt: null,
+          twoFaSetupStatus: "idle",
+          twoFaSetupError: null,
+        }),
+
+      setTwoFaBootstrapFromSignup: (payload) =>
+        set({
+          twoFaSetupToken: payload.setup_token,
+          twoFaSecret: payload.secret,
+          twoFaOtpAuthUrl: payload.otpauth_url,
+          twoFaSetupExpiresAt: Date.now() + payload.expires_in * 1000,
           twoFaSetupStatus: "idle",
           twoFaSetupError: null,
         }),

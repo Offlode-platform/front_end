@@ -3,6 +3,8 @@ export type { ApiErrorBody } from "./api";
 export type {
   TokenResponse,
   LoginRequest,
+  SignupRequest,
+  SignupResponse,
   Bootstrap2faSetupRequest,
   Bootstrap2faSetupResponse,
   Bootstrap2faVerifyRequest,
