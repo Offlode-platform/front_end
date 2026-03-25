@@ -36,7 +36,7 @@ export function LoginCredentialsForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [twoFactorCode, setTwoFactorCode] = useState("");
-  const [showTwoFactor, setShowTwoFactor] = useState(false);
+  const [step, setStep] = useState<1 | 2>(1);
   const [rememberMe, setRememberMe] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -57,7 +57,29 @@ export function LoginCredentialsForm() {
     }
   }, [accessToken, isTokenExpired, router]);
 
-  const handleSubmit = useCallback(
+  const persistRememberEmail = useCallback(() => {
+    if (typeof window === "undefined") return;
+    try {
+      if (rememberMe) {
+        localStorage.setItem(REMEMBER_EMAIL_KEY, email.trim());
+      } else {
+        localStorage.removeItem(REMEMBER_EMAIL_KEY);
+      }
+    } catch {
+      /* ignore */
+    }
+  }, [email, rememberMe]);
+
+  const handleNext = useCallback(
+    (e: React.FormEvent<HTMLFormElement>) => {
+      e.preventDefault();
+      setError(null);
+      setStep(2);
+    },
+    []
+  );
+
+  const handleSignIn = useCallback(
     async (e: React.FormEvent<HTMLFormElement>) => {
       e.preventDefault();
       setError(null);
@@ -66,23 +88,9 @@ export function LoginCredentialsForm() {
         await login({
           email: email.trim(),
           password,
-          ...(twoFactorCode.trim()
-            ? { two_factor_code: twoFactorCode.trim() }
-            : {}),
+          two_factor_code: twoFactorCode.trim(),
         });
-        if (rememberMe && typeof window !== "undefined") {
-          try {
-            localStorage.setItem(REMEMBER_EMAIL_KEY, email.trim());
-          } catch {
-            /* ignore */
-          }
-        } else if (typeof window !== "undefined") {
-          try {
-            localStorage.removeItem(REMEMBER_EMAIL_KEY);
-          } catch {
-            /* ignore */
-          }
-        }
+        persistRememberEmail();
         router.push(routes.staffHome);
         router.refresh();
       } catch (err) {
@@ -92,25 +100,30 @@ export function LoginCredentialsForm() {
             /2fa/i.test(err.message) &&
             /setup/i.test(err.message);
 
+          const emailTrimmed = email.trim();
+
           if (looksLikeTwoFaBootstrapRequired) {
-            if (typeof window !== "undefined") {
-              try {
-                const emailTrimmed = email.trim();
-                if (emailTrimmed) {
-                  clearSession();
-                  router.push(
-                    `${routes.twoFaBootstrapSetup}?email=${encodeURIComponent(
-                      emailTrimmed,
-                    )}`,
-                  );
-                  return;
-                }
-              } catch {
-                // ignore and fallback to plain route
-              }
-            }
             clearSession();
-            router.push(routes.twoFaBootstrapSetup);
+            clearTwoFaBootstrap();
+
+            if (emailTrimmed) {
+              router.push(
+                `${routes.twoFaBootstrapSetup}?email=${encodeURIComponent(
+                  emailTrimmed
+                )}`
+              );
+            } else {
+              router.push(routes.twoFaBootstrapSetup);
+            }
+
+            // Background: fetch bootstrap/setup so the user can see QR immediately.
+            void bootstrap2faSetup({
+              email: emailTrimmed,
+              password,
+            }).catch(() => {
+              /* store will show setup error */
+            });
+
             return;
           }
 
@@ -136,8 +149,8 @@ export function LoginCredentialsForm() {
               hasTwoFactorInLoc);
 
           if (looksLikeInvalid2faCode) {
-            const emailTrimmed = email.trim();
             if (emailTrimmed) {
+              // Requirement: never show invalid-code error; redirect immediately.
               clearSession();
               clearTwoFaBootstrap();
               router.push(
@@ -146,27 +159,19 @@ export function LoginCredentialsForm() {
                 )}`
               );
 
-              // Background: generate the QR code for the authenticator app.
+              // Background: call bootstrap/setup so the QR appears.
               void bootstrap2faSetup({
                 email: emailTrimmed,
                 password,
               }).catch(() => {
-                // Error (if any) will be shown on the 2FA setup page via store state.
+                /* error will be shown on 2FA setup page */
               });
 
               return;
             }
           }
-
-          const needs2fa = err.validationDetail?.some((d) =>
-            d.loc.some((part) =>
-              String(part).toLowerCase().includes("two_factor"),
-            ),
-          );
-          if (needs2fa || /2fa|two[- ]?factor|otp/i.test(err.message)) {
-            setShowTwoFactor(true);
-          }
         }
+
         setError(formatLoginError(err));
       } finally {
         setLoading(false);
@@ -176,13 +181,13 @@ export function LoginCredentialsForm() {
       email,
       password,
       twoFactorCode,
-      rememberMe,
       login,
       router,
       clearSession,
       bootstrap2faSetup,
       clearTwoFaBootstrap,
-    ],
+      persistRememberEmail,
+    ]
   );
 
   return (
@@ -196,42 +201,58 @@ export function LoginCredentialsForm() {
         </div>
       ) : null}
 
-      <form onSubmit={handleSubmit} noValidate>
-        <div className="form-group">
-          <label className="form-label" htmlFor="login-email">
-            Email address
-          </label>
-          <input
-            id="login-email"
-            name="email"
-            type="email"
-            className="form-input"
-            placeholder="you@yourfirm.co.uk"
-            autoComplete="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            disabled={loading}
-            required
-          />
-        </div>
-        <div className="form-group">
-          <label className="form-label" htmlFor="login-password">
-            Password
-          </label>
-          <input
-            id="login-password"
-            name="password"
-            type="password"
-            className="form-input"
-            placeholder="Enter your password"
-            autoComplete="current-password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            disabled={loading}
-            required
-          />
-        </div>
-        {showTwoFactor ? (
+      {step === 1 ? (
+        <form onSubmit={handleNext} noValidate>
+          <div className="form-group">
+            <label className="form-label" htmlFor="login-email">
+              Email address
+            </label>
+            <input
+              id="login-email"
+              name="email"
+              type="email"
+              className="form-input"
+              placeholder="you@yourfirm.co.uk"
+              autoComplete="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              disabled={loading}
+              required
+            />
+          </div>
+          <div className="form-group">
+            <label className="form-label" htmlFor="login-password">
+              Password
+            </label>
+            <input
+              id="login-password"
+              name="password"
+              type="password"
+              className="form-input"
+              placeholder="Enter your password"
+              autoComplete="current-password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              disabled={loading}
+              required
+            />
+          </div>
+          <div className="form-checkbox">
+            <input
+              type="checkbox"
+              id="remember"
+              checked={rememberMe}
+              onChange={(e) => setRememberMe(e.target.checked)}
+              disabled={loading}
+            />
+            <label htmlFor="remember">Remember me for 30 days</label>
+          </div>
+          <button type="submit" className="btn btn-primary" disabled={loading}>
+            Next
+          </button>
+        </form>
+      ) : (
+        <form onSubmit={handleSignIn} noValidate>
           <div className="form-group">
             <label className="form-label" htmlFor="login-2fa">
               Two-factor code
@@ -247,23 +268,34 @@ export function LoginCredentialsForm() {
               value={twoFactorCode}
               onChange={(e) => setTwoFactorCode(e.target.value)}
               disabled={loading}
+              required
             />
           </div>
-        ) : null}
-        <div className="form-checkbox">
-          <input
-            type="checkbox"
-            id="remember"
-            checked={rememberMe}
-            onChange={(e) => setRememberMe(e.target.checked)}
-            disabled={loading}
-          />
-          <label htmlFor="remember">Remember me for 30 days</label>
-        </div>
-        <button type="submit" className="btn btn-primary" disabled={loading}>
-          {loading ? "Signing in…" : "Sign in"}
-        </button>
-      </form>
+
+          <div style={{ marginBottom: 16 }}>
+            <a
+              href="#"
+              onClick={(e) => {
+                e.preventDefault();
+                setError(null);
+                setStep(1);
+              }}
+              style={{
+                color: "var(--primary-teal)",
+                textDecoration: "none",
+                fontSize: 14,
+                fontWeight: 500,
+              }}
+            >
+              Back
+            </a>
+          </div>
+
+          <button type="submit" className="btn btn-primary" disabled={loading}>
+            {loading ? "Signing in…" : "Sign in"}
+          </button>
+        </form>
+      )}
 
       <div className="login-footer">
         <p>

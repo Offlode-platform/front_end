@@ -2,7 +2,7 @@
 
 /* eslint-disable @next/next/no-img-element */
 
-import { Lock, ShieldCheck } from "lucide-react";
+import { Lock } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { toDataURL } from "qrcode";
@@ -34,7 +34,6 @@ export function TwoFaBootstrapSetupPage({
   const bootstrap2faSetup = useAuthStore((s) => s.bootstrap2faSetup);
   const bootstrap2faVerify = useAuthStore((s) => s.bootstrap2faVerify);
   const twoFaSetupToken = useAuthStore((s) => s.twoFaSetupToken);
-  const twoFaSecret = useAuthStore((s) => s.twoFaSecret);
   const twoFaOtpAuthUrl = useAuthStore((s) => s.twoFaOtpAuthUrl);
   const twoFaSetupExpiresAt = useAuthStore((s) => s.twoFaSetupExpiresAt);
   const twoFaSetupStatus = useAuthStore((s) => s.twoFaSetupStatus);
@@ -47,6 +46,7 @@ export function TwoFaBootstrapSetupPage({
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
+  const [stage, setStage] = useState<"qr" | "code">("qr");
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -88,6 +88,14 @@ export function TwoFaBootstrapSetupPage({
       cancelled = true;
     };
   }, [twoFaOtpAuthUrl]);
+
+  useEffect(() => {
+    // Reset the UI whenever a new bootstrap/setup token is issued.
+    if (!twoFaSetupToken) return;
+    setStage("qr");
+    setError(null);
+    setCode("");
+  }, [twoFaSetupToken]);
 
   const setupExpired = useMemo(() => {
     if (!twoFaSetupExpiresAt) return false;
@@ -161,49 +169,8 @@ export function TwoFaBootstrapSetupPage({
           ) : null}
 
           {twoFaSetupToken && !setupExpired ? (
-            <form onSubmit={handleVerify} noValidate>
-              <div className="form-group">
-                <label className="form-label" htmlFor="login-2fa-verify">
-                  Two-factor code
-                </label>
-                <input
-                  id="login-2fa-verify"
-                  name="code"
-                  type="text"
-                  className="form-input"
-                  placeholder="Enter 6-digit code"
-                  autoComplete="one-time-code"
-                  inputMode="numeric"
-                  value={code}
-                  onChange={(e) => setCode(e.target.value)}
-                  disabled={loading}
-                  required
-                />
-              </div>
-
-              <div style={{ marginTop: 18 }}>
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 10,
-                    marginBottom: 8,
-                    color: "var(--text-secondary)",
-                    fontSize: 14,
-                    fontWeight: 500,
-                  }}
-                >
-                  <ShieldCheck size={18} color="var(--primary-teal)" />
-                  Setup details
-                </div>
-                {twoFaSecret ? (
-                  <div className="login-code-box">
-                    <div style={{ fontWeight: 600, marginBottom: 6 }}>
-                      Secret
-                    </div>
-                    <div style={{ wordBreak: "break-all" }}>{twoFaSecret}</div>
-                  </div>
-                ) : null}
+            stage === "qr" ? (
+              <div>
                 {twoFaOtpAuthUrl ? (
                   <div style={{ marginTop: 14 }}>
                     {qrDataUrl ? (
@@ -222,40 +189,133 @@ export function TwoFaBootstrapSetupPage({
                         }}
                       />
                     ) : (
-                      <div style={{ textAlign: "center", color: "var(--text-tertiary)" }}>
-                        Generating QR...
+                      <div
+                        style={{
+                          textAlign: "center",
+                          color: "var(--text-tertiary)",
+                        }}
+                      >
+                        {twoFaSetupStatus === "loading"
+                          ? "Generating QR…"
+                          : "Preparing QR…"}
                       </div>
                     )}
-                    <div
-                      style={{
-                        marginTop: 10,
-                        textAlign: "center",
-                        color: "var(--text-tertiary)",
-                        fontSize: 13,
-                      }}
-                    >
-                      Scan from the QR (derived from `otpauth_url`).
-                    </div>
                   </div>
                 ) : null}
-              </div>
 
-              <button type="submit" className="btn btn-primary" disabled={loading}>
-                {loading ? "Verifying…" : "Verify & Sign in"}
-              </button>
-              <div className="login-footer" style={{ marginTop: 14 }}>
-                <a
-                  href="#"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    clearTwoFaBootstrap();
-                    router.push(routes.login);
+                <div
+                  style={{
+                    marginTop: 14,
+                    color: "var(--text-tertiary)",
+                    fontSize: 14,
+                    lineHeight: 1.6,
                   }}
                 >
-                  Back to login
-                </a>
+                  <div style={{ color: "var(--text-secondary)", fontWeight: 600 }}>
+                    How to scan (Google/Microsoft Authenticator)
+                  </div>
+                  <p style={{ marginTop: 10 }}>
+                    1) Open <strong>Google Authenticator</strong> or{" "}
+                    <strong>Microsoft Authenticator</strong> on your phone.
+                  </p>
+                  <p>
+                    2) Tap <strong>+</strong> (Add account) and choose{" "}
+                    <strong>Scan a QR code</strong>.
+                  </p>
+                  <p>
+                    3) Point your camera at the QR shown on this screen.
+                    The app will generate a 6-digit code automatically.
+                  </p>
+                  <p>
+                    Supported devices: iPhone/Android camera. If you are on a
+                    desktop, open this page on your phone and scan from there.
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  disabled={!qrDataUrl || loading}
+                  onClick={() => {
+                    setError(null);
+                    setStage("code");
+                  }}
+                  style={{ marginTop: 18 }}
+                >
+                  Next
+                </button>
+
+                <div className="login-footer" style={{ marginTop: 14 }}>
+                  <a
+                    href="#"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      clearTwoFaBootstrap();
+                      router.push(routes.login);
+                    }}
+                  >
+                    Back to login
+                  </a>
+                </div>
               </div>
-            </form>
+            ) : (
+              <form onSubmit={handleVerify} noValidate>
+                <div className="form-group">
+                  <label className="form-label" htmlFor="login-2fa-verify">
+                    Two-factor code
+                  </label>
+                  <input
+                    id="login-2fa-verify"
+                    name="code"
+                    type="text"
+                    className="form-input"
+                    placeholder="Enter 6-digit code"
+                    autoComplete="one-time-code"
+                    inputMode="numeric"
+                    value={code}
+                    onChange={(e) => setCode(e.target.value)}
+                    disabled={loading}
+                    required
+                  />
+                </div>
+
+                <div style={{ marginBottom: 16 }}>
+                  <a
+                    href="#"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setError(null);
+                      setStage("qr");
+                    }}
+                    style={{
+                      color: "var(--primary-teal)",
+                      textDecoration: "none",
+                      fontSize: 14,
+                      fontWeight: 500,
+                    }}
+                  >
+                    Back to QR
+                  </a>
+                </div>
+
+                <button type="submit" className="btn btn-primary" disabled={loading}>
+                  {loading ? "Verifying…" : "Verify & Sign in"}
+                </button>
+
+                <div className="login-footer" style={{ marginTop: 14 }}>
+                  <a
+                    href="#"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      clearTwoFaBootstrap();
+                      router.push(routes.login);
+                    }}
+                  >
+                    Back to login
+                  </a>
+                </div>
+              </form>
+            )
           ) : (
             <form onSubmit={handleStartSetup} noValidate>
               {twoFaSetupStatus === "loading" ? (
@@ -264,45 +324,53 @@ export function TwoFaBootstrapSetupPage({
                 </div>
               ) : null}
 
-              <div className="form-group">
-                <label className="form-label" htmlFor="login-2fa-email">
-                  Email address
-                </label>
-                <input
-                  id="login-2fa-email"
-                  name="email"
-                  type="email"
-                  className="form-input"
-                  placeholder="you@yourfirm.co.uk"
-                  autoComplete="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  disabled={loading}
-                  required
-                />
-              </div>
+              {twoFaSetupStatus !== "loading" ? (
+                <>
+                  <div className="form-group">
+                    <label className="form-label" htmlFor="login-2fa-email">
+                      Email address
+                    </label>
+                    <input
+                      id="login-2fa-email"
+                      name="email"
+                      type="email"
+                      className="form-input"
+                      placeholder="you@yourfirm.co.uk"
+                      autoComplete="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      disabled={loading}
+                      required
+                    />
+                  </div>
 
-              <div className="form-group">
-                <label className="form-label" htmlFor="login-2fa-password">
-                  Password
-                </label>
-                <input
-                  id="login-2fa-password"
-                  name="password"
-                  type="password"
-                  className="form-input"
-                  placeholder="Enter your password"
-                  autoComplete="current-password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  disabled={loading}
-                  required
-                />
-              </div>
+                  <div className="form-group">
+                    <label className="form-label" htmlFor="login-2fa-password">
+                      Password
+                    </label>
+                    <input
+                      id="login-2fa-password"
+                      name="password"
+                      type="password"
+                      className="form-input"
+                      placeholder="Enter your password"
+                      autoComplete="current-password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      disabled={loading}
+                      required
+                    />
+                  </div>
 
-              <button type="submit" className="btn btn-primary" disabled={loading}>
-                {loading ? "Bootstrapping…" : "Start 2FA setup"}
-              </button>
+                  <button
+                    type="submit"
+                    className="btn btn-primary"
+                    disabled={loading}
+                  >
+                    {loading ? "Bootstrapping…" : "Start 2FA setup"}
+                  </button>
+                </>
+              ) : null}
               <div className="login-footer" style={{ marginTop: 14 }}>
                 <a
                   href="#"
