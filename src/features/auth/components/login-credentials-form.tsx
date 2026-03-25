@@ -24,6 +24,26 @@ function formatLoginError(error: unknown): string {
   return "Something went wrong. Please try again.";
 }
 
+function hasTwoFaSetupRequired(error: ApiRequestError): boolean {
+  return (
+    error.status === 403 &&
+    /2fa/i.test(error.message) &&
+    /setup/i.test(error.message)
+  );
+}
+
+function hasTwoFaCodeRequired(error: ApiRequestError): boolean {
+  const messageLower = error.message.toLowerCase();
+  const hasTwoFactorInLoc = error.validationDetail?.some((d) =>
+    d.loc.some((part) => String(part).toLowerCase().includes("two_factor"))
+  );
+
+  // Covers API responses like "2FA code required", "OTP required", validation on two_factor_code.
+  return (
+    hasTwoFactorInLoc || /2fa|otp|two[-_ ]?factor/.test(messageLower)
+  );
+}
+
 export function LoginCredentialsForm() {
   const router = useRouter();
   const login = useAuthStore((s) => s.login);
@@ -70,13 +90,73 @@ export function LoginCredentialsForm() {
     }
   }, [email, rememberMe]);
 
+  const redirectToBootstrapSetup = useCallback(() => {
+    const emailTrimmed = email.trim();
+    clearSession();
+    clearTwoFaBootstrap();
+
+    if (emailTrimmed) {
+      router.push(
+        `${routes.twoFaBootstrapSetup}?email=${encodeURIComponent(emailTrimmed)}`
+      );
+    } else {
+      router.push(routes.twoFaBootstrapSetup);
+    }
+
+    void bootstrap2faSetup({
+      email: emailTrimmed,
+      password,
+    }).catch(() => {
+      /* store will surface setup error on setup page */
+    });
+  }, [
+    email,
+    password,
+    router,
+    clearSession,
+    clearTwoFaBootstrap,
+    bootstrap2faSetup,
+  ]);
+
   const handleNext = useCallback(
-    (e: React.FormEvent<HTMLFormElement>) => {
+    async (e: React.FormEvent<HTMLFormElement>) => {
       e.preventDefault();
       setError(null);
-      setStep(2);
+      setLoading(true);
+      try {
+        // Step 1: try login with email/password only.
+        await login({
+          email: email.trim(),
+          password,
+        });
+        persistRememberEmail();
+        router.push(routes.staffHome);
+        router.refresh();
+      } catch (err) {
+        if (err instanceof ApiRequestError) {
+          if (hasTwoFaSetupRequired(err)) {
+            redirectToBootstrapSetup();
+            return;
+          }
+          if (hasTwoFaCodeRequired(err)) {
+            // 2FA already linked: ask user for OTP in step 2.
+            setStep(2);
+            return;
+          }
+        }
+        setError(formatLoginError(err));
+      } finally {
+        setLoading(false);
+      }
     },
-    []
+    [
+      email,
+      password,
+      login,
+      persistRememberEmail,
+      router,
+      redirectToBootstrapSetup,
+    ]
   );
 
   const handleSignIn = useCallback(
@@ -94,84 +174,10 @@ export function LoginCredentialsForm() {
         router.push(routes.staffHome);
         router.refresh();
       } catch (err) {
-        if (err instanceof ApiRequestError) {
-          const looksLikeTwoFaBootstrapRequired =
-            err.status === 403 &&
-            /2fa/i.test(err.message) &&
-            /setup/i.test(err.message);
-
-          const emailTrimmed = email.trim();
-
-          if (looksLikeTwoFaBootstrapRequired) {
-            clearSession();
-            clearTwoFaBootstrap();
-
-            if (emailTrimmed) {
-              router.push(
-                `${routes.twoFaBootstrapSetup}?email=${encodeURIComponent(
-                  emailTrimmed
-                )}`
-              );
-            } else {
-              router.push(routes.twoFaBootstrapSetup);
-            }
-
-            // Background: fetch bootstrap/setup so the user can see QR immediately.
-            void bootstrap2faSetup({
-              email: emailTrimmed,
-              password,
-            }).catch(() => {
-              /* store will show setup error */
-            });
-
-            return;
-          }
-
-          const messageLower = err.message.toLowerCase();
-          const detailLower = err.validationDetail
-            ?.map((d) => d.msg)
-            .join(" ")
-            .toLowerCase();
-          const hasTwoFactorInLoc = err.validationDetail?.some((d) =>
-            d.loc.some((part) =>
-              String(part).toLowerCase().includes("two_factor")
-            )
-          );
-          const looksLikeInvalid2faCode =
-            (messageLower.includes("invalid") ||
-              messageLower.includes("incorrect") ||
-              messageLower.includes("wrong")) &&
-            (messageLower.includes("2fa") ||
-              messageLower.includes("otp") ||
-              messageLower.includes("two-factor") ||
-              messageLower.includes("two_factor") ||
-              /two[-_ ]?factor/.test(detailLower ?? "") ||
-              hasTwoFactorInLoc);
-
-          if (looksLikeInvalid2faCode) {
-            if (emailTrimmed) {
-              // Requirement: never show invalid-code error; redirect immediately.
-              clearSession();
-              clearTwoFaBootstrap();
-              router.push(
-                `${routes.twoFaBootstrapSetup}?email=${encodeURIComponent(
-                  emailTrimmed
-                )}`
-              );
-
-              // Background: call bootstrap/setup so the QR appears.
-              void bootstrap2faSetup({
-                email: emailTrimmed,
-                password,
-              }).catch(() => {
-                /* error will be shown on 2FA setup page */
-              });
-
-              return;
-            }
-          }
+        if (err instanceof ApiRequestError && hasTwoFaSetupRequired(err)) {
+          redirectToBootstrapSetup();
+          return;
         }
-
         setError(formatLoginError(err));
       } finally {
         setLoading(false);
@@ -182,11 +188,9 @@ export function LoginCredentialsForm() {
       password,
       twoFactorCode,
       login,
-      router,
-      clearSession,
-      bootstrap2faSetup,
-      clearTwoFaBootstrap,
       persistRememberEmail,
+      router,
+      redirectToBootstrapSetup,
     ]
   );
 
@@ -248,11 +252,65 @@ export function LoginCredentialsForm() {
             <label htmlFor="remember">Remember me for 30 days</label>
           </div>
           <button type="submit" className="btn btn-primary" disabled={loading}>
-            Next
+            {loading ? "Checking..." : "Next"}
           </button>
         </form>
       ) : (
         <form onSubmit={handleSignIn} noValidate>
+          <p style={{ marginBottom: 12, fontSize: 14, color: "var(--text-tertiary)" }}>
+            Enter the code from your authenticator app.
+          </p>
+          <p
+            style={{
+              marginBottom: 16,
+              fontSize: 14,
+              color: "var(--text-secondary)",
+              fontWeight: 500,
+              lineHeight: 1.5,
+            }}
+          >
+            If your 2FA is not linked yet,{" "}
+            <a
+              href="#"
+              onClick={async (e) => {
+                e.preventDefault();
+                setError(null);
+
+                const emailTrimmed = email.trim();
+                const passwordTrimmed = password.trim();
+
+                if (!emailTrimmed || !passwordTrimmed) {
+                  setError("Please enter your email and password first.");
+                  setStep(1);
+                  return;
+                }
+
+                setLoading(true);
+                clearTwoFaBootstrap();
+                try {
+                  await bootstrap2faSetup({
+                    email: emailTrimmed,
+                    password: passwordTrimmed,
+                  });
+                } finally {
+                  setLoading(false);
+                  router.push(
+                    `${routes.twoFaBootstrapSetup}?email=${encodeURIComponent(
+                      emailTrimmed
+                    )}`
+                  );
+                }
+              }}
+              style={{
+                color: "var(--primary-teal)",
+                textDecoration: "none",
+                fontWeight: 600,
+              }}
+            >
+              link it here
+            </a>
+            .
+          </p>
           <div className="form-group">
             <label className="form-label" htmlFor="login-2fa">
               Two-factor code
@@ -292,7 +350,7 @@ export function LoginCredentialsForm() {
           </div>
 
           <button type="submit" className="btn btn-primary" disabled={loading}>
-            {loading ? "Signing in…" : "Sign in"}
+            {loading ? "Signing in..." : "Sign in"}
           </button>
         </form>
       )}
