@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Offlode — Iconography & Icon Button Reference v2.0</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Instrument+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--brand:#357E92;--brand-electric:#62BED0;--brand-deep:#265E68;--success:#22A06B;--warning:#E09422;--danger:#EF4444;--info:#3B82F6;--ai:#8B5CF6;--collect:#357E92;--respond:#E09422;--settle:#62BED0}
+body{font-family:'DM Sans',sans-serif;background:#1A1C20;color:#C8C9CE;line-height:1.6;-webkit-font-smoothing:antialiased}
+.guide{max-width:1200px;margin:0 auto;padding:48px 32px}
+
+/* Cover */
+.cover{text-align:center;padding:48px 0 40px;border-bottom:1px solid rgba(255,255,255,0.06)}
+.cover h1{font-family:'Instrument Sans',sans-serif;font-size:32px;font-weight:700;color:#EDEEF0;letter-spacing:-0.02em;margin-bottom:6px}
+.cover p{font-size:14px;color:#808088;max-width:600px;margin:0 auto}
+.cover .ver{display:inline-block;font-size:10px;font-weight:600;color:var(--brand-electric);background:rgba(98,190,208,0.08);border:1px solid rgba(98,190,208,0.12);padding:2px 8px;border-radius:4px;margin-top:10px;font-family:'JetBrains Mono',monospace}
+
+/* Sections */
+.section{padding:48px 0;border-bottom:1px solid rgba(255,255,255,0.04)}
+.section:last-child{border-bottom:none}
+.section-tag{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--brand);margin-bottom:8px}
+.section-title{font-family:'Instrument Sans',sans-serif;font-size:24px;font-weight:700;color:#EDEEF0;letter-spacing:-0.02em;margin-bottom:6px}
+.section-desc{font-size:13px;color:#808088;max-width:700px;margin-bottom:24px}
+
+/* Spec cards */
+.spec-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px}
+.spec-card{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.05);border-radius:10px;padding:16px;text-align:center}
+.spec-card h5{font-size:12px;font-weight:600;color:#EDEEF0;margin-bottom:4px}
+.spec-card p{font-size:11px;color:#808088}
+.spec-val{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--brand-electric);margin-top:6px}
+
+/* Icon grid */
+.icon-grid{display:grid;grid-template-columns:repeat(8,1fr);gap:8px;margin-bottom:16px}
+.icon-grid.wide{grid-template-columns:repeat(6,1fr)}
+.icon-grid.narrow{grid-template-columns:repeat(5,1fr)}
+.icon-item{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.05);border-radius:8px;padding:14px 8px 10px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:6px;transition:border-color 0.15s ease}
+.icon-item:hover{border-color:rgba(255,255,255,0.10)}
+.icon-item svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;color:#EDEEF0}
+.icon-item .name{font-size:9px;color:#808088;font-weight:500}
+.icon-item.new{border-color:rgba(53,126,146,0.25);position:relative}
+.icon-item.new::after{content:'NEW';position:absolute;top:4px;right:4px;font-size:7px;font-weight:700;color:var(--brand-electric);background:rgba(98,190,208,0.10);padding:1px 4px;border-radius:3px;letter-spacing:0.04em}
+.icon-item.changed{border-color:rgba(224,148,34,0.25);position:relative}
+.icon-item.changed::after{content:'UPD';position:absolute;top:4px;right:4px;font-size:7px;font-weight:700;color:var(--warning);background:rgba(224,148,34,0.10);padding:1px 4px;border-radius:3px;letter-spacing:0.04em}
+
+/* Agent icon cards */
+.agent-icons{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px}
+.agent-icon-card{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.05);border-radius:10px;padding:20px;text-align:center}
+.agent-icon-card svg{width:32px;height:32px;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;fill:none;margin-bottom:8px}
+.agent-icon-card h5{font-size:13px;font-weight:600;color:#EDEEF0;margin-bottom:2px}
+.agent-icon-card p{font-size:11px;color:#808088}
+
+/* Icon button grid */
+.btn-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-bottom:24px}
+.btn-card{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.05);border-radius:10px;padding:20px}
+.btn-card h5{font-size:13px;font-weight:600;color:#EDEEF0;margin-bottom:4px}
+.btn-card p{font-size:11px;color:#808088;margin-bottom:12px}
+.btn-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap}
+.btn-label{font-size:10px;color:#606068;min-width:80px}
+
+/* Shared icon button base */
+.ib{display:inline-flex;align-items:center;justify-content:center;border-radius:6px;cursor:pointer;flex-shrink:0}
+.ib svg{stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+/* Notes */
+.note{background:rgba(53,126,146,0.06);border:1px solid rgba(53,126,146,0.12);border-radius:10px;padding:14px 18px;margin:16px 0;font-size:12px;color:#A0A0A6}
+.note strong{color:var(--brand-electric)}
+.note-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--brand);margin-bottom:4px}
+.note.warn{background:rgba(224,148,34,0.06);border-color:rgba(224,148,34,0.12)}
+.note.warn .note-label{color:var(--warning)}
+.note.warn strong{color:var(--warning)}
+.code{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--brand-electric);background:rgba(0,0,0,0.2);padding:2px 6px;border-radius:4px}
+.palette-label{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:#808088;margin-bottom:12px}
+
+/* Sub-labels */
+.sub-label{font-size:11px;font-weight:600;color:#A0A0A6;margin:16px 0 10px;text-transform:uppercase;letter-spacing:0.05em}
+</style>
+</head>
+<body>
+<div class="guide">
+
+<div class="cover">
+  <h1>Iconography & Icon Buttons</h1>
+  <p>Complete icon set and icon button specifications for the Offlode platform. All icons use Lucide-style stroked SVGs at 2px stroke weight.</p>
+  <div class="ver">v2.0 — Expanded</div>
+</div>
+
+<!-- ═══════════════════ SECTION 1: ICON SPECS ═══════════════════ -->
+<div class="section">
+  <div class="section-tag">Specifications</div>
+  <div class="section-title">Icon System Rules</div>
+  <div class="section-desc">All icons are stroked SVGs on a 24×24 viewBox. Consistent stroke weight, rounded caps, rounded joins.</div>
+  
+  <div class="spec-grid">
+    <div class="spec-card">
+      <h5>Viewbox</h5>
+      <p>Standard canvas</p>
+      <div class="spec-val">24 × 24</div>
+    </div>
+    <div class="spec-card">
+      <h5>Stroke Weight</h5>
+      <p>Default for all UI icons</p>
+      <div class="spec-val">2px</div>
+    </div>
+    <div class="spec-card">
+      <h5>Stroke Caps</h5>
+      <p>Rounded ends</p>
+      <div class="spec-val">round</div>
+    </div>
+    <div class="spec-card">
+      <h5>Stroke Joins</h5>
+      <p>Rounded corners</p>
+      <div class="spec-val">round</div>
+    </div>
+  </div>
+  
+  <div class="palette-label">Sizes</div>
+  <div style="display:flex;align-items:flex-end;gap:20px;margin-bottom:24px">
+    <div style="text-align:center"><svg viewBox="0 0 24 24" style="width:12px;height:12px;stroke:#EDEEF0;fill:none;stroke-width:2"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg><div class="code" style="margin-top:4px">12px</div><div style="font-size:9px;color:#606068;margin-top:2px">Inline / badge</div></div>
+    <div style="text-align:center"><svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:#EDEEF0;fill:none;stroke-width:2"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg><div class="code" style="margin-top:4px">14px</div><div style="font-size:9px;color:#606068;margin-top:2px">Search / input</div></div>
+    <div style="text-align:center"><svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:#EDEEF0;fill:none;stroke-width:2"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg><div class="code" style="margin-top:4px">16px</div><div style="font-size:9px;color:#606068;margin-top:2px">Buttons / nav</div></div>
+    <div style="text-align:center"><svg viewBox="0 0 24 24" style="width:20px;height:20px;stroke:#EDEEF0;fill:none;stroke-width:2"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg><div class="code" style="margin-top:4px">20px</div><div style="font-size:9px;color:#606068;margin-top:2px">Sidebar / utility nav</div></div>
+    <div style="text-align:center"><svg viewBox="0 0 24 24" style="width:24px;height:24px;stroke:#EDEEF0;fill:none;stroke-width:2"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg><div class="code" style="margin-top:4px">24px</div><div style="font-size:9px;color:#606068;margin-top:2px">Empty state / hero</div></div>
+  </div>
+  
+  <div class="note">
+    <div class="note-label">Colour Rule</div>
+    Icons inherit <strong>currentColor</strong> from their parent text colour. Never hardcode icon colours — they adapt to dark/light mode automatically. The only exceptions are agent icons (Collect/Respond/Settle) which use their dedicated agent colours, and status icons which use semantic colours.
+  </div>
+</div>
+
+<!-- ═══════════════════ SECTION 2: AGENT ICONS ═══════════════════ -->
+<div class="section">
+  <div class="section-tag">Agent Icons</div>
+  <div class="section-title">Collect / Respond / Settle</div>
+  <div class="section-desc">The three AI agents each have a dedicated icon and colour. These appear in the workspace toggle, agent tabs, status dots, and client rows.</div>
+  
+  <div class="agent-icons">
+    <div class="agent-icon-card">
+      <svg viewBox="0 0 24 24" stroke="var(--collect)"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>
+      <h5>Collect</h5>
+      <p>Inbox — gathering documents in</p>
+      <div class="code">#357E92</div>
+    </div>
+    <div class="agent-icon-card">
+      <svg viewBox="0 0 24 24" stroke="var(--respond)"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+      <h5>Respond</h5>
+      <p>Phone — handling calls & callbacks</p>
+      <div class="code">#E09422</div>
+    </div>
+    <div class="agent-icon-card">
+      <svg viewBox="0 0 24 24" stroke="var(--settle)"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+      <h5>Settle</h5>
+      <p>Card — invoices & payments</p>
+      <div class="code">#62BED0</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ SECTION 3: NAVIGATION ICONS ═══════════════════ -->
+<div class="section">
+  <div class="section-tag">Navigation</div>
+  <div class="section-title">Primary Navigation Icons</div>
+  <div class="section-desc">Sidebar menu items. 17px in wide sidebar, 20px in utility sidebar. Clients uses a handshake icon — distinct from Team's group silhouette.</div>
+  
+  <div class="icon-grid">
+    <!-- Dashboard -->
+    <div class="icon-item"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg><div class="name">Dashboard</div></div>
+    <!-- Workspace -->
+    <div class="icon-item"><svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg><div class="name">Workspace</div></div>
+    <!-- Clients — User in circle (simple, distinct from Team's bare group silhouette) -->
+    <div class="icon-item changed"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="10" r="3"/><path d="M7 20.662V19a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v1.662"/></svg><div class="name">Clients</div></div>
+    <!-- Team — keeps Users icon -->
+    <div class="icon-item"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg><div class="name">Team</div></div>
+    <!-- Schedule -->
+    <div class="icon-item"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg><div class="name">Schedule</div></div>
+    <!-- Reports -->
+    <div class="icon-item"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><div class="name">Reports</div></div>
+    <!-- Settings -->
+    <div class="icon-item"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1.08-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1.08 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9c.26.604.852.997 1.51 1H21a2 2 0 0 1 0 4h-.09"/></svg><div class="name">Settings</div></div>
+    <!-- Notifications -->
+    <div class="icon-item"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg><div class="name">Notifications</div></div>
+  </div>
+
+  <div class="note warn">
+    <div class="note-label">v2 Change — Clients Icon</div>
+    Clients now uses a <strong>Handshake</strong> icon instead of the single-person silhouette, which was too close to Team (multi-person silhouette). This gives instant visual separation: <strong>Handshake = client relationships</strong>, <strong>Users = internal team members</strong>.
+  </div>
+</div>
+
+<!-- ═══════════════════ SECTION 4: STATUS & ALERT ═══════════════════ -->
+<div class="section">
+  <div class="section-tag">Status</div>
+  <div class="section-title">Status & Alert Icons</div>
+  <div class="section-desc">Used in badges, toasts, table cells, and inline feedback. Each has a dedicated semantic colour.</div>
+  
+  <div class="icon-grid" style="grid-template-columns:repeat(5,1fr)">
+    <div class="icon-item" style="border-color:rgba(34,160,107,0.15)"><svg viewBox="0 0 24 24" style="color:var(--success)"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg><div class="name">Success</div><div class="code" style="font-size:9px">#22A06B</div></div>
+    <div class="icon-item" style="border-color:rgba(224,148,34,0.15)"><svg viewBox="0 0 24 24" style="color:var(--warning)"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><circle cx="12" cy="17" r="0.5" fill="currentColor" stroke="none"/></svg><div class="name">Warning</div><div class="code" style="font-size:9px">#E09422</div></div>
+    <div class="icon-item" style="border-color:rgba(239,68,68,0.15)"><svg viewBox="0 0 24 24" style="color:var(--danger)"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg><div class="name">Error</div><div class="code" style="font-size:9px">#EF4444</div></div>
+    <div class="icon-item" style="border-color:rgba(59,130,246,0.15)"><svg viewBox="0 0 24 24" style="color:var(--info)"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><circle cx="12" cy="8" r="0.5" fill="currentColor" stroke="none"/></svg><div class="name">Info</div><div class="code" style="font-size:9px">#3B82F6</div></div>
+    <div class="icon-item"><svg viewBox="0 0 24 24" style="color:#A0A0A6"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><div class="name">Pending</div><div class="code" style="font-size:9px">#A0A0A6</div></div>
+  </div>
+
+  <div class="sub-label">Extended Status</div>
+  <div class="icon-grid" style="grid-template-columns:repeat(5,1fr)">
+    <div class="icon-item new" style="border-color:rgba(34,160,107,0.15)"><svg viewBox="0 0 24 24" style="color:var(--success)"><polyline points="20 6 9 17 4 12"/></svg><div class="name">Complete</div></div>
+    <div class="icon-item new"><svg viewBox="0 0 24 24" style="color:#A0A0A6"><circle cx="12" cy="12" r="10"/><line x1="8" y1="12" x2="16" y2="12"/></svg><div class="name">Paused</div></div>
+    <div class="icon-item new" style="border-color:rgba(224,148,34,0.15)"><svg viewBox="0 0 24 24" style="color:var(--warning)"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg><div class="name">Overdue</div></div>
+    <div class="icon-item new" style="border-color:rgba(59,130,246,0.15)"><svg viewBox="0 0 24 24" style="color:var(--info)"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg><div class="name">In Progress</div></div>
+    <div class="icon-item new"><svg viewBox="0 0 24 24" style="color:#606068"><circle cx="12" cy="12" r="10"/></svg><div class="name">Not Started</div></div>
+  </div>
+</div>
+
+<!-- ═══════════════════ SECTION 5: ACTION ICONS ═══════════════════ -->
+<div class="section">
+  <div class="section-tag">Actions</div>
+  <div class="section-title">Action & Interaction Icons</div>
+  <div class="section-desc">Buttons, toolbars, table row actions, inline controls.</div>
+  
+  <div class="sub-label">Core Actions</div>
+  <div class="icon-grid">
+    <div class="icon-item"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><div class="name">Plus</div></div>
+    <div class="icon-item"><svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/></svg><div class="name">Minus</div></div>
+    <div class="icon-item"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg><div class="name">Close</div></div>
+    <div class="icon-item"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg><div class="name">Check</div></div>
+    <div class="icon-item"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg><div class="name">Edit</div></div>
+    <div class="icon-item"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg><div class="name">Delete</div></div>
+    <div class="icon-item"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><div class="name">Search</div></div>
+    <div class="icon-item"><svg viewBox="0 0 24 24"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg><div class="name">Filter</div></div>
+  </div>
+  
+  <div class="sub-label">Utility Actions</div>
+  <div class="icon-grid">
+    <div class="icon-item"><svg viewBox="0 0 24 24"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg><div class="name">Sliders</div></div>
+    <div class="icon-item"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg><div class="name">Upload</div></div>
+    <div class="icon-item"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg><div class="name">Download</div></div>
+    <div class="icon-item"><svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg><div class="name">Send</div></div>
+    <div class="icon-item"><svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg><div class="name">External</div></div>
+    <div class="icon-item"><svg viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg><div class="name">Refresh</div></div>
+    <div class="icon-item"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><div class="name">Copy</div></div>
+    <div class="icon-item"><svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg><div class="name">Share</div></div>
+  </div>
+  
+  <div class="sub-label">Markers & Toggles</div>
+  <div class="icon-grid">
+    <div class="icon-item"><svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><div class="name">Star</div></div>
+    <div class="icon-item"><svg viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg><div class="name">Bookmark</div></div>
+    <!-- Pin — proper thumbtack pushpin -->
+    <div class="icon-item changed"><svg viewBox="0 0 24 24"><path d="M12 17v5"/><path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v3.76z"/></svg><div class="name">Pin</div></div>
+    <!-- MapPin — NEW: proper location pin -->
+    <div class="icon-item new"><svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg><div class="name">Map Pin</div></div>
+    <div class="icon-item"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><div class="name">Lock</div></div>
+    <div class="icon-item"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg><div class="name">Unlock</div></div>
+    <div class="icon-item"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg><div class="name">Eye</div></div>
+    <div class="icon-item"><svg viewBox="0 0 24 24"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg><div class="name">Eye Off</div></div>
+  </div>
+
+  <div class="sub-label">Overflow & Context</div>
+  <div class="icon-grid">
+    <div class="icon-item"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg><div class="name">More Horiz</div></div>
+    <div class="icon-item new"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg><div class="name">More Vert</div></div>
+    <div class="icon-item new"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg><div class="name">Trash Detail</div></div>
+    <div class="icon-item new"><svg viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M3 12h18"/><path d="M3 18h18"/></svg><div class="name">Menu</div></div>
+    <div class="icon-item new"><svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg><div class="name">Pencil</div></div>
+    <div class="icon-item new"><svg viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg><div class="name">Book Open</div></div>
+    <div class="icon-item new"><svg viewBox="0 0 24 24"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg><div class="name">Thumb Up</div></div>
+    <div class="icon-item new"><svg viewBox="0 0 24 24"><path d="M10 15v6a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zM17 2h2.67A2.31 2.31 0 0 1 22 4.33v7.34A2.31 2.31 0 0 1 19.67 14H17"/></svg><div class="name">Thumb Down</div></div>
+  </div>
+</div>
+
+<!-- ═══════════════════ SECTION 6: COMMUNICATION ═══════════════════ -->
+<div class="section">
+  <div class="section-tag">Communication</div>
+  <div class="section-title">Communication & Messaging Icons</div>
+  <div class="section-desc">Used in the Respond agent, contact panels, activity feeds, and notification systems.</div>
+  
+  <div class="icon-grid">
+    <div class="icon-item"><svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22 6 12 13 2 6"/></svg><div class="name">Mail</div></div>
+    <div class="icon-item"><svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg><div class="name">Phone</div></div>
+    <div class="icon-item"><svg viewBox="0 0 24 24"><polyline points="15.05 5 20 5 20 9.95"/><path d="M20 5L11 14"/><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.79 19.79 0 0 1 2.12 4.11 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91"/></svg><div class="name">Call Out</div></div>
+    <div class="icon-item"><svg viewBox="0 0 24 24"><polyline points="16 2 16 8 22 8"/><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.79 19.79 0 0 1 2.12 4.11 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91"/></svg><div class="name">Call In</div></div>
+    <div class="icon-item"><svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg><div class="name">Message</div></div>
+    <div class="icon-item"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg><div class="name">Bell</div></div>
+    <div class="icon-item"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><div class="name">Clock</div></div>
+    <div class="icon-item"><svg viewBox="0 0 24 24"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg><div class="name">Video</div></div>
+  </div>
+
+  <div class="sub-label">Extended Comms</div>
+  <div class="icon-grid">
+    <div class="icon-item new"><svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22 6 12 13 2 6"/><line x1="2" y1="20" x2="8" y2="14"/><line x1="22" y1="20" x2="16" y2="14"/></svg><div class="name">Mail Open</div></div>
+    <div class="icon-item new"><svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/><line x1="15" y1="5" x2="15" y2="1"/><line x1="13" y1="3" x2="17" y2="3"/></svg><div class="name">Phone Plus</div></div>
+    <div class="icon-item new"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><div class="name">Chat</div></div>
+    <div class="icon-item new"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><line x1="9" y1="10" x2="15" y2="10"/></svg><div class="name">Chat Minus</div></div>
+    <div class="icon-item new"><svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg><div class="name">User Plus</div></div>
+    <div class="icon-item new"><svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="22" y1="11" x2="16" y2="11"/></svg><div class="name">User Minus</div></div>
+    <div class="icon-item new"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><div class="name">User</div></div>
+    <div class="icon-item new"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/><line x1="1" y1="1" x2="23" y2="23"/></svg><div class="name">Bell Off</div></div>
+  </div>
+</div>
+
+<!-- ═══════════════════ SECTION 7: DOCUMENT & FILE ═══════════════════ -->
+<div class="section">
+  <div class="section-tag">Documents</div>
+  <div class="section-title">Document & File Icons</div>
+  <div class="section-desc">Used in the Collect agent, document chasing, file uploads, and the template builder.</div>
+  
+  <div class="icon-grid">
+    <div class="icon-item"><svg viewBox="0 0 24 24"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg><div class="name">File</div></div>
+    <div class="icon-item"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg><div class="name">File Text</div></div>
+    <div class="icon-item"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg><div class="name">File Plus</div></div>
+    <div class="icon-item"><svg viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg><div class="name">Folder</div></div>
+    <div class="icon-item"><svg viewBox="0 0 24 24"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg><div class="name">Inbox</div></div>
+    <div class="icon-item"><svg viewBox="0 0 24 24"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg><div class="name">Attach</div></div>
+    <div class="icon-item"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><div class="name">Image</div></div>
+    <div class="icon-item"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg><div class="name">Shield</div></div>
+  </div>
+
+  <div class="sub-label">Extended Documents</div>
+  <div class="icon-grid">
+    <div class="icon-item new"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><polyline points="16 13 12 17 8 13"/></svg><div class="name">File Down</div></div>
+    <div class="icon-item new"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9.5" y1="12.5" x2="14.5" y2="17.5"/><line x1="14.5" y1="12.5" x2="9.5" y2="17.5"/></svg><div class="name">File X</div></div>
+    <div class="icon-item new"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M9 15l2 2 4-4"/></svg><div class="name">File Check</div></div>
+    <div class="icon-item new"><svg viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/><line x1="12" y1="11" x2="12" y2="17"/><line x1="9" y1="14" x2="15" y2="14"/></svg><div class="name">Folder Plus</div></div>
+    <div class="icon-item new"><svg viewBox="0 0 24 24"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg><div class="name">Clipboard</div></div>
+    <div class="icon-item new"><svg viewBox="0 0 24 24"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="M9 14l2 2 4-4"/></svg><div class="name">Clipboard Check</div></div>
+    <div class="icon-item new"><svg viewBox="0 0 24 24"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="8" y1="16" x2="16" y2="16"/></svg><div class="name">Clipboard List</div></div>
+    <div class="icon-item new"><svg viewBox="0 0 24 24"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4z"/></svg><div class="name">Wallet</div></div>
+  </div>
+</div>
+
+<!-- ═══════════════════ SECTION 8: ARROWS & CHEVRONS ═══════════════════ -->
+<div class="section">
+  <div class="section-tag">Directional</div>
+  <div class="section-title">Arrows & Chevrons</div>
+  <div class="section-desc">Navigation, expansion, sorting, and breadcrumb indicators.</div>
+  
+  <div class="icon-grid">
+    <div class="icon-item"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg><div class="name">Chev Left</div></div>
+    <div class="icon-item"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg><div class="name">Chev Right</div></div>
+    <div class="icon-item"><svg viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"/></svg><div class="name">Chev Up</div></div>
+    <div class="icon-item"><svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg><div class="name">Chev Down</div></div>
+    <div class="icon-item"><svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg><div class="name">Arrow Right</div></div>
+    <div class="icon-item"><svg viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg><div class="name">Arrow Left</div></div>
+    <div class="icon-item"><svg viewBox="0 0 24 24"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg><div class="name">Arrow Up</div></div>
+    <div class="icon-item"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg><div class="name">Arrow Down</div></div>
+  </div>
+
+  <div class="sub-label">Extended Directional</div>
+  <div class="icon-grid">
+    <div class="icon-item new"><svg viewBox="0 0 24 24"><polyline points="7 13 12 18 17 13"/><polyline points="7 6 12 11 17 6"/></svg><div class="name">Chev Dbl Down</div></div>
+    <div class="icon-item new"><svg viewBox="0 0 24 24"><polyline points="17 11 12 6 7 11"/><polyline points="17 18 12 13 7 18"/></svg><div class="name">Chev Dbl Up</div></div>
+    <div class="icon-item new"><svg viewBox="0 0 24 24"><polyline points="11 17 6 12 11 7"/><polyline points="18 17 13 12 18 7"/></svg><div class="name">Chev Dbl Left</div></div>
+    <div class="icon-item new"><svg viewBox="0 0 24 24"><polyline points="13 17 18 12 13 7"/><polyline points="6 17 11 12 6 7"/></svg><div class="name">Chev Dbl Right</div></div>
+    <div class="icon-item new"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/><line x1="5" y1="5" x2="19" y2="5"/></svg><div class="name">Arrow to Bottom</div></div>
+    <div class="icon-item new"><svg viewBox="0 0 24 24"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/><line x1="5" y1="19" x2="19" y2="19"/></svg><div class="name">Arrow to Top</div></div>
+    <div class="icon-item new"><svg viewBox="0 0 24 24"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg><div class="name">Repeat</div></div>
+    <div class="icon-item new"><svg viewBox="0 0 24 24"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/></svg><div class="name">Sort</div></div>
+  </div>
+</div>
+
+<!-- ═══════════════════ SECTION 9: AI & BRAND ═══════════════════ -->
+<div class="section">
+  <div class="section-tag">AI & Brand</div>
+  <div class="section-title">AI Intelligence & Brand Icons</div>
+  <div class="section-desc">The Offlode sparkle and related AI signifiers. The four-pointed sparkle (✦) is the primary AI indicator across the platform.</div>
+  
+  <div class="icon-grid" style="grid-template-columns:repeat(5,1fr)">
+    <div class="icon-item" style="border-color:rgba(53,126,146,0.15)">
+      <div style="color:var(--brand-electric);font-size:20px;filter:drop-shadow(0 0 4px rgba(98,190,208,0.4))">✦</div>
+      <div class="name">Sparkle (primary)</div>
+    </div>
+    <div class="icon-item"><svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg><div class="name">Zap</div></div>
+    <div class="icon-item"><svg viewBox="0 0 24 24"><path d="M12 2a7 7 0 0 0-4.58 12.33c.74.74 1.08 1.3 1.08 2.17v1h7v-1c0-.87.34-1.43 1.08-2.17A7 7 0 0 0 12 2z"/><path d="M9 18h6"/><path d="M10 22h4"/></svg><div class="name">Lightbulb</div></div>
+    <div class="icon-item"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg><div class="name">Target</div></div>
+    <div class="icon-item"><svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg><div class="name">Activity</div></div>
+  </div>
+
+  <div class="sub-label">Extended AI & Automation</div>
+  <div class="icon-grid" style="grid-template-columns:repeat(5,1fr)">
+    <div class="icon-item new"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M9 9h0.01"/><path d="M15 9h0.01"/><path d="M9 15c.83.67 1.83 1 3 1s2.17-.33 3-1"/></svg><div class="name">Bot</div></div>
+    <div class="icon-item new"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg><div class="name">Layers</div></div>
+    <div class="icon-item new"><svg viewBox="0 0 24 24"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="M12 15l-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg><div class="name">Rocket</div></div>
+    <div class="icon-item new"><svg viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg><div class="name">Wrench</div></div>
+    <div class="icon-item new"><svg viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg><div class="name">Code</div></div>
+  </div>
+</div>
+
+<!-- ═══════════════════ SECTION 10: UI & LAYOUT ═══════════════════ -->
+<div class="section">
+  <div class="section-tag">UI</div>
+  <div class="section-title">UI & Layout Icons</div>
+  <div class="section-desc">Theme toggles, view modes, layout controls, and display options.</div>
+  
+  <div class="icon-grid">
+    <div class="icon-item"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg><div class="name">Sun</div></div>
+    <div class="icon-item"><svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg><div class="name">Moon</div></div>
+    <div class="icon-item"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg><div class="name">Grid</div></div>
+    <div class="icon-item"><svg viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg><div class="name">List</div></div>
+    <div class="icon-item"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="9" y1="3" x2="9" y2="21"/></svg><div class="name">Sidebar</div></div>
+    <div class="icon-item"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg><div class="name">Layout</div></div>
+    <div class="icon-item"><svg viewBox="0 0 24 24"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg><div class="name">Maximize</div></div>
+    <div class="icon-item"><svg viewBox="0 0 24 24"><polyline points="4 14 10 14 10 20"/><polyline points="20 10 14 10 14 4"/><line x1="14" y1="10" x2="21" y2="3"/><line x1="3" y1="21" x2="10" y2="14"/></svg><div class="name">Minimize</div></div>
+  </div>
+
+  <div class="sub-label">Extended UI</div>
+  <div class="icon-grid">
+    <div class="icon-item new"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/></svg><div class="name">Panel Top</div></div>
+    <div class="icon-item new"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 15h18"/></svg><div class="name">Panel Bottom</div></div>
+    <div class="icon-item new"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg><div class="name">Kanban</div></div>
+    <div class="icon-item new"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg><div class="name">Table</div></div>
+    <div class="icon-item new"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg><div class="name">Globe</div></div>
+    <div class="icon-item new"><svg viewBox="0 0 24 24"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg><div class="name">Bar Chart</div></div>
+    <div class="icon-item new"><svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg><div class="name">Bar Simple</div></div>
+    <div class="icon-item new"><svg viewBox="0 0 24 24"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg><div class="name">Pie Chart</div></div>
+  </div>
+</div>
+
+<!-- ═══════════════════ SECTION 11: FINANCE & BILLING ═══════════════════ -->
+<div class="section">
+  <div class="section-tag">Finance</div>
+  <div class="section-title">Finance & Billing Icons</div>
+  <div class="section-desc">Used in the Settle agent, invoice management, payment tracking, and financial reporting. New section for v2.</div>
+
+  <div class="icon-grid">
+    <div class="icon-item new"><svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg><div class="name">Currency</div></div>
+    <div class="icon-item new"><svg viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg><div class="name">Credit Card</div></div>
+    <div class="icon-item new"><svg viewBox="0 0 24 24"><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/><path d="M12 2L2 7l10 5 10-5L12 2z"/></svg><div class="name">Stack</div></div>
+    <div class="icon-item new"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="12" y2="17"/></svg><div class="name">Invoice</div></div>
+    <div class="icon-item new"><svg viewBox="0 0 24 24"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg><div class="name">Receipt</div></div>
+    <div class="icon-item new"><svg viewBox="0 0 24 24"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4z"/></svg><div class="name">Wallet</div></div>
+    <div class="icon-item new"><svg viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg><div class="name">Ledger</div></div>
+    <div class="icon-item new"><svg viewBox="0 0 24 24"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg><div class="name">Trending Up</div></div>
+  </div>
+  <div class="icon-grid">
+    <div class="icon-item new"><svg viewBox="0 0 24 24"><polyline points="22 17 13.5 8.5 8.5 13.5 2 7"/><polyline points="16 17 22 17 22 11"/></svg><div class="name">Trending Down</div></div>
+    <div class="icon-item new"><svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg><div class="name">Briefcase</div></div>
+    <div class="icon-item new"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 12 15 16 10"/></svg><div class="name">Shield Check</div></div>
+    <div class="icon-item new"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><div class="name">Alert Circle</div></div>
+    <div class="icon-item new"><svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg><div class="name">Alert Triangle</div></div>
+    <div class="icon-item new"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg><div class="name">Help Circle</div></div>
+    <div class="icon-item new"><svg viewBox="0 0 24 24"><path d="M12 3v18"/><path d="M5.5 14.5l-2 2"/><path d="M18.5 14.5l2 2"/><path d="M8 8l-3-3"/><path d="M16 8l3-3"/><circle cx="12" cy="12" r="3"/></svg><div class="name">Hash / Ref</div></div>
+    <div class="icon-item new"><svg viewBox="0 0 24 24"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg><div class="name">Flag</div></div>
+    <div class="icon-item new"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="13" y2="17"/><circle cx="15.5" cy="17" r="1" fill="currentColor" stroke="none"/></svg><div class="name">Audit Log</div></div>
+    <div class="icon-item new"><svg viewBox="0 0 24 24"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="10"/><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .34-7.36L1 10"/></svg><div class="name">History</div></div>
+  </div>
+</div>
+
+<!-- ═══════════════════ SECTION 12: SCHEDULING & TIME ═══════════════════ -->
+<div class="section">
+  <div class="section-tag">Scheduling</div>
+  <div class="section-title">Schedule & Time Icons</div>
+  <div class="section-desc">Calendar views, scheduling, time-based features, and deadline management. New section for v2.</div>
+
+  <div class="icon-grid">
+    <div class="icon-item new"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg><div class="name">Calendar</div></div>
+    <div class="icon-item new"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/><path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01M16 18h.01"/></svg><div class="name">Calendar Days</div></div>
+    <div class="icon-item new"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/><path d="M9 16l2 2 4-4"/></svg><div class="name">Calendar Check</div></div>
+    <div class="icon-item new"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/><line x1="10" y1="14" x2="14" y2="18"/><line x1="14" y1="14" x2="10" y2="18"/></svg><div class="name">Calendar X</div></div>
+    <div class="icon-item new"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/><line x1="12" y1="14" x2="12" y2="18"/><line x1="10" y1="16" x2="14" y2="16"/></svg><div class="name">Calendar Plus</div></div>
+    <div class="icon-item new"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><div class="name">Clock</div></div>
+    <div class="icon-item new"><svg viewBox="0 0 24 24"><path d="M5 22h14"/><path d="M5 2h14"/><path d="M17 22v-4.172a2 2 0 0 0-.586-1.414L12 12l-4.414 4.414A2 2 0 0 0 7 17.828V22"/><path d="M7 2v4.172a2 2 0 0 0 .586 1.414L12 12l4.414-4.414A2 2 0 0 0 17 6.172V2"/></svg><div class="name">Hourglass</div></div>
+    <div class="icon-item new"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12"/><path d="M16.24 16.24l-4.24-4.24"/></svg><div class="name">Timer</div></div>
+  </div>
+</div>
+
+<!-- ═══════════════════ SECTION 13: ICON BUTTON SYSTEM ═══════════════════ -->
+<div class="section">
+  <div class="section-tag">Icon Buttons</div>
+  <div class="section-title">Icon Button System — Complete</div>
+  <div class="section-desc">Every icon button variant used across the platform. Organised by size, treatment, and context.</div>
+  
+  <div class="btn-grid">
+    <!-- Sizes -->
+    <div class="btn-card">
+      <h5>Size Variants</h5>
+      <p>Three sizes for different contexts. Touch target stays at minimum 28px.</p>
+      <div class="btn-row">
+        <div class="btn-label">Small (24px)</div>
+        <div class="ib" style="width:24px;height:24px;background:rgba(255,255,255,0.06);color:#A0A0A6"><svg viewBox="0 0 24 24" width="12" height="12"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
+        <div class="ib" style="width:24px;height:24px;background:rgba(255,255,255,0.06);color:#A0A0A6"><svg viewBox="0 0 24 24" width="12" height="12"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>
+        <div class="ib" style="width:24px;height:24px;background:rgba(255,255,255,0.06);color:#A0A0A6"><svg viewBox="0 0 24 24" width="12" height="12"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></div>
+        <span style="font-size:10px;color:#606068">Table rows, inline</span>
+      </div>
+      <div class="btn-row">
+        <div class="btn-label">Default (28px)</div>
+        <div class="ib" style="width:28px;height:28px;border-radius:6px;background:rgba(255,255,255,0.06);color:#A0A0A6"><svg viewBox="0 0 24 24" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
+        <div class="ib" style="width:28px;height:28px;border-radius:6px;background:rgba(255,255,255,0.06);color:#A0A0A6"><svg viewBox="0 0 24 24" width="14" height="14"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33"/></svg></div>
+        <div class="ib" style="width:28px;height:28px;border-radius:6px;background:rgba(255,255,255,0.06);color:#A0A0A6"><svg viewBox="0 0 24 24" width="14" height="14"><polyline points="15 18 9 12 15 6"/></svg></div>
+        <span style="font-size:10px;color:#606068">Toolbars, headers</span>
+      </div>
+      <div class="btn-row">
+        <div class="btn-label">Large (36px)</div>
+        <div class="ib" style="width:36px;height:36px;border-radius:8px;background:rgba(255,255,255,0.06);color:#A0A0A6"><svg viewBox="0 0 24 24" width="18" height="18"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
+        <div class="ib" style="width:36px;height:36px;border-radius:8px;background:rgba(255,255,255,0.06);color:#A0A0A6"><svg viewBox="0 0 24 24" width="18" height="18"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg></div>
+        <span style="font-size:10px;color:#606068">Page-level actions</span>
+      </div>
+    </div>
+    
+    <!-- Treatments -->
+    <div class="btn-card">
+      <h5>Treatment Variants (28px shown)</h5>
+      <p>Five visual treatments matching the text button hierarchy.</p>
+      <div class="btn-row">
+        <div class="btn-label">Ghost filled</div>
+        <div class="ib" style="width:28px;height:28px;border-radius:6px;background:rgba(255,255,255,0.08);color:#C8C9CE"><svg viewBox="0 0 24 24" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
+        <div class="ib" style="width:28px;height:28px;border-radius:6px;background:rgba(255,255,255,0.08);color:#C8C9CE"><svg viewBox="0 0 24 24" width="14" height="14"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></div>
+        <span style="font-size:10px;color:#606068">Default. Most common.</span>
+      </div>
+      <div class="btn-row">
+        <div class="btn-label">Outlined</div>
+        <div class="ib" style="width:28px;height:28px;border-radius:6px;border:1px solid rgba(255,255,255,0.10);color:#A0A0A6"><svg viewBox="0 0 24 24" width="14" height="14"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>
+        <div class="ib" style="width:28px;height:28px;border-radius:6px;border:1px solid rgba(255,255,255,0.10);color:#A0A0A6"><svg viewBox="0 0 24 24" width="14" height="14"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></div>
+        <span style="font-size:10px;color:#606068">Secondary. Dialogs, modals.</span>
+      </div>
+      <div class="btn-row">
+        <div class="btn-label">Ghost (no bg)</div>
+        <div class="ib" style="width:28px;height:28px;border-radius:6px;color:#808088"><svg viewBox="0 0 24 24" width="14" height="14"><polyline points="15 18 9 12 15 6"/></svg></div>
+        <div class="ib" style="width:28px;height:28px;border-radius:6px;color:#808088"><svg viewBox="0 0 24 24" width="14" height="14"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></div>
+        <span style="font-size:10px;color:#606068">Tertiary. Collapse toggles.</span>
+      </div>
+      <div class="btn-row">
+        <div class="btn-label">Brand</div>
+        <div class="ib" style="width:28px;height:28px;border-radius:6px;background:var(--brand);color:#fff"><svg viewBox="0 0 24 24" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
+        <div class="ib" style="width:28px;height:28px;border-radius:6px;background:rgba(53,126,146,0.12);color:var(--brand)"><svg viewBox="0 0 24 24" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
+        <span style="font-size:10px;color:#606068">Primary action. Add, create.</span>
+      </div>
+      <div class="btn-row">
+        <div class="btn-label">Danger</div>
+        <div class="ib" style="width:28px;height:28px;border-radius:6px;background:rgba(239,68,68,0.10);color:var(--danger)"><svg viewBox="0 0 24 24" width="14" height="14"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></div>
+        <span style="font-size:10px;color:#606068">Destructive. Delete, remove.</span>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Light mode variants -->
+  <div class="btn-grid">
+    <div class="btn-card" style="background:#FAFAFA;border-color:rgba(0,0,0,0.06)">
+      <h5 style="color:#1C1C1E">Light Card — Icon Buttons</h5>
+      <p style="color:#909098">Same hierarchy, inverted for white card surface.</p>
+      <div class="btn-row">
+        <div class="btn-label" style="color:#909098">Ghost filled</div>
+        <div class="ib" style="width:28px;height:28px;border-radius:6px;background:rgba(0,0,0,0.05);color:#606068"><svg viewBox="0 0 24 24" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
+        <div class="ib" style="width:28px;height:28px;border-radius:6px;background:rgba(0,0,0,0.05);color:#606068"><svg viewBox="0 0 24 24" width="14" height="14"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></div>
+      </div>
+      <div class="btn-row">
+        <div class="btn-label" style="color:#909098">Outlined</div>
+        <div class="ib" style="width:28px;height:28px;border-radius:6px;border:1px solid rgba(0,0,0,0.12);color:#606068"><svg viewBox="0 0 24 24" width="14" height="14"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>
+        <div class="ib" style="width:28px;height:28px;border-radius:6px;border:1px solid rgba(0,0,0,0.12);color:#606068"><svg viewBox="0 0 24 24" width="14" height="14"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></div>
+      </div>
+      <div class="btn-row">
+        <div class="btn-label" style="color:#909098">Ghost (no bg)</div>
+        <div class="ib" style="width:28px;height:28px;border-radius:6px;color:#909098"><svg viewBox="0 0 24 24" width="14" height="14"><polyline points="15 18 9 12 15 6"/></svg></div>
+        <div class="ib" style="width:28px;height:28px;border-radius:6px;color:#909098"><svg viewBox="0 0 24 24" width="14" height="14"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></div>
+      </div>
+      <div class="btn-row">
+        <div class="btn-label" style="color:#909098">Brand</div>
+        <div class="ib" style="width:28px;height:28px;border-radius:6px;background:var(--brand);color:#fff"><svg viewBox="0 0 24 24" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
+        <div class="ib" style="width:28px;height:28px;border-radius:6px;background:rgba(53,126,146,0.08);color:var(--brand)"><svg viewBox="0 0 24 24" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
+      </div>
+      <div class="btn-row">
+        <div class="btn-label" style="color:#909098">Danger</div>
+        <div class="ib" style="width:28px;height:28px;border-radius:6px;background:rgba(239,68,68,0.06);color:var(--danger)"><svg viewBox="0 0 24 24" width="14" height="14"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></div>
+      </div>
+    </div>
+    
+    <!-- Contextual usage -->
+    <div class="btn-card">
+      <h5>Contextual Usage Guide</h5>
+      <p>Where each icon button variant appears in the platform.</p>
+      <div style="display:flex;flex-direction:column;gap:8px;font-size:11px;color:#A0A0A6">
+        <div><strong style="color:#EDEEF0">Header toolbar:</strong> Ghost filled 28px — search, notifications, theme toggle, profile</div>
+        <div><strong style="color:#EDEEF0">Table row actions:</strong> Ghost (no bg) 24px — edit, delete, more menu. Appear on hover.</div>
+        <div><strong style="color:#EDEEF0">Card header:</strong> Ghost filled 28px — more menu (⋯), close, expand</div>
+        <div><strong style="color:#EDEEF0">Workspace toggle:</strong> Ghost filled 28px — triage/focus mode switch (sidebar/layout icon)</div>
+        <div><strong style="color:#EDEEF0">List collapse:</strong> Ghost (no bg) 28px — chevron toggle for client list column</div>
+        <div><strong style="color:#EDEEF0">Dialog close:</strong> Outlined 28px — modal/panel close button (✕)</div>
+        <div><strong style="color:#EDEEF0">Floating action:</strong> Brand filled 36px — primary add/create button</div>
+        <div><strong style="color:#EDEEF0">Destructive confirm:</strong> Danger 28px — delete confirmation in modals</div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="note">
+    <div class="note-label">Hover & Active States</div>
+    <strong>Ghost filled:</strong> background opacity increases from 0.08 → 0.12 on hover, 0.15 on active. <strong>Outlined:</strong> border opacity increases from 0.10 → 0.16 on hover. <strong>Ghost (no bg):</strong> background appears at 0.06 on hover. <strong>Brand:</strong> darken 10% on hover. <strong>Danger:</strong> background opacity increases from 0.10 → 0.16 on hover. All transitions use 150ms ease.
+  </div>
+</div>
+
+<!-- ═══════════════════ CHANGELOG ═══════════════════ -->
+<div class="section">
+  <div class="section-tag">Changelog</div>
+  <div class="section-title">v1.0 → v2.0 Changes</div>
+  <div class="section-desc">Summary of all additions and modifications in this version.</div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+    <div style="background:rgba(224,148,34,0.04);border:1px solid rgba(224,148,34,0.12);border-radius:10px;padding:16px">
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--warning);margin-bottom:8px">Modified</div>
+      <div style="font-size:12px;color:#A0A0A6;line-height:1.8">
+        <strong style="color:#EDEEF0">Clients icon</strong> — changed from single-person silhouette to Handshake to separate from Team
+      </div>
+    </div>
+    <div style="background:rgba(53,126,146,0.04);border:1px solid rgba(53,126,146,0.12);border-radius:10px;padding:16px">
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--brand-electric);margin-bottom:8px">New Icons Added</div>
+      <div style="font-size:12px;color:#A0A0A6;line-height:1.8">
+        <strong style="color:#EDEEF0">Map Pin</strong> — proper location/address pin<br>
+        <strong style="color:#EDEEF0">Status:</strong> Complete, Paused, Overdue, In Progress, Not Started<br>
+        <strong style="color:#EDEEF0">Actions:</strong> More Vert, Trash Detail, Menu, Pencil, Book Open, Thumb Up/Down<br>
+        <strong style="color:#EDEEF0">Comms:</strong> Mail Open, Phone Plus, Chat, Chat Minus, User Plus/Minus, User, Bell Off<br>
+        <strong style="color:#EDEEF0">Docs:</strong> File Down/X/Check, Folder Plus, Clipboard/Check/List, Wallet<br>
+        <strong style="color:#EDEEF0">Directional:</strong> Chev Double (all 4), Arrow to Bottom/Top, Repeat, Sort<br>
+        <strong style="color:#EDEEF0">AI:</strong> Bot, Layers, Rocket, Wrench, Code<br>
+        <strong style="color:#EDEEF0">UI:</strong> Panel Top/Bottom, Kanban, Table, Globe, Bar Chart, Bar Simple, Pie Chart<br>
+        <strong style="color:#EDEEF0">Finance (new section):</strong> Currency, Credit Card, Stack, Invoice, Receipt, Wallet, Ledger, Trending Up/Down, Briefcase, Shield Check, Alert Circle/Triangle, Help Circle, Hash/Ref, Flag, Audit Log, History<br>
+        <strong style="color:#EDEEF0">Scheduling (new section):</strong> Calendar, Calendar Days/Check/X/Plus, Clock, Hourglass, Timer
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Footer -->
+<div style="text-align:center;padding:40px 0;color:#606068;font-size:11px">
+  <div style="display:flex;align-items:center;justify-content:center;gap:6px;margin-bottom:6px">
+    <svg viewBox="0 0 64 64" fill="none" width="16" height="16"><circle cx="32" cy="32" r="24" stroke="#62BED0" stroke-width="2.5" fill="none" stroke-dasharray="7 5" opacity="0.35"/><circle cx="32" cy="14" r="3.5" fill="#357E92" opacity="0.45"/></svg>
+    <span style="font-family:'Instrument Sans';font-weight:600;color:#808088">Offlode</span>
+  </div>
+  Iconography & Icon Button Reference v2.0 — Companion to Design Conversion Guide
+</div>
+
+</div>
+</body>
+</html>
