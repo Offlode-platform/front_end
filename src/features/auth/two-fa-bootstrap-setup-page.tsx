@@ -1,8 +1,11 @@
 "use client";
 
+/* eslint-disable @next/next/no-img-element */
+
 import { Lock, ShieldCheck } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { toDataURL } from "qrcode";
 import { routes } from "@/config/routes";
 import { ApiRequestError } from "@/lib/api/errors";
 import { useAuthStore } from "@/stores/auth-store";
@@ -34,6 +37,8 @@ export function TwoFaBootstrapSetupPage({
   const twoFaSecret = useAuthStore((s) => s.twoFaSecret);
   const twoFaOtpAuthUrl = useAuthStore((s) => s.twoFaOtpAuthUrl);
   const twoFaSetupExpiresAt = useAuthStore((s) => s.twoFaSetupExpiresAt);
+  const twoFaSetupStatus = useAuthStore((s) => s.twoFaSetupStatus);
+  const twoFaSetupError = useAuthStore((s) => s.twoFaSetupError);
   const clearTwoFaBootstrap = useAuthStore((s) => s.clearTwoFaBootstrap);
 
   const [email, setEmail] = useState(initialEmail ?? "");
@@ -41,6 +46,7 @@ export function TwoFaBootstrapSetupPage({
   const [code, setCode] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -58,6 +64,30 @@ export function TwoFaBootstrapSetupPage({
       router.replace(routes.staffHome);
     }
   }, [accessToken, isTokenExpired, router]);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function run() {
+      if (!twoFaOtpAuthUrl) {
+        setQrDataUrl(null);
+        return;
+      }
+      try {
+        const url = await toDataURL(twoFaOtpAuthUrl, {
+          width: 240,
+          margin: 1,
+          errorCorrectionLevel: "M",
+        });
+        if (!cancelled) setQrDataUrl(url);
+      } catch {
+        if (!cancelled) setQrDataUrl(null);
+      }
+    }
+    run();
+    return () => {
+      cancelled = true;
+    };
+  }, [twoFaOtpAuthUrl]);
 
   const setupExpired = useMemo(() => {
     if (!twoFaSetupExpiresAt) return false;
@@ -124,6 +154,12 @@ export function TwoFaBootstrapSetupPage({
             </div>
           ) : null}
 
+          {!error && twoFaSetupStatus === "error" && twoFaSetupError ? (
+            <div className="login-form-error" role="alert">
+              {twoFaSetupError}
+            </div>
+          ) : null}
+
           {twoFaSetupToken && !setupExpired ? (
             <form onSubmit={handleVerify} noValidate>
               <div className="form-group">
@@ -169,12 +205,36 @@ export function TwoFaBootstrapSetupPage({
                   </div>
                 ) : null}
                 {twoFaOtpAuthUrl ? (
-                  <div className="login-code-box" style={{ marginTop: 10 }}>
-                    <div style={{ fontWeight: 600, marginBottom: 6 }}>
-                      otpauth_url
-                    </div>
-                    <div style={{ wordBreak: "break-all" }}>
-                      {twoFaOtpAuthUrl}
+                  <div style={{ marginTop: 14 }}>
+                    {qrDataUrl ? (
+                      <img
+                        className="login-qr"
+                        alt="2FA QR Code"
+                        src={qrDataUrl}
+                        width={240}
+                        height={240}
+                        style={{
+                          display: "block",
+                          margin: "0 auto",
+                          borderRadius: 8,
+                          border: "1px solid var(--border-color)",
+                          background: "rgba(255,255,255,0.03)",
+                        }}
+                      />
+                    ) : (
+                      <div style={{ textAlign: "center", color: "var(--text-tertiary)" }}>
+                        Generating QR...
+                      </div>
+                    )}
+                    <div
+                      style={{
+                        marginTop: 10,
+                        textAlign: "center",
+                        color: "var(--text-tertiary)",
+                        fontSize: 13,
+                      }}
+                    >
+                      Scan from the QR (derived from `otpauth_url`).
                     </div>
                   </div>
                 ) : null}
@@ -198,6 +258,12 @@ export function TwoFaBootstrapSetupPage({
             </form>
           ) : (
             <form onSubmit={handleStartSetup} noValidate>
+              {twoFaSetupStatus === "loading" ? (
+                <div className="login-form-error" role="status" style={{ background: "rgba(255,255,255,0.06)", color: "var(--text-primary)" }}>
+                  Bootstrapping 2FA setup and generating QR...
+                </div>
+              ) : null}
+
               <div className="form-group">
                 <label className="form-label" htmlFor="login-2fa-email">
                   Email address

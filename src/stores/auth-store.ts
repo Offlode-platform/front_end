@@ -31,6 +31,8 @@ type AuthState = PersistedAuth & {
   clearSession: () => void;
   login: (payload: LoginRequest) => Promise<TokenResponse>;
   logout: () => Promise<void>;
+  twoFaSetupStatus: "idle" | "loading" | "error";
+  twoFaSetupError: string | null;
   bootstrap2faSetup: (
     payload: Bootstrap2faSetupRequest
   ) => Promise<Bootstrap2faSetupResponse>;
@@ -64,6 +66,8 @@ export const useAuthStore = create<AuthState>()(
       twoFaSecret: null,
       twoFaOtpAuthUrl: null,
       twoFaSetupExpiresAt: null,
+      twoFaSetupStatus: "idle",
+      twoFaSetupError: null,
 
       setSession: (tokens) => set(tokenResponseToState(tokens)),
 
@@ -76,6 +80,8 @@ export const useAuthStore = create<AuthState>()(
           twoFaSecret: null,
           twoFaOtpAuthUrl: null,
           twoFaSetupExpiresAt: null,
+          twoFaSetupStatus: "idle",
+          twoFaSetupError: null,
         }),
 
       clearTwoFaBootstrap: () =>
@@ -84,6 +90,8 @@ export const useAuthStore = create<AuthState>()(
           twoFaSecret: null,
           twoFaOtpAuthUrl: null,
           twoFaSetupExpiresAt: null,
+          twoFaSetupStatus: "idle",
+          twoFaSetupError: null,
         }),
 
       login: async (payload) => {
@@ -101,14 +109,24 @@ export const useAuthStore = create<AuthState>()(
       },
 
       bootstrap2faSetup: async (payload) => {
-        const res = await authApi.bootstrap2faSetup(payload);
-        set({
-          twoFaSetupToken: res.setup_token,
-          twoFaSecret: res.secret,
-          twoFaOtpAuthUrl: res.otpauth_url,
-          twoFaSetupExpiresAt: Date.now() + res.expires_in * 1000,
-        });
-        return res;
+        set({ twoFaSetupStatus: "loading", twoFaSetupError: null });
+        try {
+          const res = await authApi.bootstrap2faSetup(payload);
+          set({
+            twoFaSetupToken: res.setup_token,
+            twoFaSecret: res.secret,
+            twoFaOtpAuthUrl: res.otpauth_url,
+            twoFaSetupExpiresAt: Date.now() + res.expires_in * 1000,
+            twoFaSetupStatus: "idle",
+            twoFaSetupError: null,
+          });
+          return res;
+        } catch (err) {
+          const message =
+            err instanceof Error && err.message ? err.message : "2FA setup failed";
+          set({ twoFaSetupStatus: "error", twoFaSetupError: message });
+          throw err;
+        }
       },
 
       bootstrap2faVerify: async (payload) => {

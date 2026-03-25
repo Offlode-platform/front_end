@@ -1,2 +1,11 @@
-declare module "qrcode";
+declare module "qrcode" {
+  export function toDataURL(
+    text: string,
+    options?: {
+      width?: number;
+      margin?: number;
+      errorCorrectionLevel?: "L" | "M" | "Q" | "H" | string;
+    }
+  ): Promise<string>;
+}
 
