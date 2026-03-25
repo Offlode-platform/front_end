@@ -269,6 +269,22 @@
   border: 1px solid #fecaca;
 }
 
+.login-page .login-code-box {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-primary);
+  box-sizing: border-box;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.login-page[data-offlode-theme="dark"] .login-code-box {
+  background: rgba(255, 255, 255, 0.03);
+}
+
 .login-page[data-offlode-theme="dark"] .login-form-error {
   background: rgba(239, 68, 68, 0.15);
   color: #fecaca;

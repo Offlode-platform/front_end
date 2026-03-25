@@ -20,6 +20,10 @@ type PersistedAuth = {
   accessToken: string | null;
   tokenType: string | null;
   expiresAt: number | null;
+  twoFaSetupToken: string | null;
+  twoFaSecret: string | null;
+  twoFaOtpAuthUrl: string | null;
+  twoFaSetupExpiresAt: number | null;
 };
 
 type AuthState = PersistedAuth & {
@@ -37,6 +41,7 @@ type AuthState = PersistedAuth & {
   verify2fa: (payload: Verify2faRequest) => Promise<string>;
   requestMagicLink: (payload: MagicLinkRequest) => Promise<string>;
   isTokenExpired: () => boolean;
+  clearTwoFaBootstrap: () => void;
 };
 
 function tokenResponseToState(
@@ -55,6 +60,10 @@ export const useAuthStore = create<AuthState>()(
       accessToken: null,
       tokenType: null,
       expiresAt: null,
+      twoFaSetupToken: null,
+      twoFaSecret: null,
+      twoFaOtpAuthUrl: null,
+      twoFaSetupExpiresAt: null,
 
       setSession: (tokens) => set(tokenResponseToState(tokens)),
 
@@ -63,6 +72,18 @@ export const useAuthStore = create<AuthState>()(
           accessToken: null,
           tokenType: null,
           expiresAt: null,
+          twoFaSetupToken: null,
+          twoFaSecret: null,
+          twoFaOtpAuthUrl: null,
+          twoFaSetupExpiresAt: null,
+        }),
+
+      clearTwoFaBootstrap: () =>
+        set({
+          twoFaSetupToken: null,
+          twoFaSecret: null,
+          twoFaOtpAuthUrl: null,
+          twoFaSetupExpiresAt: null,
         }),
 
       login: async (payload) => {
@@ -79,11 +100,21 @@ export const useAuthStore = create<AuthState>()(
         }
       },
 
-      bootstrap2faSetup: (payload) => authApi.bootstrap2faSetup(payload),
+      bootstrap2faSetup: async (payload) => {
+        const res = await authApi.bootstrap2faSetup(payload);
+        set({
+          twoFaSetupToken: res.setup_token,
+          twoFaSecret: res.secret,
+          twoFaOtpAuthUrl: res.otpauth_url,
+          twoFaSetupExpiresAt: Date.now() + res.expires_in * 1000,
+        });
+        return res;
+      },
 
       bootstrap2faVerify: async (payload) => {
         const tokens = await authApi.bootstrap2faVerify(payload);
         set(tokenResponseToState(tokens));
+        get().clearTwoFaBootstrap();
         return tokens;
       },
 
@@ -106,6 +137,10 @@ export const useAuthStore = create<AuthState>()(
         accessToken: state.accessToken,
         tokenType: state.tokenType,
         expiresAt: state.expiresAt,
+        twoFaSetupToken: state.twoFaSetupToken,
+        twoFaSecret: state.twoFaSecret,
+        twoFaOtpAuthUrl: state.twoFaOtpAuthUrl,
+        twoFaSetupExpiresAt: state.twoFaSetupExpiresAt,
       }),
     }
   )
