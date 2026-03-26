@@ -31,16 +31,15 @@
   z-index: 30;
 }
 
-.offlode-shell__brand {
-  font-size: 18px;
-  font-weight: 700;
-  letter-spacing: -0.01em;
-}
-
-.offlode-shell__header-actions {
+.offlode-shell__header-left,
+.offlode-shell__header-right {
   display: flex;
   align-items: center;
   gap: 10px;
+}
+
+.offlode-shell__header-spacer {
+  flex: 1;
 }
 
 .offlode-shell__icon-btn {
@@ -53,6 +52,151 @@
   justify-content: center;
   background: rgba(255, 255, 255, 0.04);
   color: var(--text-primary);
+}
+
+.shell-logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.shell-logo-mark {
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  /* border: 2px dashed var(--brand-electric); */
+}
+
+.shell-wordmark {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.shell-breadcrumb {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.68);
+}
+
+.shell-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 240px;
+  height: 36px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.14);
+  padding: 0 10px;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.shell-search-input {
+  width: 100%;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.shell-search-shortcut {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.shell-create-wrap,
+.shell-dropdown-wrap {
+  position: relative;
+}
+
+.shell-create-menu,
+.shell-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 260px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #2f333b;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.25);
+  padding: 8px;
+  display: none;
+  z-index: 40;
+}
+
+.shell-create-wrap:hover .shell-create-menu,
+.shell-dropdown-wrap:hover .shell-dropdown {
+  display: block;
+}
+
+.shell-create-item {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  color: #fff;
+  text-align: left;
+  padding: 8px;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.shell-create-item:hover,
+.shell-dropdown-action:hover,
+.shell-dropdown-row:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.shell-create-label,
+.shell-dropdown-title {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.shell-create-hint {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.62);
+}
+
+.shell-dropdown-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.shell-dropdown-row {
+  padding: 8px;
+  border-radius: 8px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.86);
+}
+
+.shell-dropdown-action {
+  width: 100%;
+  border: 0;
+  text-align: left;
+  color: #fff;
+  background: transparent;
+  border-radius: 8px;
+  padding: 8px;
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.shell-dropdown-action--danger {
+  color: #fca5a5;
+}
+
+.shell-avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  font-size: 12px;
 }
 
 .offlode-shell__sidebar {
@@ -70,6 +214,12 @@
 }
 
 .offlode-shell__nav {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.offlode-shell__nav-group {
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -204,6 +354,11 @@
 
   .offlode-shell__grid {
     grid-template-columns: 1fr;
+  }
+
+  .shell-breadcrumb,
+  .shell-search {
+    display: none;
   }
 }
 
