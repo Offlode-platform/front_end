@@ -12,8 +12,10 @@ export type MissingByClientItem = {
 };
 
 export type MissingByClientResponse = {
-  total_clients: number;
-  items: MissingByClientItem[];
+  total_clients?: number;
+  items?: MissingByClientItem[];
+  total?: number;
+  clients?: MissingByClientItem[];
 };
 
 export type NeedsAttentionV2Client = {
@@ -40,7 +42,19 @@ export type RecentChasesResponse = {
   events: RecentChaseEvent[];
 };
 
-export type NeedsAttentionResponse = string | Record<string, unknown>;
+export type NeedsAttentionBucketsResponse = {
+  non_responsive_clients: string[];
+  vat_deadline_upcoming: string[];
+  delivery_failures: string[];
+  security_issues: string[];
+  flagged_uploads: string[];
+  unassigned_clients: string[];
+};
+
+export type NeedsAttentionResponse =
+  | string
+  | NeedsAttentionBucketsResponse
+  | Record<string, unknown>;
 
 export type OnTrackResponse = string | Record<string, unknown>;
 

@@ -18,28 +18,29 @@ export function DashboardRecentChases({
   error,
 }: DashboardRecentChasesProps) {
   return (
-    <article className="offlode-shell__panel">
-      <h2 className="offlode-shell__panel-title">Recent Chase Events</h2>
-      {error ? <p className="offlode-dashboard__error">{error}</p> : null}
+    <article className="ws-card u-mb-0">
+      <div className="ws-settings-row" style={{ border: "none", paddingBottom: "var(--sp-4)" }}>
+        <span className="ws-card-title u-mb-0">Recent Chase Events</span>
+        <span className="ws-settings-value u-text-muted">{data?.events?.length ?? 0}</span>
+      </div>
+      {error ? <p className="dash-kpi-sub">{error}</p> : null}
       {!error && data?.events?.length ? (
-        <div className="offlode-dashboard__rows">
+        <div>
           {data.events.slice(0, 8).map((event) => (
-            <div className="offlode-dashboard__row" key={event.chase_id}>
-              <div>
-                <div className="offlode-dashboard__row-name">{event.client_name}</div>
-                <div className="offlode-dashboard__row-meta">
+            <div className="dash-row ws-row-hover" key={event.chase_id}>
+              <div className="dash-row-info">
+                <div className="dash-row-name">{event.client_name}</div>
+                <div className="dash-row-meta">
                   {event.chase_type} - {event.status}
                 </div>
               </div>
-              <div className="offlode-dashboard__row-time">
-                {formatDate(event.created_at)}
-              </div>
+              <div className="act-dot-time">{formatDate(event.created_at)}</div>
             </div>
           ))}
         </div>
       ) : null}
       {!error && !data?.events?.length ? (
-        <p>No chase events available right now.</p>
+        <p className="dash-kpi-sub">No chase events available right now.</p>
       ) : null}
     </article>
   );

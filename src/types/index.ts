@@ -22,6 +22,7 @@ export type {
   NeedsAttentionV2Response,
   RecentChaseEvent,
   RecentChasesResponse,
+  NeedsAttentionBucketsResponse,
   NeedsAttentionResponse,
   OnTrackResponse,
   ClientDashboardDetailsResponse,

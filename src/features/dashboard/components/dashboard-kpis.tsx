@@ -12,22 +12,22 @@ export function DashboardKpis({
   recentChasesCount,
 }: DashboardKpisProps) {
   return (
-    <section className="offlode-shell__kpis">
-      <article className="offlode-shell__kpi">
-        <div className="offlode-shell__kpi-label">Total Clients</div>
-        <div className="offlode-shell__kpi-value">{totalClients}</div>
+    <section className="dash-kpis">
+      <article className="ws-card u-mb-0">
+        <div className="ws-card-title">Total Clients</div>
+        <div className="dash-kpi-val">{totalClients}</div>
       </article>
-      <article className="offlode-shell__kpi">
-        <div className="offlode-shell__kpi-label">Needs Attention</div>
-        <div className="offlode-shell__kpi-value">{needsAttentionCount}</div>
+      <article className="ws-card u-mb-0">
+        <div className="ws-card-title">Needs Attention</div>
+        <div className="dash-kpi-val">{needsAttentionCount}</div>
       </article>
-      <article className="offlode-shell__kpi">
-        <div className="offlode-shell__kpi-label">On Track</div>
-        <div className="offlode-shell__kpi-value">{onTrackCount}</div>
+      <article className="ws-card u-mb-0">
+        <div className="ws-card-title">On Track</div>
+        <div className="dash-kpi-val">{onTrackCount}</div>
       </article>
-      <article className="offlode-shell__kpi">
-        <div className="offlode-shell__kpi-label">Recent Chases</div>
-        <div className="offlode-shell__kpi-value">{recentChasesCount}</div>
+      <article className="ws-card u-mb-0">
+        <div className="ws-card-title">Recent Chases</div>
+        <div className="dash-kpi-val">{recentChasesCount}</div>
       </article>
     </section>
   );
