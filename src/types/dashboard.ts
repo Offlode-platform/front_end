@@ -1,4 +1,9 @@
-export type DashboardSummaryResponse = string;
+export type DashboardSummaryResponse = {
+  active_clients: number;
+  total_missing_documents: number;
+  total_documents_received: number;
+  timestamp: string;
+};
 
 export type MissingByClientItem = {
   client_id: string;
@@ -35,9 +40,9 @@ export type RecentChasesResponse = {
   events: RecentChaseEvent[];
 };
 
-export type NeedsAttentionResponse = string;
+export type NeedsAttentionResponse = string | Record<string, unknown>;
 
-export type OnTrackResponse = string;
+export type OnTrackResponse = string | Record<string, unknown>;
 
 export type ClientDashboardDetailsResponse = string;
 

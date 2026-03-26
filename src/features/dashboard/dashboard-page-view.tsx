@@ -7,12 +7,30 @@ import { DashboardNeedsAttention } from "./components/dashboard-needs-attention"
 import { DashboardOnTrack } from "./components/dashboard-on-track";
 import { DashboardRecentChases } from "./components/dashboard-recent-chases";
 import { useDashboardStore } from "@/stores/dashboard-store";
+import type { DashboardSummaryResponse } from "@/types/dashboard";
 
 function getGreeting(): string {
   const hour = new Date().getHours();
   if (hour < 12) return "Good morning";
   if (hour < 17) return "Good afternoon";
   return "Good evening";
+}
+
+function toPlainText(value: unknown): string | null {
+  if (typeof value === "string") {
+    return value;
+  }
+  if (value == null) {
+    return null;
+  }
+  return JSON.stringify(value);
+}
+
+function formatSummaryText(summary: DashboardSummaryResponse | null): string | null {
+  if (!summary) {
+    return null;
+  }
+  return `${summary.active_clients} active clients · ${summary.total_missing_documents} missing docs · ${summary.total_documents_received} docs received`;
 }
 
 export function DashboardPageView() {
@@ -44,12 +62,19 @@ export function DashboardPageView() {
     return `${totalClients} clients · ${needsAttentionCount} need attention · ${onTrackCount} handled`;
   }, [needsAttentionCount, onTrackCount, totalClients]);
 
+  const summaryApiText = useMemo(() => formatSummaryText(summary), [summary]);
+  const needsAttentionText = useMemo(
+    () => toPlainText(needsAttention),
+    [needsAttention]
+  );
+  const onTrackText = useMemo(() => toPlainText(onTrack), [onTrack]);
+
   return (
     <div className="offlode-dashboard">
       <DashboardHeader
         greeting={getGreeting()}
         summaryLine={summaryLine}
-        summaryApiText={summary}
+        summaryApiText={summaryApiText}
       />
 
       <DashboardKpis
@@ -66,12 +91,12 @@ export function DashboardPageView() {
       <section className="offlode-shell__grid offlode-dashboard__grid">
         <DashboardNeedsAttention
           data={needsAttentionV2}
-          fallbackText={needsAttention}
+          fallbackText={needsAttentionText}
           error={sectionErrors.needsAttentionV2 ?? sectionErrors.needsAttention}
         />
         <DashboardOnTrack
           data={missingByClient}
-          onTrackText={onTrack}
+          onTrackText={onTrackText}
           error={sectionErrors.missingByClient ?? sectionErrors.onTrack}
         />
         <DashboardRecentChases
