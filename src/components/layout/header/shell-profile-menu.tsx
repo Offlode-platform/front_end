@@ -8,9 +8,10 @@ import { useAuthStore } from "@/stores/auth-store";
 type ShellProfileMenuProps = {
   theme: "dark" | "hybrid" | "light";
   onToggleTheme: () => void;
+  onSetTheme: (theme: "dark" | "hybrid" | "light") => void;
 };
 
-export function ShellProfileMenu({ theme, onToggleTheme }: ShellProfileMenuProps) {
+export function ShellProfileMenu({ theme, onToggleTheme, onSetTheme }: ShellProfileMenuProps) {
   const router = useRouter();
   const logout = useAuthStore((s) => s.logout);
 
@@ -33,6 +34,26 @@ export function ShellProfileMenu({ theme, onToggleTheme }: ShellProfileMenuProps
           <Settings size={14} />
           Settings
         </button>
+        <div className="hidden md:block">
+          <div className="shell-create-hint" style={{ padding: "8px 8px 4px" }}>
+            Theme
+          </div>
+          <div style={{ display: "flex", gap: 6, padding: "0 8px 8px" }}>
+            <button type="button" className="shell-dropdown-action" onClick={() => onSetTheme("dark")}>
+              Dark
+            </button>
+            <button
+              type="button"
+              className="shell-dropdown-action"
+              onClick={() => onSetTheme("hybrid")}
+            >
+              Hybrid
+            </button>
+            <button type="button" className="shell-dropdown-action" onClick={() => onSetTheme("light")}>
+              Light
+            </button>
+          </div>
+        </div>
         <button
           type="button"
           className="shell-dropdown-action shell-dropdown-action--danger"

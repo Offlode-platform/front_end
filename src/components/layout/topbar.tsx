@@ -31,9 +31,13 @@ export function Topbar({ onToggleSidebar }: TopbarProps) {
     document.documentElement.setAttribute("data-theme", nextTheme);
     setTheme(nextTheme);
   };
+  const setSpecificTheme = (nextTheme: "dark" | "hybrid" | "light") => {
+    document.documentElement.setAttribute("data-theme", nextTheme);
+    setTheme(nextTheme);
+  };
 
   return (
-    <header className="offlode-shell__header">
+    <header className="offlode-shell__header shell-header">
       <div className="offlode-shell__header-left">
         <div className="md:hidden">
           <button
@@ -47,7 +51,7 @@ export function Topbar({ onToggleSidebar }: TopbarProps) {
         </div>
         <ShellLogo />
       </div>
-      <div className="offlode-shell__header-spacer" />
+      <div className="offlode-shell__header-spacer shell-spacer" />
       <div className="offlode-shell__header-right">
         <div className="hidden md:block">
           <ShellSearch />
@@ -65,7 +69,11 @@ export function Topbar({ onToggleSidebar }: TopbarProps) {
         <div className="hidden md:block">
           <ShellNotifications />
         </div>
-        <ShellProfileMenu theme={theme} onToggleTheme={toggleTheme} />
+        <ShellProfileMenu
+          theme={theme}
+          onToggleTheme={toggleTheme}
+          onSetTheme={setSpecificTheme}
+        />
       </div>
     </header>
   );

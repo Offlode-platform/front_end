@@ -23,7 +23,6 @@ export const PRIMARY_NAV_ITEMS: NavItem[] = [
   { href: routes.team, label: "Team", icon: Users, implemented: false },
   { href: routes.schedule, label: "Schedule", icon: Calendar, implemented: false },
   { href: routes.reports, label: "Reports", icon: FileText, implemented: false },
-  { href: routes.staffHome, label: "Staff", icon: Users, implemented: true },
 ];
 
 export function getNavItemByPath(pathname: string): NavItem | null {

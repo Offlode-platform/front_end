@@ -12,7 +12,7 @@ export function SidebarNavItem({ href, label, icon: Icon, active }: SidebarNavIt
   return (
     <Link
       href={href}
-      className={`offlode-shell__link ${active ? "offlode-shell__link--active" : ""}`}
+      className={`offlode-shell__link nav-item ${active ? "offlode-shell__link--active active" : ""}`}
     >
       <Icon size={18} />
       <span>{label}</span>
