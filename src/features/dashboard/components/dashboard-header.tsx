@@ -9,12 +9,12 @@ export function DashboardHeader({
 }: DashboardHeaderProps) {
   return (
     <div className="page-bar" id="dashHeader">
-      <div className="page-bar-left" style={{ gap: "var(--sp-12)" }}>
-        <div style={{ display: "flex", alignItems: "baseline", gap: "var(--sp-12)" }}>
+      <div className="page-bar-left" style={{ gap: "var(--sp-12)", minWidth: 0 }}>
+        <div className="dash-header-line" style={{ display: "flex", alignItems: "baseline", gap: "var(--sp-12)", minWidth: 0 }}>
           <div className="pg-title" id="dashGreeting">
             {greeting}
           </div>
-          <div className="pg-subtitle" id="dashSummary" style={{ marginTop: 0 }}>
+          <div className="pg-subtitle" id="dashSummary" style={{ marginTop: 0, minWidth: 0 }}>
             {summaryLine}
           </div>
         </div>

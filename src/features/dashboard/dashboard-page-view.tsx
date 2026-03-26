@@ -101,13 +101,7 @@ export function DashboardPageView() {
 
       <div
         id="dashContent"
-        style={{
-          flex: 1,
-          minWidth: 0,
-          overflowY: "auto",
-          padding: "var(--sp-24) var(--sp-32) var(--sp-48)",
-          background: "var(--canvas-bg)",
-        }}
+        className="dash-content"
       >
         <DashboardKpis
           totalClients={totalClients}

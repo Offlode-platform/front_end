@@ -1,6 +1,6 @@
 "use client";
 
-import { Menu, Moon, SunMedium } from "lucide-react";
+import { Menu } from "lucide-react";
 import { useEffect, useState } from "react";
 import { ShellCreateMenu } from "./header/shell-create-menu";
 import { ShellLogo } from "./header/shell-logo";
@@ -56,19 +56,8 @@ export function Topbar({ onToggleSidebar }: TopbarProps) {
         <div className="hidden md:block">
           <ShellSearch />
         </div>
-        <button
-          type="button"
-          className="shell-theme-toggle hidden md:flex"
-          onClick={toggleTheme}
-          aria-label={`Switch theme, current ${theme}`}
-          title={`Theme: ${theme}`}
-        >
-          {theme === "light" ? <SunMedium size={16} /> : <Moon size={16} />}
-        </button>
         <ShellCreateMenu />
-        <div className="hidden md:block">
-          <ShellNotifications />
-        </div>
+        <ShellNotifications />
         <ShellProfileMenu
           theme={theme}
           onToggleTheme={toggleTheme}
