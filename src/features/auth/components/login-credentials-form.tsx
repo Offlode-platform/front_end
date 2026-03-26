@@ -75,7 +75,7 @@ export function LoginCredentialsForm() {
 
   useEffect(() => {
     if (accessToken && !isTokenExpired()) {
-      router.replace(routes.staffHome);
+      router.replace(routes.dashboard);
     }
   }, [accessToken, isTokenExpired, router]);
 
@@ -132,7 +132,7 @@ export function LoginCredentialsForm() {
           password,
         });
         persistRememberEmail();
-        router.push(routes.staffHome);
+        router.push(routes.dashboard);
         router.refresh();
       } catch (err) {
         if (err instanceof ApiRequestError) {
@@ -173,7 +173,7 @@ export function LoginCredentialsForm() {
           two_factor_code: twoFactorCode.trim(),
         });
         persistRememberEmail();
-        router.push(routes.staffHome);
+        router.push(routes.dashboard);
         router.refresh();
       } catch (err) {
         if (err instanceof ApiRequestError && hasTwoFaSetupRequired(err)) {

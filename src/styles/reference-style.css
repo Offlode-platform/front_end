@@ -1209,11 +1209,11 @@ select {
 /* ── Dark / Hybrid Nav Colours ── */
 [data-theme="dark"] .nav-item,
 [data-theme="hybrid"] .nav-item {
-  color: rgba(255, 255, 255, 0.3);
+  color: rgba(255, 255, 255, 0.8);
 }
 [data-theme="dark"] .nav-item svg,
 [data-theme="hybrid"] .nav-item svg {
-  opacity: 0.25;
+  opacity: 0.8;
 }
 [data-theme="dark"] .nav-item.active,
 [data-theme="hybrid"] .nav-item.active {
@@ -1225,15 +1225,15 @@ select {
 }
 [data-theme="dark"] .nav-item.active svg,
 [data-theme="hybrid"] .nav-item.active svg {
-  opacity: 0.8;
+  opacity: 1;
 }
 [data-theme="dark"] .nav-item:hover:not(.active),
 [data-theme="hybrid"] .nav-item:hover:not(.active) {
-  color: rgba(255, 255, 255, 0.6);
+  color: rgba(255, 255, 255, 0.95);
 }
 [data-theme="dark"] .nav-item:hover:not(.active) svg,
 [data-theme="hybrid"] .nav-item:hover:not(.active) svg {
-  opacity: 0.5;
+  opacity: 0.95;
 }
 
 /* ── Light Nav Colours ── */

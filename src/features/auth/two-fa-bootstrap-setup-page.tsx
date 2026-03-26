@@ -61,7 +61,7 @@ export function TwoFaBootstrapSetupPage({
 
   useEffect(() => {
     if (accessToken && !isTokenExpired()) {
-      router.replace(routes.staffHome);
+      router.replace(routes.dashboard);
     }
   }, [accessToken, isTokenExpired, router]);
 
