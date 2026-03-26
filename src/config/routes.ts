@@ -1,5 +1,6 @@
 export const routes = {
   home: "/",
+  dashboard: "/dashboard",
   login: "/login",
   signup: "/signup",
   twoFaBootstrapSetup: "/login/2fa-setup",
