@@ -5,6 +5,7 @@ import { AppRouteShell } from "@/components/layout/app-route-shell";
 import { APP_METADATA } from "@/constants";
 import "./globals.css";
 import "@/styles/offlode-login.css";
+import "@/styles/reference-style.css";
 
 const dmSans = DM_Sans({
   variable: "--font-synapse-sans",

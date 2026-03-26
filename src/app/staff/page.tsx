@@ -21,11 +21,11 @@ export default function StaffHomePage() {
   }, [expiresAt]);
 
   return (
-    <section className="offlode-shell__panel" style={{ maxWidth: 820 }}>
-      <h1 className="offlode-shell__panel-title" style={{ marginBottom: 4 }}>
+    <section className="ws-card" style={{ maxWidth: 820, margin: "var(--sp-24)" }}>
+      <h1 className="ws-card-title" style={{ marginBottom: 4 }}>
         Staff Workspace
       </h1>
-      <p className="offlode-shell__subtitle" style={{ marginBottom: 12 }}>
+      <p className="dash-kpi-sub" style={{ marginBottom: 12 }}>
         {expiresInText ? `Session: ${expiresInText}` : "Session active"}
       </p>
       <p style={{ fontSize: 14, marginBottom: 10 }}>
@@ -47,7 +47,7 @@ export default function StaffHomePage() {
       </div>
       <button
         type="button"
-        className="offlode-shell__icon-btn"
+        className="shell-theme-toggle"
         style={{ width: 200, height: 38, gap: 8 }}
         onClick={async () => {
           setLoading(true);

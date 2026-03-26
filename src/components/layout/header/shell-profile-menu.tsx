@@ -2,6 +2,7 @@
 
 import { Bell, LogOut, Moon, Settings, SunMedium } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { routes } from "@/config/routes";
 import { useAuthStore } from "@/stores/auth-store";
 
@@ -14,57 +15,80 @@ type ShellProfileMenuProps = {
 export function ShellProfileMenu({ theme, onToggleTheme, onSetTheme }: ShellProfileMenuProps) {
   const router = useRouter();
   const logout = useAuthStore((s) => s.logout);
+  const [open, setOpen] = useState(false);
 
   return (
-    <div className="shell-dropdown-wrap">
-      <button type="button" className="shell-avatar" aria-label="Profile menu">
+    <div className="shell-profile-wrap">
+      <button
+        type="button"
+        className="shell-avatar"
+        aria-label="Profile menu"
+        onClick={() => setOpen((v) => !v)}
+      >
         RM
       </button>
-      <div className="shell-dropdown">
-        <div className="shell-dropdown-title">Richard Morrison</div>
-        <button type="button" className="shell-dropdown-action md:hidden">
-          <Bell size={14} />
-          Notifications
-        </button>
-        <button type="button" className="shell-dropdown-action md:hidden" onClick={onToggleTheme}>
-          {theme === "light" ? <SunMedium size={14} /> : <Moon size={14} />}
-          Theme: {theme}
-        </button>
-        <button type="button" className="shell-dropdown-action">
-          <Settings size={14} />
-          Settings
-        </button>
-        <div className="hidden md:block">
-          <div className="shell-create-hint" style={{ padding: "8px 8px 4px" }}>
-            Theme
-          </div>
-          <div style={{ display: "flex", gap: 6, padding: "0 8px 8px" }}>
-            <button type="button" className="shell-dropdown-action" onClick={() => onSetTheme("dark")}>
-              Dark
-            </button>
-            <button
-              type="button"
-              className="shell-dropdown-action"
-              onClick={() => onSetTheme("hybrid")}
-            >
-              Hybrid
-            </button>
-            <button type="button" className="shell-dropdown-action" onClick={() => onSetTheme("light")}>
-              Light
-            </button>
+      <div className={`shell-profile-dropdown ${open ? "open" : ""}`}>
+        <div className="shell-profile-header">
+          <div className="shell-profile-name">Richard Morrison</div>
+          <div className="shell-profile-firm">Thornbury Associates LLP</div>
+        </div>
+        <div className="shell-profile-section md:hidden">
+          <button type="button" className="shell-profile-item">
+            <Bell size={14} />
+            Notifications
+          </button>
+          <button type="button" className="shell-profile-item" onClick={onToggleTheme}>
+            {theme === "light" ? <SunMedium size={14} /> : <Moon size={14} />}
+            Theme: {theme}
+          </button>
+        </div>
+        <div className="shell-profile-section">
+          <button type="button" className="shell-profile-item">
+            <Settings size={14} />
+            Settings
+          </button>
+        </div>
+        <div className="shell-profile-section hidden md:block">
+          <div className="shell-profile-theme">
+            <div className="shell-profile-theme-label">Theme</div>
+            <div className="shell-profile-theme-opts">
+              <button
+                type="button"
+                className={`shell-profile-theme-btn ${theme === "dark" ? "active" : ""}`}
+                onClick={() => onSetTheme("dark")}
+              >
+                Dark
+              </button>
+              <button
+                type="button"
+                className={`shell-profile-theme-btn ${theme === "hybrid" ? "active" : ""}`}
+                onClick={() => onSetTheme("hybrid")}
+              >
+                Hybrid
+              </button>
+              <button
+                type="button"
+                className={`shell-profile-theme-btn ${theme === "light" ? "active" : ""}`}
+                onClick={() => onSetTheme("light")}
+              >
+                Light
+              </button>
+            </div>
           </div>
         </div>
-        <button
-          type="button"
-          className="shell-dropdown-action shell-dropdown-action--danger"
-          onClick={async () => {
-            await logout();
-            router.replace(routes.login);
-          }}
-        >
-          <LogOut size={14} />
-          Sign out
-        </button>
+        <div className="shell-profile-section">
+          <button
+            type="button"
+            className="shell-profile-item danger"
+            onClick={async () => {
+              await logout();
+              router.replace(routes.login);
+            }}
+          >
+            <LogOut size={14} />
+            Sign out
+          </button>
+        </div>
       </div>
     </div>
   );

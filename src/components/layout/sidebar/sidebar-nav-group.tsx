@@ -16,7 +16,7 @@ export function SidebarNavGroup({ items }: SidebarNavGroupProps) {
   const pathname = usePathname();
 
   return (
-    <div className="offlode-shell__nav-group">
+    <div className="nav-group">
       {items.map((item) => (
         <SidebarNavItem
           key={`${item.href}-${item.label}`}

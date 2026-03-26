@@ -37,12 +37,12 @@ export function Topbar({ onToggleSidebar }: TopbarProps) {
   };
 
   return (
-    <header className="offlode-shell__header shell-header">
-      <div className="offlode-shell__header-left">
+    <header className="shell-header">
+      <div className="flex items-center gap-2 min-w-0">
         <div className="md:hidden">
           <button
             type="button"
-            className="offlode-shell__icon-btn"
+            className="shell-theme-toggle"
             onClick={onToggleSidebar}
             aria-label="Toggle navigation"
           >
@@ -51,14 +51,14 @@ export function Topbar({ onToggleSidebar }: TopbarProps) {
         </div>
         <ShellLogo />
       </div>
-      <div className="offlode-shell__header-spacer shell-spacer" />
-      <div className="offlode-shell__header-right">
+      <div className="shell-spacer" />
+      <div className="flex items-center gap-2 min-w-0">
         <div className="hidden md:block">
           <ShellSearch />
         </div>
         <button
           type="button"
-          className="offlode-shell__icon-btn hidden md:inline-flex"
+          className="shell-theme-toggle hidden md:flex"
           onClick={toggleTheme}
           aria-label={`Switch theme, current ${theme}`}
           title={`Theme: ${theme}`}
