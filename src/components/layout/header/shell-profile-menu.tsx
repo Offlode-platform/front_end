@@ -2,7 +2,7 @@
 
 import { Bell, LogOut, Moon, Settings, SunMedium } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { routes } from "@/config/routes";
 import { useAuthStore } from "@/stores/auth-store";
 
@@ -16,9 +16,26 @@ export function ShellProfileMenu({ theme, onToggleTheme, onSetTheme }: ShellProf
   const router = useRouter();
   const logout = useAuthStore((s) => s.logout);
   const [open, setOpen] = useState(false);
+  const wrapRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const onPointerDown = (event: MouseEvent | TouchEvent) => {
+      const target = event.target as Node;
+      if (!wrapRef.current?.contains(target)) {
+        setOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", onPointerDown);
+    document.addEventListener("touchstart", onPointerDown);
+    return () => {
+      document.removeEventListener("mousedown", onPointerDown);
+      document.removeEventListener("touchstart", onPointerDown);
+    };
+  }, []);
 
   return (
-    <div className="shell-profile-wrap">
+    <div className="shell-profile-wrap" ref={wrapRef}>
       <button
         type="button"
         className="shell-avatar"

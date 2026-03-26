@@ -9,11 +9,9 @@ type SidebarProps = {
 };
 
 export function Sidebar({ isOpen }: SidebarProps) {
-  const mobileStateClass = isOpen ? "max-md:translate-x-0" : "max-md:-translate-x-full";
-
   return (
     <aside
-      className={`shell-sidebar max-md:transition-transform max-md:duration-200 max-md:z-[60] ${mobileStateClass}`}
+      className={`shell-sidebar ${isOpen ? "open" : ""}`}
       aria-label="Main navigation"
     >
       <nav className="h-full nav-group">

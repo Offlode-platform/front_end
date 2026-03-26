@@ -1123,7 +1123,7 @@ select {
 
 [data-theme="dark"] .shell-sidebar,
 [data-theme="hybrid"] .shell-sidebar {
-  background: transparent;
+  background: var(--header-dk);
 }
 
 [data-theme="dark"] .shell-sidebar::after,
@@ -13058,6 +13058,40 @@ details.ws-card[open] summary {
 /* ── Light Theme: Header & Sidebar icon visibility ── */
 [data-theme="light"] .shell-header {
   color: var(--text-secondary-lt);
+}
+
+/* Responsive shell behavior for app routes */
+@media (max-width: 1024px) {
+  .shell-sidebar {
+    transform: translateX(-100%);
+    transition: transform var(--dur) var(--ease);
+    z-index: 60;
+  }
+  .shell-sidebar.open {
+    transform: translateX(0);
+  }
+  .card-bed {
+    left: 0;
+  }
+  .content-card {
+    top: calc(var(--shell-header-h) + var(--sp-16));
+    left: var(--sp-16);
+    right: var(--sp-16);
+    bottom: var(--sp-16);
+  }
+}
+
+@media (max-width: 640px) {
+  .shell-header {
+    padding: 0 var(--sp-12);
+    gap: var(--sp-8);
+  }
+  .content-card {
+    top: calc(var(--shell-header-h) + var(--sp-12));
+    left: var(--sp-8);
+    right: var(--sp-8);
+    bottom: var(--sp-8);
+  }
 }
 [data-theme="light"] .shell-notif svg {
   opacity: 0.6;

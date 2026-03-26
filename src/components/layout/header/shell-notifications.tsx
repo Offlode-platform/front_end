@@ -1,7 +1,7 @@
 "use client";
 
 import { Bell } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const NOTIFICATIONS = [
   { text: "TechCorp Solutions uploaded 3 documents", time: "5 minutes ago" },
@@ -11,9 +11,26 @@ const NOTIFICATIONS = [
 
 export function ShellNotifications() {
   const [open, setOpen] = useState(false);
+  const wrapRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const onPointerDown = (event: MouseEvent | TouchEvent) => {
+      const target = event.target as Node;
+      if (!wrapRef.current?.contains(target)) {
+        setOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", onPointerDown);
+    document.addEventListener("touchstart", onPointerDown);
+    return () => {
+      document.removeEventListener("mousedown", onPointerDown);
+      document.removeEventListener("touchstart", onPointerDown);
+    };
+  }, []);
 
   return (
-    <div className="shell-notif-wrap">
+    <div className="shell-notif-wrap" ref={wrapRef}>
       <button
         type="button"
         className="shell-notif"

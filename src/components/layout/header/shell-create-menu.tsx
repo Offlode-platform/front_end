@@ -1,7 +1,7 @@
 "use client";
 
 import { Plus } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const CREATE_ITEMS = [
   { label: "Add Client", hint: "New client record" },
@@ -13,9 +13,26 @@ const CREATE_ITEMS = [
 
 export function ShellCreateMenu() {
   const [open, setOpen] = useState(false);
+  const wrapRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const onPointerDown = (event: MouseEvent | TouchEvent) => {
+      const target = event.target as Node;
+      if (!wrapRef.current?.contains(target)) {
+        setOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", onPointerDown);
+    document.addEventListener("touchstart", onPointerDown);
+    return () => {
+      document.removeEventListener("mousedown", onPointerDown);
+      document.removeEventListener("touchstart", onPointerDown);
+    };
+  }, []);
 
   return (
-    <div className="shell-create-wrap">
+    <div className="shell-create-wrap" ref={wrapRef}>
       <button
         type="button"
         className="shell-create-btn"
