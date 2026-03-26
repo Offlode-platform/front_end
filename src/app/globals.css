@@ -1,7 +1,6 @@
 @import "tailwindcss";
 @import "../styles/synapse-theme.css";
 @import "../styles/offlode-login.css";
-@import "../styles/offlode-dashboard.css";
 @import "../styles/reference-style.css";
 
 :root {

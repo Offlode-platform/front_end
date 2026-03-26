@@ -1,0 +1,226 @@
+.offlode-shell {
+  --brand: #357e92;
+  --brand-electric: #62bed0;
+  --hull: #2f3238;
+  --header: #393d44;
+  --sidebar: #343842;
+  --card-bed: #3a3e45;
+  --card: #2a2d33;
+  --text-primary: #f2f3f5;
+  --text-muted: #9a9aa0;
+  position: fixed;
+  inset: 0;
+  background: var(--hull);
+  color: var(--text-primary);
+  overflow: hidden;
+}
+
+.offlode-shell__header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 0 20px;
+  background: var(--header);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  z-index: 30;
+}
+
+.offlode-shell__brand {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.offlode-shell__header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.offlode-shell__icon-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-primary);
+}
+
+.offlode-shell__sidebar {
+  position: absolute;
+  top: 64px;
+  bottom: 0;
+  left: 0;
+  width: 220px;
+  background: var(--sidebar);
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 18px 10px;
+  overflow-y: auto;
+  z-index: 20;
+  transition: transform 0.2s ease;
+}
+
+.offlode-shell__nav {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.offlode-shell__link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 40px;
+  padding: 0 12px;
+  border-radius: 10px;
+  color: rgba(255, 255, 255, 0.72);
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.offlode-shell__link--active {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+.offlode-shell__card-bed {
+  position: absolute;
+  top: 64px;
+  left: 220px;
+  right: 0;
+  bottom: 0;
+  background: var(--card-bed);
+  z-index: 5;
+}
+
+.offlode-shell__content-card {
+  position: absolute;
+  top: 96px;
+  left: 252px;
+  right: 24px;
+  bottom: 24px;
+  border-radius: 12px;
+  background: var(--card);
+  box-shadow:
+    2px 2px 4px rgba(0, 0, 0, 0.1),
+    4px 4px 12px rgba(0, 0, 0, 0.08);
+  overflow: auto;
+  z-index: 10;
+}
+
+.offlode-shell__page {
+  min-height: 100%;
+  padding: 24px;
+}
+
+.offlode-shell__title {
+  font-size: 24px;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.offlode-shell__subtitle {
+  font-size: 14px;
+  color: var(--text-muted);
+  margin-bottom: 20px;
+}
+
+.offlode-shell__kpis {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.offlode-shell__kpi {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  padding: 14px;
+}
+
+.offlode-shell__kpi-label {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.offlode-shell__kpi-value {
+  margin-top: 6px;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.offlode-shell__grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.offlode-shell__panel {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  padding: 14px;
+}
+
+.offlode-shell__panel-title {
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+@media (max-width: 1024px) {
+  .offlode-shell__sidebar {
+    transform: translateX(-100%);
+  }
+
+  .offlode-shell--sidebar-open .offlode-shell__sidebar {
+    transform: translateX(0);
+  }
+
+  .offlode-shell__card-bed {
+    left: 0;
+  }
+
+  .offlode-shell__content-card {
+    left: 16px;
+    right: 16px;
+    bottom: 16px;
+    top: 86px;
+  }
+
+  .offlode-shell__kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .offlode-shell__grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .offlode-shell__header {
+    padding: 0 12px;
+  }
+
+  .offlode-shell__brand {
+    font-size: 16px;
+  }
+
+  .offlode-shell__page {
+    padding: 14px;
+  }
+
+  .offlode-shell__kpis {
+    grid-template-columns: 1fr;
+  }
+}
