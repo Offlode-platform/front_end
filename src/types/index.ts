@@ -14,3 +14,19 @@ export type {
   FastAPIValidationDetail,
   FastAPIValidationErrorBody,
 } from "./auth";
+export type {
+  DashboardSummaryResponse,
+  MissingByClientItem,
+  MissingByClientResponse,
+  NeedsAttentionV2Client,
+  NeedsAttentionV2Response,
+  RecentChaseEvent,
+  RecentChasesResponse,
+  NeedsAttentionResponse,
+  OnTrackResponse,
+  ClientDashboardDetailsResponse,
+  BulkActionRequestBody,
+  BulkActionResponse,
+  ExportClientsCsvRequestBody,
+  ExportClientsCsvResponse,
+} from "./dashboard";

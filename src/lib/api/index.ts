@@ -1,5 +1,6 @@
 export { authenticatedApi } from "./authenticated-client";
 export { authApi } from "./auth-api";
+export { dashboardApi } from "./dashboard-api";
 export {
   ApiRequestError,
   getFirstValidationMessage,
