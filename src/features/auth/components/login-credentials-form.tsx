@@ -37,13 +37,11 @@ function hasTwoFaSetupRequired(error: ApiRequestError): boolean {
 function hasTwoFaCodeRequired(error: ApiRequestError): boolean {
   const messageLower = error.message.toLowerCase();
   const hasTwoFactorInLoc = error.validationDetail?.some((d) =>
-    d.loc.some((part) => String(part).toLowerCase().includes("two_factor"))
+    d.loc.some((part) => String(part).toLowerCase().includes("two_factor")),
   );
 
   // Covers API responses like "2FA code required", "OTP required", validation on two_factor_code.
-  return (
-    hasTwoFactorInLoc || /2fa|otp|two[-_ ]?factor/.test(messageLower)
-  );
+  return hasTwoFactorInLoc || /2fa|otp|two[-_ ]?factor/.test(messageLower);
 }
 
 export function LoginCredentialsForm() {
@@ -100,7 +98,7 @@ export function LoginCredentialsForm() {
 
     if (emailTrimmed) {
       router.push(
-        `${routes.twoFaBootstrapSetup}?email=${encodeURIComponent(emailTrimmed)}`
+        `${routes.twoFaBootstrapSetup}?email=${encodeURIComponent(emailTrimmed)}`,
       );
     } else {
       router.push(routes.twoFaBootstrapSetup);
@@ -159,7 +157,7 @@ export function LoginCredentialsForm() {
       persistRememberEmail,
       router,
       redirectToBootstrapSetup,
-    ]
+    ],
   );
 
   const handleSignIn = useCallback(
@@ -194,7 +192,7 @@ export function LoginCredentialsForm() {
       persistRememberEmail,
       router,
       redirectToBootstrapSetup,
-    ]
+    ],
   );
 
   return (
@@ -271,7 +269,13 @@ export function LoginCredentialsForm() {
         </form>
       ) : (
         <form onSubmit={handleSignIn} noValidate>
-          <p style={{ marginBottom: 12, fontSize: 14, color: "var(--text-tertiary)" }}>
+          <p
+            style={{
+              marginBottom: 12,
+              fontSize: 14,
+              color: "var(--text-tertiary)",
+            }}
+          >
             Enter the code from your authenticator app.
           </p>
           <p
@@ -310,8 +314,8 @@ export function LoginCredentialsForm() {
                   setLoading(false);
                   router.push(
                     `${routes.twoFaBootstrapSetup}?email=${encodeURIComponent(
-                      emailTrimmed
-                    )}`
+                      emailTrimmed,
+                    )}`,
                   );
                 }
               }}
@@ -372,15 +376,13 @@ export function LoginCredentialsForm() {
       <div className="login-footer">
         <p>
           Don&apos;t have an account?{" "}
-          <Link href={routes.signup}>
-            Start free trial
-          </Link>
+          <Link href={routes.signup}>Start free trial</Link>
         </p>
-        <p style={{ marginTop: 8 }}>
+        {/* <p style={{ marginTop: 8 }}>
           <a href="#" onClick={(e) => e.preventDefault()}>
             Forgot password?
           </a>
-        </p>
+        </p> */}
       </div>
     </div>
   );
