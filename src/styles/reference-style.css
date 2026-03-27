@@ -13103,6 +13103,17 @@ details.ws-card[open] summary {
 
 /* Responsive shell behavior for app routes */
 @media (max-width: 1024px) {
+  .shell-sidebar-backdrop {
+    position: fixed;
+    top: var(--shell-header-h);
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 55;
+    background: rgba(0, 0, 0, 0.35);
+    border: 0;
+    padding: 0;
+  }
   .shell-sidebar {
     transform: translateX(-100%);
     transition: transform var(--dur) var(--ease);
@@ -13123,6 +13134,10 @@ details.ws-card[open] summary {
 }
 
 @media (max-width: 640px) {
+  .shell-sidebar-backdrop {
+    top: var(--shell-header-h);
+    background: rgba(0, 0, 0, 0.42);
+  }
   .shell-header {
     padding: 0 var(--sp-12);
     gap: var(--sp-8);

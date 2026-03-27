@@ -17,6 +17,14 @@ export function DashboardShell({ children }: DashboardShellProps) {
       <div className="hull">
         <div className="card-bed" />
         <Topbar onToggleSidebar={() => setSidebarOpen((s) => !s)} />
+        {sidebarOpen ? (
+          <button
+            type="button"
+            className="shell-sidebar-backdrop"
+            aria-label="Close navigation"
+            onClick={() => setSidebarOpen(false)}
+          />
+        ) : null}
         <Sidebar isOpen={sidebarOpen} />
         <main className="content-card">
           <div className="h-full overflow-auto canvas-bg">{children}</div>
