@@ -9,10 +9,16 @@ import { ShellProfileMenu } from "./header/shell-profile-menu";
 import { ShellSearch } from "./header/shell-search";
 
 type TopbarProps = {
+  isSidebarOpen: boolean;
   onToggleSidebar: () => void;
+  onRequestCloseSidebar: () => void;
 };
 
-export function Topbar({ onToggleSidebar }: TopbarProps) {
+export function Topbar({
+  isSidebarOpen,
+  onToggleSidebar,
+  onRequestCloseSidebar,
+}: TopbarProps) {
   const [theme, setTheme] = useState<"dark" | "hybrid" | "light">(() => {
     if (typeof window === "undefined") return "hybrid";
     const existing = document.documentElement.getAttribute("data-theme");
@@ -37,7 +43,15 @@ export function Topbar({ onToggleSidebar }: TopbarProps) {
   };
 
   return (
-    <header className="shell-header">
+    <header
+      className="shell-header"
+      onClickCapture={(event) => {
+        if (!isSidebarOpen) return;
+        const target = event.target as HTMLElement;
+        if (target.closest('[aria-label="Toggle navigation"]')) return;
+        onRequestCloseSidebar();
+      }}
+    >
       <div className="flex items-center gap-2 min-w-0">
         <div className="md:hidden">
           <button

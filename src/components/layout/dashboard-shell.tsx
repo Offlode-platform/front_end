@@ -16,7 +16,11 @@ export function DashboardShell({ children }: DashboardShellProps) {
     <AuthGuard>
       <div className="hull">
         <div className="card-bed" />
-        <Topbar onToggleSidebar={() => setSidebarOpen((s) => !s)} />
+        <Topbar
+          isSidebarOpen={sidebarOpen}
+          onToggleSidebar={() => setSidebarOpen((s) => !s)}
+          onRequestCloseSidebar={() => setSidebarOpen(false)}
+        />
         {sidebarOpen ? (
           <button
             type="button"
