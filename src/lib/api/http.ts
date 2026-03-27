@@ -1,4 +1,5 @@
 import axios from "axios";
+import { env } from "@/config/env";
 import { getBearerToken } from "@/lib/auth/bearer-token";
 import { runUnauthorizedHandler } from "@/lib/auth/auth-handlers";
 import { parseAxiosError } from "./errors";
@@ -7,9 +8,7 @@ const DEFAULT_TIMEOUT_MS = 60_000;
 
 export function createAxiosInstance(options: { withAuth: boolean }) {
   const instance = axios.create({
-    // Use same-origin relative URLs so requests can be proxied by Next rewrites.
-    // This avoids browser CORS issues from direct cross-origin API calls.
-    baseURL: undefined,
+    baseURL: env.publicApiUrl || undefined,
     headers: {
       "Content-Type": "application/json",
       Accept: "application/json",
