@@ -8,7 +8,6 @@ import { DashboardOnTrack } from "./components/dashboard-on-track";
 import { DashboardRecentChases } from "./components/dashboard-recent-chases";
 import { useDashboardStore } from "@/stores/dashboard-store";
 import type {
-  DashboardSummaryResponse,
   NeedsAttentionBucketsResponse,
   NeedsAttentionResponse,
 } from "@/types/dashboard";
@@ -21,7 +20,7 @@ function getGreeting(): string {
 }
 
 function getNeedsAttentionBuckets(
-  payload: NeedsAttentionResponse | null
+  payload: NeedsAttentionResponse | null,
 ): NeedsAttentionBucketsResponse | null {
   if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
     return null;
@@ -62,13 +61,14 @@ export function DashboardPageView() {
     }
   }, [initialized, loadDashboard]);
 
-  const totalClients = missingByClient?.total_clients ?? missingByClient?.total ?? 0;
+  const totalClients =
+    missingByClient?.total_clients ?? missingByClient?.total ?? 0;
   const needsAttentionCount = needsAttentionV2?.clients?.length ?? 0;
   const onTrackCount = Math.max(totalClients - needsAttentionCount, 0);
   const recentChasesCount = recentChases?.events?.length ?? 0;
   const attentionBuckets = useMemo(
     () => getNeedsAttentionBuckets(needsAttention),
-    [needsAttention]
+    [needsAttention],
   );
   const bucketNeedsCount = useMemo(() => {
     if (!attentionBuckets) return 0;
@@ -81,7 +81,10 @@ export function DashboardPageView() {
       attentionBuckets.unassigned_clients.length
     );
   }, [attentionBuckets]);
-  const resolvedNeedsAttentionCount = Math.max(needsAttentionCount, bucketNeedsCount);
+  const resolvedNeedsAttentionCount = Math.max(
+    needsAttentionCount,
+    bucketNeedsCount,
+  );
 
   const summaryLine = useMemo(() => {
     return `${totalClients} clients · ${needsAttentionCount} need attention · ${onTrackCount} handled`;
@@ -89,20 +92,14 @@ export function DashboardPageView() {
 
   const summaryApiText = useMemo(() => {
     if (!summary) return summaryLine;
-    return `${summary.active_clients} clients · ${summary.total_missing_documents} need attention · ${summary.total_documents_received} handled`;
+    return `${summary?.active_clients} clients · ${summary?.total_missing_documents} need attention · ${summary?.total_documents_received} handled`;
   }, [summary, summaryLine]);
 
   return (
     <div className="page active" id="page-dashboard">
-      <DashboardHeader
-        greeting={getGreeting()}
-        summaryLine={summaryApiText}
-      />
+      <DashboardHeader greeting={getGreeting()} summaryLine={summaryApiText} />
 
-      <div
-        id="dashContent"
-        className="dash-content"
-      >
+      <div id="dashContent" className="dash-content">
         <DashboardKpis
           totalClients={totalClients}
           needsAttentionCount={resolvedNeedsAttentionCount}
@@ -120,7 +117,9 @@ export function DashboardPageView() {
           <DashboardNeedsAttention
             data={needsAttentionV2}
             buckets={attentionBuckets}
-            error={sectionErrors.needsAttentionV2 ?? sectionErrors.needsAttention}
+            error={
+              sectionErrors.needsAttentionV2 ?? sectionErrors.needsAttention
+            }
           />
           <DashboardOnTrack
             data={missingByClient}
