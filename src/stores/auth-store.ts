@@ -60,6 +60,20 @@ function tokenResponseToState(
   };
 }
 
+function clearBrowserStorage() {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.clear();
+  } catch {
+    /* ignore */
+  }
+  try {
+    sessionStorage.clear();
+  } catch {
+    /* ignore */
+  }
+}
+
 export const useAuthStore = create<AuthState>()(
   persist(
     (set, get) => ({
@@ -117,8 +131,11 @@ export const useAuthStore = create<AuthState>()(
       logout: async () => {
         try {
           await authApi.logout();
+        } catch {
+          // Logout should still complete locally even if API logout fails.
         } finally {
           get().clearSession();
+          clearBrowserStorage();
         }
       },
 
