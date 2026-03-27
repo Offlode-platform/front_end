@@ -1,0 +1,69 @@
+"use client";
+
+import { Menu } from "lucide-react";
+import { useEffect, useState } from "react";
+import { ShellCreateMenu } from "./header/shell-create-menu";
+import { ShellLogo } from "./header/shell-logo";
+import { ShellNotifications } from "./header/shell-notifications";
+import { ShellProfileMenu } from "./header/shell-profile-menu";
+import { ShellSearch } from "./header/shell-search";
+
+type TopbarProps = {
+  onToggleSidebar: () => void;
+};
+
+export function Topbar({ onToggleSidebar }: TopbarProps) {
+  const [theme, setTheme] = useState<"dark" | "hybrid" | "light">(() => {
+    if (typeof window === "undefined") return "hybrid";
+    const existing = document.documentElement.getAttribute("data-theme");
+    return existing === "dark" || existing === "hybrid" || existing === "light"
+      ? existing
+      : "hybrid";
+  });
+
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", theme);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    const nextTheme =
+      theme === "dark" ? "light" : theme === "light" ? "hybrid" : "dark";
+    document.documentElement.setAttribute("data-theme", nextTheme);
+    setTheme(nextTheme);
+  };
+  const setSpecificTheme = (nextTheme: "dark" | "hybrid" | "light") => {
+    document.documentElement.setAttribute("data-theme", nextTheme);
+    setTheme(nextTheme);
+  };
+
+  return (
+    <header className="shell-header">
+      <div className="flex items-center gap-2 min-w-0">
+        <div className="md:hidden">
+          <button
+            type="button"
+            className="shell-theme-toggle"
+            onClick={onToggleSidebar}
+            aria-label="Toggle navigation"
+          >
+            <Menu size={16} />
+          </button>
+        </div>
+        <ShellLogo />
+      </div>
+      <div className="shell-spacer" />
+      <div className="flex items-center gap-2 min-w-0">
+        <div className="hidden md:block">
+          <ShellSearch />
+        </div>
+        <ShellCreateMenu />
+        <ShellNotifications />
+        <ShellProfileMenu
+          theme={theme}
+          onToggleTheme={toggleTheme}
+          onSetTheme={setSpecificTheme}
+        />
+      </div>
+    </header>
+  );
+}

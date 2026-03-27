@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import { DM_Sans, Instrument_Sans, JetBrains_Mono } from "next/font/google";
 import { AppProviders } from "@/components/providers";
+import { AppRouteShell } from "@/components/layout/app-route-shell";
 import { APP_METADATA } from "@/constants";
 import "./globals.css";
 import "@/styles/offlode-login.css";
+import "@/styles/reference-style.css";
 
 const dmSans = DM_Sans({
   variable: "--font-synapse-sans",
@@ -39,7 +41,9 @@ export default function RootLayout({
       className={`${dmSans.variable} ${instrumentSans.variable} ${jetbrainsMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col font-sans">
-        <AppProviders>{children}</AppProviders>
+        <AppProviders>
+          <AppRouteShell>{children}</AppRouteShell>
+        </AppProviders>
       </body>
     </html>
   );

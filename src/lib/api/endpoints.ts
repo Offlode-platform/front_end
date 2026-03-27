@@ -12,6 +12,17 @@ export const apiPaths = {
     twoFaVerify: "/api/v1/auth/2fa/verify",
     magicLink: "/api/v1/auth/magic-link",
   },
+  dashboard: {
+    summary: "/api/v1/dashboard/summary",
+    missingByClient: "/api/v1/dashboard/missing-by-client",
+    needsAttentionV2: "/api/v1/dashboard/needs-attention-v2",
+    recentChases: "/api/v1/dashboard/recent-chases",
+    needsAttention: "/api/v1/dashboard/needs-attention",
+    onTrack: "/api/v1/dashboard/on-track",
+    clientDetails: "/api/v1/dashboard/client",
+    bulkAction: "/api/v1/dashboard/bulk-action",
+    exportCsv: "/api/v1/dashboard/export/csv",
+  },
 } as const;
 
 export function apiUrl(path: string): string {

@@ -1,5 +1,11 @@
 export const routes = {
   home: "/",
+  dashboard: "/dashboard",
+  workspace: "/workspace",
+  clients: "/clients",
+  team: "/team",
+  schedule: "/schedule",
+  reports: "/reports",
   login: "/login",
   signup: "/signup",
   twoFaBootstrapSetup: "/login/2fa-setup",
