@@ -28,6 +28,22 @@ const jetbrainsMono = JetBrains_Mono({
 export const metadata: Metadata = {
   title: APP_METADATA.title,
   description: APP_METADATA.description,
+  applicationName: "Offlode",
+  icons: {
+    icon: "/offlode-logo.svg",
+    shortcut: "/offlode-logo.svg",
+    apple: "/offlode-logo.svg",
+  },
+  openGraph: {
+    title: "Offlode",
+    description: APP_METADATA.description,
+    siteName: "Offlode",
+  },
+  twitter: {
+    card: "summary",
+    title: "Offlode",
+    description: APP_METADATA.description,
+  },
 };
 
 export default function RootLayout({
