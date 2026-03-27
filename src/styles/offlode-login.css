@@ -1,28 +1,29 @@
 /* Offlode login screen — scoped under .login-page (from offlode-test-v50 design) */
 
 .login-page {
-  --primary-teal: #0d9488;
-  --teal-500: #14b8a6;
+  --primary-teal: var(--brand);
+  --teal-500: var(--brand-electric);
   --font-display: var(--font-offlode-display), "Instrument Sans", system-ui,
     sans-serif;
   --font-body: var(--font-synapse-sans), "DM Sans", system-ui, sans-serif;
   --space-lg: 24px;
   --radius-xl: 10px;
-  --card-bg: #ffffff;
-  --text-primary: #111827;
-  --text-secondary: #6b7280;
-  --text-tertiary: #9ca3af;
-  --border-color: #e5e7eb;
-  --input-bg: #ffffff;
+  --card-bg: var(--card-lt);
+  --text-primary: var(--text-primary-lt);
+  --text-secondary: var(--text-secondary-lt);
+  --text-tertiary: var(--text-tertiary-lt);
+  --border-color: rgba(0, 0, 0, 0.08);
+  --input-bg: var(--card-lt);
 }
 
-.login-page[data-offlode-theme="dark"] {
-  --card-bg: #151f2e;
-  --text-primary: #f9fafb;
-  --text-secondary: #e5e7eb;
-  --text-tertiary: #9ca3af;
-  --border-color: #243044;
-  --input-bg: #1e293b;
+[data-theme="dark"] .login-page,
+[data-theme="hybrid"] .login-page {
+  --card-bg: var(--card-dk);
+  --text-primary: var(--text-primary-dk);
+  --text-secondary: var(--text-secondary-dk);
+  --text-tertiary: var(--text-tertiary-dk);
+  --border-color: rgba(255, 255, 255, 0.12);
+  --input-bg: rgba(255, 255, 255, 0.03);
 }
 
 @keyframes offlode-login-spin {
@@ -34,10 +35,24 @@
 .login-page {
   min-height: 100vh;
   display: flex;
-  background: linear-gradient(135deg, #0d9488 0%, #14b8a6 50%, #22d3ee 100%);
+  background: linear-gradient(
+    135deg,
+    var(--hull-dk) 0%,
+    var(--header-dk) 48%,
+    var(--card-bed-dk) 100%
+  );
   position: relative;
   overflow: hidden;
   font-family: var(--font-body);
+}
+
+[data-theme="light"] .login-page {
+  background: linear-gradient(
+    135deg,
+    var(--hull-lt) 0%,
+    var(--header-lt) 48%,
+    var(--card-bed-lt) 100%
+  );
 }
 
 .login-page::before {
@@ -247,16 +262,16 @@
 }
 
 .login-page .btn-primary {
-  background: #0d9488;
+  background: var(--brand);
   color: #fff;
 }
 
 .login-page .btn-primary:hover:not(:disabled) {
-  background: #0f766e;
+  background: var(--brand-deep);
 }
 
 .login-page .login-form .btn-primary {
-  background: #0d9488;
+  background: var(--brand);
   color: #ffffff !important;
   font-weight: 500;
   width: 100%;
@@ -267,7 +282,7 @@
 }
 
 .login-page .login-form .btn-primary:hover:not(:disabled) {
-  background: #0f766e;
+  background: var(--brand-deep);
   color: #ffffff !important;
 }
 
@@ -314,11 +329,13 @@
   line-height: 1.45;
 }
 
-.login-page[data-offlode-theme="dark"] .login-code-box {
+[data-theme="dark"] .login-page .login-code-box,
+[data-theme="hybrid"] .login-page .login-code-box {
   background: rgba(255, 255, 255, 0.03);
 }
 
-.login-page[data-offlode-theme="dark"] .login-form-error {
+[data-theme="dark"] .login-page .login-form-error,
+[data-theme="hybrid"] .login-page .login-form-error {
   background: rgba(239, 68, 68, 0.15);
   color: #fecaca;
   border-color: rgba(239, 68, 68, 0.35);

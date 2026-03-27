@@ -136,7 +136,7 @@ export function TwoFaBootstrapSetupPage({
   };
 
   return (
-    <div className="login-page" data-offlode-theme="light">
+    <div className="login-page">
       <LoginBrandPanel />
 
       <div className="login-right">
