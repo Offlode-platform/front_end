@@ -11,10 +11,11 @@ type DashboardShellProps = {
 
 export function DashboardShell({ children }: DashboardShellProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isUtilitySidebar, setIsUtilitySidebar] = useState(false);
 
   return (
     <AuthGuard>
-      <div className="hull">
+      <div className="hull" data-sidebar={isUtilitySidebar ? "utility" : undefined}>
         <div className="card-bed" />
         <Topbar
           isSidebarOpen={sidebarOpen}
@@ -29,7 +30,11 @@ export function DashboardShell({ children }: DashboardShellProps) {
             onClick={() => setSidebarOpen(false)}
           />
         ) : null}
-        <Sidebar isOpen={sidebarOpen} />
+        <Sidebar
+          isOpen={sidebarOpen}
+          isUtility={isUtilitySidebar}
+          onToggleMode={() => setIsUtilitySidebar((v) => !v)}
+        />
         <main className="content-card">
           <div className="h-full overflow-auto canvas-bg">{children}</div>
         </main>

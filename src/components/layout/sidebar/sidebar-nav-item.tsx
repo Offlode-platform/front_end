@@ -13,6 +13,8 @@ export function SidebarNavItem({ href, label, icon: Icon, active }: SidebarNavIt
     <Link
       href={href}
       className={`nav-item ${active ? "active" : ""}`}
+      aria-label={label}
+      title={label}
     >
       <Icon size={18} />
       <span>{label}</span>
