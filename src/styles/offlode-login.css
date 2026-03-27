@@ -347,7 +347,10 @@
   }
 
   .login-page .login-left {
-    padding: 28px 18px 22px;
+    flex: 0 0 auto;
+    min-height: 34vh;
+    justify-content: flex-start;
+    padding: 20px 16px 12px;
   }
 
   .login-page .login-hero h1 {
@@ -422,16 +425,19 @@
 
 @media (max-width: 480px) {
   .login-page .login-left {
-    padding: 22px 14px 16px;
+    min-height: 30vh;
+    padding: 14px 12px 8px;
   }
 
   .login-page .login-hero h1 {
-    font-size: 1.35rem;
+    font-size: 1.2rem;
     max-width: none;
+    margin-bottom: 10px;
   }
 
   .login-page .login-hero p {
-    font-size: 0.86rem;
+    font-size: 0.82rem;
+    line-height: 1.45;
   }
 
   .login-page .login-right {
