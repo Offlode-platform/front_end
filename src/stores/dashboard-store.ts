@@ -3,6 +3,7 @@
 import { create } from "zustand";
 import { dashboardApi } from "@/lib/api/dashboard-api";
 import type {
+  DashboardSummaryResponse,
   MissingByClientResponse,
   NeedsAttentionResponse,
   NeedsAttentionV2Response,
@@ -22,7 +23,7 @@ type DashboardState = {
   isLoading: boolean;
   initialized: boolean;
   sectionErrors: Partial<Record<DashboardSection, string>>;
-  summary: string | null;
+  summary: DashboardSummaryResponse | null;
   missingByClient: MissingByClientResponse | null;
   needsAttentionV2: NeedsAttentionV2Response | null;
   recentChases: RecentChasesResponse | null;
