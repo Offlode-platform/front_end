@@ -1,6 +1,7 @@
 "use client";
 
 import { Eye, EyeOff } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { routes } from "@/config/routes";
@@ -371,15 +372,9 @@ export function LoginCredentialsForm() {
       <div className="login-footer">
         <p>
           Don&apos;t have an account?{" "}
-          <a
-            href="#"
-            onClick={(e) => {
-              e.preventDefault();
-              router.push(routes.signup);
-            }}
-          >
+          <Link href={routes.signup}>
             Start free trial
-          </a>
+          </Link>
         </p>
         <p style={{ marginTop: 8 }}>
           <a href="#" onClick={(e) => e.preventDefault()}>

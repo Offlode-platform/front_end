@@ -1,6 +1,7 @@
-﻿"use client";
+"use client";
 
 import { Eye, EyeOff } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { routes } from "@/config/routes";
@@ -200,15 +201,9 @@ export function SignupForm() {
       <div className="login-footer">
         <p>
           Already have an account?{" "}
-          <a
-            href="#"
-            onClick={(e) => {
-              e.preventDefault();
-              router.push(routes.login);
-            }}
-          >
+          <Link href={routes.login}>
             Sign in
-          </a>
+          </Link>
         </p>
       </div>
     </div>
