@@ -24,7 +24,7 @@ export function WorkspacePageView({ clients }: WorkspacePageViewProps) {
   );
 
   return (
-    <div className="page active" id="page-workspace">
+    <div className="page active workspace-page-lock" id="page-workspace">
       <div className={`ws ${focusedZone ? "focused" : ""}`} id="ws">
         <WorkspaceClientList
           clients={clients}

@@ -1439,6 +1439,25 @@ select {
   z-index: 1;
 }
 
+/* Workspace route: lock outer scroll, keep sidebar list scrollable */
+#page-workspace.workspace-page-lock {
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+#page-workspace.workspace-page-lock .ws {
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+#page-workspace.workspace-page-lock .ws-list {
+  min-height: 0;
+}
+#page-workspace.workspace-page-lock .ws-items {
+  min-height: 0;
+  overflow-y: auto;
+}
+
 /* =============================================================================
    11. COMPONENT LIBRARY
    
