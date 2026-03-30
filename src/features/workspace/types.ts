@@ -93,6 +93,20 @@ export type WorkspaceDemoClient = {
   name: string;
   intent?: string;
   intentDetail?: string;
+  legalEntity?: string;
+  urgentItem?: {
+    agent?: string;
+    desc?: string;
+    severity?: string;
+  };
+  aiLearned?: {
+    bestContactTime?: string;
+    avgResponseTime?: string;
+    preferredChannel?: string;
+    paymentPattern?: string;
+    documentPattern?: string;
+    callPattern?: string;
+  } | null;
   vip?: boolean;
   contact?: string;
   email?: string;
@@ -113,6 +127,7 @@ export type WorkspaceDemoClient = {
   collect?: {
     status?: string;
     chaseCount?: number;
+    lastChaseOpened?: boolean;
     nextEscalation?: string;
     documentSets?: DemoDocumentSet[];
     pendingReview?: Array<{
@@ -124,6 +139,7 @@ export type WorkspaceDemoClient = {
   };
   respond?: {
     status?: string;
+    callbackOverdue?: boolean;
     callType?: string;
     callDuration?: string;
     callTime?: string;

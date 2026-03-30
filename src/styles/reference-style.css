@@ -5742,6 +5742,52 @@ select {
   border-top-color: rgba(255, 255, 255, 0.04);
 }
 
+/* Workspace client list — full-width selectable rows (button reset + alignment) */
+.ws-list .ws-items {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+.ws-list button.ws-item {
+  width: 100%;
+  max-width: 100%;
+  align-self: stretch;
+  box-sizing: border-box;
+  text-align: left;
+  justify-content: flex-start;
+  border: none;
+  background: transparent;
+  font: inherit;
+  color: inherit;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.ws-list button.ws-item:hover {
+  background: rgba(0, 0, 0, 0.025);
+}
+[data-theme="dark"] .ws-list button.ws-item:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+.ws-list button.ws-item.selected {
+  background: rgba(0, 0, 0, 0.04);
+}
+[data-theme="dark"] .ws-list button.ws-item.selected {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.ws-list-header-controls {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-6);
+  width: 100%;
+  align-items: stretch;
+}
+
+.ws-vip-toggle--full {
+  width: 100%;
+  justify-content: center;
+}
+
 /* ── Triage Preview — right side of triage view ── */
 .ws-preview {
   flex: 1;
