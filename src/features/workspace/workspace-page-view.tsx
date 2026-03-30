@@ -12,7 +12,9 @@ type WorkspacePageViewProps = {
 };
 
 export function WorkspacePageView({ clients }: WorkspacePageViewProps) {
-  const [activeFilter, setActiveFilter] = useState<"needs-input" | "handled">("needs-input");
+  const [activeFilter, setActiveFilter] = useState<"needs-input" | "handled">(
+    "needs-input",
+  );
   const [showVipOnly, setShowVipOnly] = useState(false);
   const [selectedClientId, setSelectedClientId] = useState<string | null>(
     clients[0] ? String(clients[0].id) : null,
@@ -21,13 +23,17 @@ export function WorkspacePageView({ clients }: WorkspacePageViewProps) {
   const [refSurface, setRefSurface] = useState<RefSurface | null>(null);
 
   const selectedClient = useMemo(
-    () => clients.find((client) => String(client.id) === selectedClientId) ?? null,
+    () =>
+      clients.find((client) => String(client.id) === selectedClientId) ?? null,
     [clients, selectedClientId],
   );
 
   return (
     <div className="page active workspace-page-lock" id="page-workspace">
-      <div className={`ws ${focusedZone || refSurface ? "focused" : ""}`} id="ws">
+      <div
+        className={`ws ${focusedZone || refSurface ? "focused" : ""}`}
+        id="ws"
+      >
         <WorkspaceClientList
           clients={clients}
           activeFilter={activeFilter}
@@ -62,7 +68,10 @@ export function WorkspacePageView({ clients }: WorkspacePageViewProps) {
           onCloseRef={() => setRefSurface(null)}
         />
 
-        <WorkspaceContextPanel client={selectedClient} isVisible={Boolean(focusedZone || refSurface)} />
+        <WorkspaceContextPanel
+          client={selectedClient}
+          isVisible={Boolean(focusedZone || refSurface)}
+        />
       </div>
     </div>
   );

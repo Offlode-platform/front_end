@@ -1441,11 +1441,15 @@ select {
 
 /* Workspace route: lock outer scroll, keep sidebar list scrollable */
 #page-workspace.workspace-page-lock {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
   height: 100%;
   min-height: 0;
   overflow: hidden;
 }
 #page-workspace.workspace-page-lock .ws {
+  flex: 1;
   height: 100%;
   min-height: 0;
   overflow: hidden;
@@ -7795,7 +7799,10 @@ button.ws-ref-icon {
   cursor: pointer;
   font-family: inherit;
   font-weight: var(--fw-medium);
-  transition: border-color 0.15s, background 0.15s, color 0.15s;
+  transition:
+    border-color 0.15s,
+    background 0.15s,
+    color 0.15s;
 }
 .ws-timeline-filter:hover {
   border-color: var(--brand);
@@ -13777,4 +13784,267 @@ details.ws-card[open] summary {
 }
 [data-theme="light"] #page-help [style*="position:sticky"] {
   background: var(--card-lt);
+}
+
+/* =============================================================================
+   WORKSPACE RESPONSIVE ADAPTATIONS
+   Professional mobile/tablet behavior:
+   - Preserve desktop tri-column experience.
+   - Stack into list -> workspace -> context on smaller screens.
+   - Keep scroll ownership explicit to avoid nested scroll jank.
+   ============================================================================= */
+
+@media (max-width: 1280px) {
+  /*
+   * Tablet + narrow laptop: column layout (no horizontal split), triage shows
+   * list above preview. Removes 44%-max-height collapse that hid client rows.
+   */
+  #page-workspace.workspace-page-lock .ws {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+    overflow-x: hidden;
+  }
+
+  /* Focus / ref: full-width workspace; context stacks below middle */
+  #page-workspace.workspace-page-lock .ws.focused .ws-list {
+    display: none !important;
+  }
+  #page-workspace.workspace-page-lock .ws.focused .ws-middle {
+    display: flex;
+    width: 100%;
+  }
+
+  /*
+   * Triage: stack list (scrollable) above preview — full width, no horizontal split.
+   * Cap list height so .ws-items keeps room; middle gets remaining space + "Open workspace".
+   */
+  .ws-list {
+    width: 100%;
+    flex: 0 1 auto;
+    min-height: 0;
+    /* Avoid zero-height list in short landscape viewports */
+    max-height: clamp(140px, 46vh, 420px);
+    border-right: none;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  }
+  [data-theme="dark"] .ws-list {
+    border-bottom-color: rgba(255, 255, 255, 0.06);
+  }
+  #page-workspace.workspace-page-lock .ws.focused .ws-list {
+    max-height: none;
+    border-bottom: none;
+  }
+
+  .ws-middle {
+    flex: 1;
+    min-height: 0;
+    width: 100%;
+  }
+
+  .ws-prev-header,
+  .ws-focus-header {
+    padding-left: var(--sp-16);
+    padding-right: var(--sp-16);
+  }
+  .ws-prev-header-top {
+    gap: var(--sp-12);
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+  .ws-header-row1 {
+    min-height: auto;
+    padding: var(--sp-10) var(--sp-16);
+    gap: var(--sp-10);
+    flex-wrap: wrap;
+  }
+  .ws-header-left {
+    min-width: 0;
+    width: 100%;
+  }
+  .ws-header-right {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .ws-content-pane {
+    position: absolute;
+  }
+  .ws-focus-content {
+    padding: var(--sp-16) var(--sp-16) var(--sp-28);
+  }
+  .ws-mode-banner {
+    margin-bottom: var(--sp-16);
+    padding: var(--sp-14) var(--sp-16);
+  }
+
+  .ws-content-nav {
+    padding: var(--sp-6) 0 var(--sp-16);
+    flex-wrap: wrap;
+  }
+  .ws-switch-pill {
+    margin-right: 0;
+    margin-bottom: var(--sp-6);
+  }
+
+  .ws-list-header {
+    padding: var(--sp-12);
+  }
+  .ws-list-header-controls {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-8);
+  }
+  .ws-vip-toggle--full {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .ws-ctx {
+    width: 100%;
+    max-height: 38%;
+    min-height: 0;
+    padding: var(--sp-16);
+    border-top: 1px solid rgba(0, 0, 0, 0.06);
+  }
+  [data-theme="dark"] .ws-ctx {
+    border-top-color: rgba(255, 255, 255, 0.06);
+  }
+  .ws-ctx::before {
+    display: none;
+  }
+  .ws-ctx.ws-ctx-hidden {
+    transform: translateY(100%);
+    margin-left: 0;
+    opacity: 0;
+    max-height: 0;
+    min-height: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    border-top: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .ws-list-header {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: inherit;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+  }
+  [data-theme="dark"] .ws-list-header {
+    border-bottom-color: rgba(255, 255, 255, 0.06);
+  }
+
+  .ws-segment {
+    width: 100%;
+  }
+  .ws-seg {
+    font-size: var(--text-xs);
+    padding: var(--sp-8) var(--sp-6);
+  }
+  .ws-seg-count {
+    min-width: 18px;
+    height: 18px;
+  }
+
+  .ws-prev-title,
+  .ws-focus-name {
+    font-size: var(--text-base);
+    line-height: 1.25;
+  }
+  .ws-prev-subtitle,
+  .ws-focus-meta {
+    font-size: var(--text-xs);
+    line-height: 1.35;
+    white-space: normal;
+  }
+  .ws-back {
+    min-height: 30px;
+    padding: 0 var(--sp-10);
+  }
+
+  .ws-header-right {
+    justify-content: flex-start;
+    gap: var(--sp-6);
+  }
+  .ws-ref-icon {
+    width: 30px;
+    height: 30px;
+  }
+  .ws-ref-icon svg {
+    width: 13px;
+    height: 13px;
+  }
+
+  .ws-focus-content {
+    padding: var(--sp-12) var(--sp-12) var(--sp-20);
+  }
+  .ws-mode-banner {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: var(--sp-6);
+  }
+  .ws-mode-count {
+    margin-left: 0;
+  }
+
+  .ws-content-nav {
+    gap: var(--sp-6);
+    padding-bottom: var(--sp-12);
+  }
+  .ws-areas-btn {
+    width: 100%;
+    justify-content: center;
+  }
+  .ws-areas-menu {
+    width: min(260px, 92vw);
+  }
+  .ws-switch-pill {
+    font-size: var(--text-2xs);
+    padding: var(--sp-4) var(--sp-10);
+  }
+  .ws-switch-count {
+    min-width: 14px;
+    height: 14px;
+  }
+
+  .ws-timeline-item {
+    gap: var(--sp-8) !important;
+  }
+  .ws-timeline-item > :first-child {
+    width: 62px !important;
+    font-size: var(--text-2xs) !important;
+  }
+  .ws-timeline-filter {
+    font-size: var(--text-2xs);
+    padding: var(--sp-4) var(--sp-10);
+  }
+
+  .ws-cmd-row {
+    padding: var(--sp-10) var(--sp-12);
+  }
+  .ws-cmd-headline {
+    font-size: var(--text-xs);
+    line-height: 1.35;
+  }
+
+  .ws-card {
+    padding: var(--sp-12);
+  }
+  .ws-ctx {
+    max-height: 38%;
+    min-height: 160px;
+    padding: var(--sp-12);
+  }
+  .ws-ctx-row {
+    gap: var(--sp-8);
+  }
+  .ws-ctx-value {
+    max-width: 60%;
+    font-size: var(--text-sm);
+  }
 }
