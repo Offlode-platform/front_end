@@ -75,11 +75,13 @@ export type DemoInvoice = {
   amount: number;
   description?: string;
   dateIssued?: string | null;
+  sentDate?: string;
   dateDue?: string;
   daysOverdue?: number;
   status?: string;
   reminderCount?: number;
   lastReminder?: string;
+  lastReminderDate?: string;
   dispute?: {
     reason?: string;
     raisedBy?: string;
@@ -127,6 +129,7 @@ export type WorkspaceDemoClient = {
   collect?: {
     status?: string;
     chaseCount?: number;
+    lastChaseDate?: string;
     lastChaseOpened?: boolean;
     nextEscalation?: string;
     documentSets?: DemoDocumentSet[];
@@ -147,7 +150,19 @@ export type WorkspaceDemoClient = {
     summary?: string;
     tags?: string[];
     transcript?: DemoCallTranscriptLine[] | string;
-    pendingCallbacks?: Array<{ reason?: string; requestedTime?: string; overdue?: boolean }>;
+    callHistory?: Array<{
+      type?: string;
+      outcome?: string;
+      duration?: string;
+      time?: string;
+      handler?: string;
+    }>;
+    pendingCallbacks?: Array<{
+      reason?: string;
+      requestedTime?: string;
+      addedTime?: string;
+      overdue?: boolean;
+    }>;
     draftResponse?: { type?: string; subject?: string; body?: string; aiNotes?: string };
   };
   settle?: {

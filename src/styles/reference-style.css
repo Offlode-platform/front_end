@@ -7784,6 +7784,29 @@ button.ws-ref-icon {
   stroke-linejoin: round;
   flex-shrink: 0;
 }
+/* Unified activity timeline (reference: _buildUnifiedTimeline) */
+.ws-timeline-filter {
+  font-size: var(--text-xs);
+  padding: var(--sp-4) var(--sp-12);
+  border-radius: 99px;
+  border: 1px solid var(--clr-divider-strong);
+  background: transparent;
+  color: var(--clr-muted);
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: var(--fw-medium);
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
+}
+.ws-timeline-filter:hover {
+  border-color: var(--brand);
+  color: var(--brand);
+}
+.ws-timeline-filter.active {
+  border-color: var(--brand);
+  background: rgba(53, 126, 146, 0.06);
+  color: var(--brand);
+}
+
 .ws-areas-item .ws-areas-count {
   margin-left: auto;
   font-size: var(--text-xs);

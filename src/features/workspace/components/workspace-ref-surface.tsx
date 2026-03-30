@@ -2,12 +2,14 @@
 
 import type { ReactNode } from "react";
 import type { WorkspaceDemoClient } from "../types";
+import { WorkspaceUnifiedTimeline } from "./workspace-unified-timeline";
 
 export type RefSurface = "records" | "activity" | "notes" | "settings";
 
 type WorkspaceRefSurfaceProps = {
   client: WorkspaceDemoClient;
   surface: RefSurface;
+  firstName: string;
 };
 
 function SectionTitle({ children }: { children: ReactNode }) {
@@ -20,7 +22,7 @@ function SectionTitle({ children }: { children: ReactNode }) {
   );
 }
 
-export function WorkspaceRefSurface({ client, surface }: WorkspaceRefSurfaceProps) {
+export function WorkspaceRefSurface({ client, surface, firstName }: WorkspaceRefSurfaceProps) {
   if (surface === "records") {
     return (
       <>
@@ -82,39 +84,7 @@ export function WorkspaceRefSurface({ client, surface }: WorkspaceRefSurfaceProp
   }
 
   if (surface === "activity") {
-    const items = client.timeline ?? [];
-    return (
-      <>
-        <SectionTitle>Activity timeline</SectionTitle>
-        {items.length === 0 ? (
-          <div className="ws-card">
-            <p className="ws-item-meta">No timeline entries for this client.</p>
-          </div>
-        ) : (
-          <div className="ws-card">
-            {items.map((ev, idx) => (
-              <div
-                key={`${ev.title}-${idx}`}
-                style={{
-                  display: "flex",
-                  gap: "var(--sp-12)",
-                  padding: "var(--sp-8) 0",
-                  borderBottom: idx < items.length - 1 ? "1px solid var(--clr-divider)" : undefined,
-                }}
-              >
-                <span className="ws-item-meta" style={{ flexShrink: 0, width: "72px" }}>
-                  {ev.time ?? ev.date ?? "—"}
-                </span>
-                <div style={{ minWidth: 0 }}>
-                  <div style={{ fontWeight: "var(--fw-medium)", color: "var(--clr-secondary)" }}>{ev.title}</div>
-                  <div className="ws-item-meta">{ev.body}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </>
-    );
+    return <WorkspaceUnifiedTimeline client={client} firstName={firstName} />;
   }
 
   if (surface === "notes") {

@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import { WorkspaceCommandCentreRows } from "./workspace-command-centre-rows";
+import { WorkspaceFocusNav } from "./workspace-focus-nav";
 import { WorkspaceJarvisCommand } from "./workspace-jarvis-command";
 import type { RefSurface } from "./workspace-ref-surface";
 import { WorkspaceRefSurface } from "./workspace-ref-surface";
@@ -164,28 +165,30 @@ export function WorkspaceMiddlePane({
           </div>
         ) : null}
 
-        {refSurface ? (
-          <div id="wsRefContent" className="ws-content-pane active">
+        {showFocusChrome ? (
+          <div id={refSurface ? "wsRefContent" : "wsFocusContent"} className="ws-content-pane active">
             <div className="ws-focus-content">
-              <WorkspaceRefSurface client={client} surface={refSurface} />
-            </div>
-          </div>
-        ) : null}
-
-        {focusedZone && !refSurface ? (
-          <div id="wsFocusContent" className="ws-content-pane active">
-            <div className="ws-focus-content">
-              <div className="ws-panel active" id="wsPanel-overview">
-                <div className="ws-mode-banner" style={{ borderLeft: `4px solid ${activeZone?.color ?? "var(--brand)"}` }}>
-                  <span className="ws-mode-title" style={{ color: activeZone?.color ?? "var(--brand)" }}>
-                    {activeZone?.label ?? "Zone"}
-                  </span>
-                  <span className="ws-mode-count">
-                    {activeZone?.count ?? 0} item{(activeZone?.count ?? 0) === 1 ? "" : "s"} need attention
-                  </span>
+              <WorkspaceFocusNav
+                tasks={tasks}
+                mode={refSurface ? "ref" : "zone"}
+                focusedZone={focusedZone}
+                onOpenZone={onOpenZone}
+              />
+              {refSurface ? (
+                <WorkspaceRefSurface client={client} surface={refSurface} firstName={firstName} />
+              ) : focusedZone ? (
+                <div className="ws-panel active" id="wsPanel-overview">
+                  <div className="ws-mode-banner" style={{ borderLeft: `4px solid ${activeZone?.color ?? "var(--brand)"}` }}>
+                    <span className="ws-mode-title" style={{ color: activeZone?.color ?? "var(--brand)" }}>
+                      {activeZone?.label ?? "Zone"}
+                    </span>
+                    <span className="ws-mode-count">
+                      {activeZone?.count ?? 0} item{(activeZone?.count ?? 0) === 1 ? "" : "s"} need attention
+                    </span>
+                  </div>
+                  <WorkspaceZoneContent client={client} zone={focusedZone} />
                 </div>
-                <WorkspaceZoneContent client={client} zone={focusedZone} />
-              </div>
+              ) : null}
             </div>
           </div>
         ) : null}
