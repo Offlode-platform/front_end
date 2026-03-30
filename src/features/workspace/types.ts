@@ -164,4 +164,10 @@ export type WorkspaceDemoClient = {
       lineItems?: Array<{ description?: string; amount?: number }>;
     };
   };
+  /** Reference panels (records / activity / notes) — from HTML demo */
+  services?: string[];
+  contacts?: Array<{ name: string; role?: string; email?: string; primary?: boolean }>;
+  timeline?: Array<{ type?: string; title?: string; body?: string; time?: string; date?: string; agent?: string }>;
+  notes?: Array<{ id?: string; text: string; author?: string; time?: string; type?: string }>;
+  pinnedNote?: { text: string; author?: string; time?: string } | string;
 };
