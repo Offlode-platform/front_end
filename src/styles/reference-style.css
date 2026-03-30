@@ -7079,6 +7079,7 @@ select {
 .ws-cmd-row {
   display: flex;
   align-items: center;
+  justify-content: flex-start;
   gap: var(--sp-12);
   padding: var(--sp-16) var(--sp-24);
   background: var(--card-lt);
@@ -7088,6 +7089,7 @@ select {
   box-shadow: var(--shadow-rest);
   cursor: pointer;
   transition: all 0.15s;
+  text-align: left;
 }
 
 .ws-cmd-row:active {
@@ -7165,6 +7167,7 @@ select {
   white-space: nowrap;
   font-size: var(--text-base);
   color: var(--text-tertiary-lt);
+  text-align: left;
 }
 [data-theme="dark"] .ws-cmd-headline {
   color: var(--text-tertiary-dk);
@@ -7188,6 +7191,7 @@ select {
   align-items: center;
   gap: var(--sp-8);
   flex-shrink: 0;
+  margin-left: auto;
 }
 .ws-cmd-urg {
   font-size: var(--text-micro);
