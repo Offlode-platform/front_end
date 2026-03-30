@@ -121,7 +121,7 @@ export function WorkspaceMiddlePane({
 
       <div className="ws-content" id="wsContent">
         {!focusedZone ? (
-          <div id="wsTriageContent" className="ws-content-pane">
+          <div id="wsTriageContent" className="ws-content-pane active">
             <div className="ws-prev-content" id="wsPrevContent">
               <div className="ws-section-divider">Command Centre</div>
               <div className="ws-card">
@@ -145,7 +145,7 @@ export function WorkspaceMiddlePane({
                         {zone.headline || <span className="ws-cmd-allclear">All clear</span>}
                       </div>
                       <div className="ws-cmd-right">
-                        {urgency ? <span className="ws-cmd-urg">{urgency}</span> : null}
+                        {zone.urgency ? <span className="ws-cmd-urg">{zone.urgency}</span> : null}
                         <svg viewBox="0 0 24 24" className="ws-cmd-arrow" aria-hidden="true">
                           <polyline points="9 6 15 12 9 18" />
                         </svg>
@@ -157,7 +157,7 @@ export function WorkspaceMiddlePane({
             </div>
           </div>
         ) : (
-          <div id="wsFocusContent" className="ws-content-pane">
+          <div id="wsFocusContent" className="ws-content-pane active">
             <div className="ws-focus-content">
               <div className="ws-panel active" id="wsPanel-overview">
                 <div className="ws-mode-banner" style={{ borderLeft: `4px solid ${activeZone?.color ?? "var(--brand)"}` }}>
