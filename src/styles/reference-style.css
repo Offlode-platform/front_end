@@ -1441,15 +1441,11 @@ select {
 
 /* Workspace route: lock outer scroll, keep sidebar list scrollable */
 #page-workspace.workspace-page-lock {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
   height: 100%;
   min-height: 0;
   overflow: hidden;
 }
 #page-workspace.workspace-page-lock .ws {
-  flex: 1;
   height: 100%;
   min-height: 0;
   overflow: hidden;
@@ -13795,47 +13791,46 @@ details.ws-card[open] summary {
    ============================================================================= */
 
 @media (max-width: 1280px) {
-  /*
-   * Tablet + narrow laptop: column layout (no horizontal split), triage shows
-   * list above preview. Removes 44%-max-height collapse that hid client rows.
-   */
+  .ws-list {
+    width: 300px;
+  }
+  .ws-focus-content {
+    padding: var(--sp-20) var(--sp-20) var(--sp-32);
+  }
+  .ws-ctx {
+    width: 300px;
+    padding: var(--sp-24);
+  }
+}
+
+@media (max-width: 1024px) {
   #page-workspace.workspace-page-lock .ws {
     display: flex;
     flex-direction: column;
     height: 100%;
     min-height: 0;
     overflow: hidden;
-    overflow-x: hidden;
   }
 
-  /* Focus / ref: full-width workspace; context stacks below middle */
-  #page-workspace.workspace-page-lock .ws.focused .ws-list {
-    display: none !important;
-  }
-  #page-workspace.workspace-page-lock .ws.focused .ws-middle {
-    display: flex;
-    width: 100%;
-  }
-
-  /*
-   * Triage: stack list (scrollable) above preview — full width, no horizontal split.
-   * Cap list height so .ws-items keeps room; middle gets remaining space + "Open workspace".
-   */
   .ws-list {
     width: 100%;
-    flex: 0 1 auto;
-    min-height: 0;
-    /* Avoid zero-height list in short landscape viewports */
-    max-height: clamp(140px, 46vh, 420px);
+    max-height: 44%;
     border-right: none;
     border-bottom: 1px solid rgba(0, 0, 0, 0.06);
   }
   [data-theme="dark"] .ws-list {
     border-bottom-color: rgba(255, 255, 255, 0.06);
   }
-  #page-workspace.workspace-page-lock .ws.focused .ws-list {
-    max-height: none;
-    border-bottom: none;
+  #page-workspace.workspace-page-lock .ws-list {
+    min-height: 180px;
+  }
+
+  .ws.focused .ws-list {
+    display: none;
+    transform: none;
+    margin-right: 0;
+    opacity: 1;
+    pointer-events: none;
   }
 
   .ws-middle {
@@ -13905,7 +13900,7 @@ details.ws-card[open] summary {
   .ws-ctx {
     width: 100%;
     max-height: 38%;
-    min-height: 0;
+    min-height: 180px;
     padding: var(--sp-16);
     border-top: 1px solid rgba(0, 0, 0, 0.06);
   }
@@ -13928,6 +13923,26 @@ details.ws-card[open] summary {
 }
 
 @media (max-width: 640px) {
+  /* Mobile should be single-pane, not split-pane */
+  #page-workspace.workspace-page-lock .ws:not(.focused) .ws-middle {
+    display: none;
+  }
+  #page-workspace.workspace-page-lock .ws.focused .ws-middle {
+    display: flex;
+    width: 100%;
+  }
+  #page-workspace.workspace-page-lock .ws.focused .ws-list {
+    display: none;
+  }
+
+  #page-workspace.workspace-page-lock .ws-list {
+    max-height: 100%;
+    min-height: 0;
+    flex: 1;
+    width: 100%;
+    border-bottom: none;
+  }
+
   .ws-list-header {
     position: sticky;
     top: 0;
