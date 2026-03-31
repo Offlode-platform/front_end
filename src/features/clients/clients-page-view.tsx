@@ -181,12 +181,19 @@ export function ClientsPageView() {
     ]);
   }
 
-  function handleClientCreated(newClient: ListedClient) {
-    setClients((prev) => {
-      if (!prev) return [newClient];
-      return [newClient, ...prev];
-    });
-    setSelectedClientId(newClient.id);
+  async function handleClientCreated(newClient: ListedClient) {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const data = await clientsApi.list();
+      setClients(data);
+      const exists = data.find((c) => c.id === newClient.id);
+      setSelectedClientId(exists ? newClient.id : data[0]?.id ?? null);
+    } catch {
+      setError("Unable to refresh clients after creating a new one.");
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   return (

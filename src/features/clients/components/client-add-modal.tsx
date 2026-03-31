@@ -29,48 +29,55 @@ export function ClientAddModal({
   }
 
   async function handleSubmit() {
-    const legalName = form.acmName?.trim();
-    const email = form.acmContactEmail?.trim();
+    // Basic guard + debug log so we can see when submit fires
+    console.log("[ClientAddModal] Submit clicked", { form, organizationId });
+
+    const legalName = form.name?.trim();
+    const email = form.email?.trim();
     if (!legalName || !email) {
       onClose();
       return;
     }
 
-    const baseClient: any = {
+    if (!organizationId) {
+      console.error(
+        "[ClientAddModal] Cannot create client – missing organizationId",
+      );
+      alert("Cannot create client: no organization is selected.");
+      return;
+    }
+
+    const today = new Date();
+    const payload: Parameters<typeof clientsApi.create>[0] = {
       name: legalName,
       email,
-      phone: form.acmContactPhone?.trim() ?? "",
-      xero_contact_id: "",
-      chase_enabled: true,
-      chase_frequency_days: 7,
-      escalation_days: 7,
-      vat_tracking_enabled: false,
-      vat_period_end_date: new Date().toISOString().slice(0, 10),
-      chase_paused_until: new Date().toISOString(),
+      phone: form.phone?.trim() ?? "",
+      organization_id: organizationId,
+      xero_contact_id: form.xero_contact_id?.trim() ?? "",
+      xero_files_inbox_email: form.xero_files_inbox_email?.trim() ?? "",
+      chase_enabled: form.chase_enabled === "false" ? false : true,
+      chase_frequency_days: form.chase_frequency_days
+        ? Number(form.chase_frequency_days)
+        : 7,
+      escalation_days: form.escalation_days
+        ? Number(form.escalation_days)
+        : 14,
+      vat_tracking_enabled: form.vat_tracking_enabled === "true",
+      vat_period_end_date:
+        form.vat_period_end_date?.trim() ?? today.toISOString().slice(0, 10),
+      chase_paused_until:
+        form.chase_paused_until?.trim() ?? today.toISOString(),
     };
-
-    if (organizationId) {
-      baseClient.organization_id = organizationId;
-    }
-
-    const payload = baseClient as Parameters<typeof clientsApi.create>[0];
+    console.log("[ClientAddModal] Creating client with payload", payload);
     try {
       const created = await clientsApi.create(payload);
+      console.log("[ClientAddModal] Client created successfully", created);
       onCreated(created);
-      onClose();
+    } catch (err) {
+      console.error("[ClientAddModal] Failed to create client", err);
+      alert("Failed to create client. Check the console for details.");
       return;
-    } catch {
-      // fall through to mock client below if API fails
     }
-
-    onCreated({
-      ...(baseClient as any),
-      id: `${Date.now()}`,
-      vat_period_completed_at: null,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      is_active: true,
-    });
     onClose();
   }
 
@@ -89,7 +96,7 @@ export function ClientAddModal({
           width: "100%",
           maxWidth: 540,
           margin: "var(--sp-24) auto",
-          maxHeight: "calc(100vh - var(--sp-48))",
+          maxHeight: "70vh",
           display: "flex",
           flexDirection: "column",
         }}
@@ -110,512 +117,140 @@ export function ClientAddModal({
           }}
         >
           <div className="acm-step">
-            <div className="acm-section-label">Business Details</div>
+            <div className="acm-section-label">Client Details</div>
             <div className="acm-field">
               <label className="acm-label">
-                Legal name <span className="acm-required">*</span>
+                Name <span className="acm-required">*</span>
               </label>
               <input
                 type="text"
                 className="input"
                 placeholder="e.g. Westbrook Holdings Ltd"
-                value={form.acmName ?? ""}
-                onChange={(e) => updateField("acmName", e.target.value)}
+                value={form.name ?? ""}
+                onChange={(e) => updateField("name", e.target.value)}
               />
             </div>
-            <div className="acm-row-2">
-              <div className="acm-field">
-                <label className="acm-label">Trading name</label>
-                <input
-                  type="text"
-                  className="input"
-                  placeholder="If different from legal name"
-                  value={form.acmTradingName ?? ""}
-                  onChange={(e) =>
-                    updateField("acmTradingName", e.target.value)
-                  }
-                />
-              </div>
-              <div className="acm-field">
-                <label className="acm-label">Entity type</label>
-                <select
-                  className="select"
-                  value={form.acmEntity ?? "Limited Company"}
-                  onChange={(e) => updateField("acmEntity", e.target.value)}
-                >
-                  <option>Limited Company</option>
-                  <option>LLP</option>
-                  <option>Sole Trader</option>
-                  <option>Partnership</option>
-                  <option>Charity</option>
-                  <option>Other</option>
-                </select>
-              </div>
-            </div>
-
-            <div className="acm-row-2">
-              <div className="acm-field">
-                <label className="acm-label">Company number</label>
-                <input
-                  type="text"
-                  className="input"
-                  placeholder="e.g. 06543210"
-                  value={form.acmCompanyNo ?? ""}
-                  onChange={(e) => updateField("acmCompanyNo", e.target.value)}
-                />
-              </div>
-              <div className="acm-field">
-                <label className="acm-label">UTR</label>
-                <input
-                  type="text"
-                  className="input"
-                  placeholder="e.g. 4567890123"
-                  value={form.acmUtr ?? ""}
-                  onChange={(e) => updateField("acmUtr", e.target.value)}
-                />
-              </div>
-            </div>
-
-            <div className="acm-row-2">
-              <div className="acm-field">
-                <label className="acm-label">SIC code</label>
-                <input
-                  type="text"
-                  className="input"
-                  placeholder="e.g. 69201"
-                  value={form.acmSic ?? ""}
-                  onChange={(e) => updateField("acmSic", e.target.value)}
-                />
-              </div>
-              <div className="acm-field">
-                <label className="acm-label">Industry</label>
-                <input
-                  type="text"
-                  className="input"
-                  placeholder="e.g. Property & Investment"
-                  value={form.acmIndustry ?? ""}
-                  onChange={(e) => updateField("acmIndustry", e.target.value)}
-                />
-              </div>
-            </div>
-
-            <div className="acm-row-2">
-              <div className="acm-field">
-                <label className="acm-label">Employees</label>
-                <input
-                  type="text"
-                  className="input"
-                  placeholder="e.g. 45"
-                  value={form.acmEmployees ?? ""}
-                  onChange={(e) => updateField("acmEmployees", e.target.value)}
-                />
-              </div>
-              <div className="acm-field">
-                <label className="acm-label">Incorporation date</label>
-                <input
-                  type="text"
-                  className="input"
-                  placeholder="e.g. 14 Mar 2012"
-                  value={form.acmIncDate ?? ""}
-                  onChange={(e) => updateField("acmIncDate", e.target.value)}
-                />
-              </div>
-            </div>
-
-            <div className="acm-section-label u-mt-20">Tax &amp; VAT</div>
-            <div className="acm-row-2">
-              <div className="acm-field">
-                <label className="acm-label">VAT number</label>
-                <input
-                  type="text"
-                  className="input"
-                  placeholder="e.g. GB 654 3210 98"
-                  value={form.acmVat ?? ""}
-                  onChange={(e) => updateField("acmVat", e.target.value)}
-                />
-              </div>
-              <div className="acm-field">
-                <label className="acm-label">VAT scheme</label>
-                <select
-                  className="select"
-                  value={form.acmVatScheme ?? "Standard"}
-                  onChange={(e) => updateField("acmVatScheme", e.target.value)}
-                >
-                  <option>Standard</option>
-                  <option>Flat Rate</option>
-                  <option>Cash Accounting</option>
-                  <option>Annual Accounting</option>
-                  <option>Not VAT registered</option>
-                </select>
-              </div>
-            </div>
-
-            <div className="acm-row-2">
-              <div className="acm-field">
-                <label className="acm-label">VAT quarter</label>
-                <select
-                  className="select"
-                  value={form.acmVatQtr ?? ""}
-                  onChange={(e) => updateField("acmVatQtr", e.target.value)}
-                >
-                  <option value="">Select...</option>
-                  <option>Q1 (Jan–Mar)</option>
-                  <option>Q2 (Apr–Jun)</option>
-                  <option>Q3 (Jul–Sep)</option>
-                  <option>Q4 (Oct–Dec)</option>
-                </select>
-              </div>
-              <div className="acm-field">
-                <label className="acm-label">Year end</label>
-                <input
-                  type="text"
-                  className="input"
-                  placeholder="e.g. 31 December"
-                  value={form.acmYearEnd ?? ""}
-                  onChange={(e) => updateField("acmYearEnd", e.target.value)}
-                />
-              </div>
-            </div>
-
-            <div className="acm-section-label u-mt-20">Addresses</div>
             <div className="acm-field">
-              <label className="acm-label">Registered address</label>
+              <label className="acm-label">
+                Email <span className="acm-required">*</span>
+              </label>
+              <input
+                type="email"
+                className="input"
+                placeholder="e.g. accounts@westbrook.co.uk"
+                value={form.email ?? ""}
+                onChange={(e) => updateField("email", e.target.value)}
+              />
+            </div>
+            <div className="acm-field">
+              <label className="acm-label">Phone</label>
+              <input
+                type="tel"
+                className="input"
+                placeholder="e.g. 020 8765 4321"
+                value={form.phone ?? ""}
+                onChange={(e) => updateField("phone", e.target.value)}
+              />
+            </div>
+
+            <div className="acm-section-label u-mt-20">Xero</div>
+            <div className="acm-field">
+              <label className="acm-label">Xero contact ID</label>
               <input
                 type="text"
                 className="input"
-                placeholder="e.g. 100 Mayfair Place, London W1K 4QT"
-                value={form.acmRegAddress ?? ""}
-                onChange={(e) => updateField("acmRegAddress", e.target.value)}
+                value={form.xero_contact_id ?? ""}
+                onChange={(e) => updateField("xero_contact_id", e.target.value)}
               />
             </div>
             <div className="acm-field">
-              <label className="acm-label">Trading address</label>
+              <label className="acm-label">Xero files inbox email</label>
               <input
-                type="text"
+                type="email"
                 className="input"
-                placeholder="Same as registered if blank"
-                value={form.acmTradeAddress ?? ""}
-                onChange={(e) => updateField("acmTradeAddress", e.target.value)}
+                placeholder="e.g. files+123@xero.com"
+                value={form.xero_files_inbox_email ?? ""}
+                onChange={(e) =>
+                  updateField("xero_files_inbox_email", e.target.value)
+                }
               />
             </div>
 
-            <div className="acm-section-label u-mt-20">
-              Primary Contact <span className="acm-required">*</span>
-            </div>
-            <div className="acm-row-2">
-              <div className="acm-field">
-                <label className="acm-label">
-                  Full name <span className="acm-required">*</span>
-                </label>
-                <input
-                  type="text"
-                  className="input"
-                  placeholder="e.g. Catherine Westbrook"
-                  value={form.acmContactName ?? ""}
-                  onChange={(e) =>
-                    updateField("acmContactName", e.target.value)
-                  }
-                />
-              </div>
-              <div className="acm-field">
-                <label className="acm-label">Role</label>
-                <input
-                  type="text"
-                  className="input"
-                  placeholder="e.g. Managing Director"
-                  value={form.acmContactRole ?? ""}
-                  onChange={(e) =>
-                    updateField("acmContactRole", e.target.value)
-                  }
-                />
-              </div>
-            </div>
-            <div className="acm-row-2">
-              <div className="acm-field">
-                <label className="acm-label">
-                  Email <span className="acm-required">*</span>
-                </label>
-                <input
-                  type="email"
-                  className="input"
-                  placeholder="e.g. catherine@westbrook.co.uk"
-                  value={form.acmContactEmail ?? ""}
-                  onChange={(e) =>
-                    updateField("acmContactEmail", e.target.value)
-                  }
-                />
-              </div>
-              <div className="acm-field">
-                <label className="acm-label">Phone</label>
-                <input
-                  type="tel"
-                  className="input"
-                  placeholder="e.g. 020 8765 4321"
-                  value={form.acmContactPhone ?? ""}
-                  onChange={(e) =>
-                    updateField("acmContactPhone", e.target.value)
-                  }
-                />
-              </div>
-            </div>
-
-            <div className="acm-row-2">
-              <div className="acm-field">
-                <label className="acm-label">Mobile</label>
-                <input
-                  type="tel"
-                  className="input"
-                  placeholder="e.g. 07700 900321"
-                  value={form.acmContactMobile ?? ""}
-                  onChange={(e) =>
-                    updateField("acmContactMobile", e.target.value)
-                  }
-                />
-              </div>
-              <div className="acm-field">
-                <label className="acm-label">Preferred channels</label>
-                <select
-                  className="select"
-                  value={form.acmContactPref ?? "Email"}
-                  onChange={(e) =>
-                    updateField("acmContactPref", e.target.value)
-                  }
-                >
-                  <option>Email</option>
-                  <option>Phone</option>
-                  <option>SMS</option>
-                  <option>WhatsApp</option>
-                </select>
-              </div>
-            </div>
-
-            <div className="acm-section-label u-mt-20">
-              Financials &amp; Billing
-            </div>
-            <div className="acm-row-2">
-              <div className="acm-field">
-                <label className="acm-label">Currency</label>
-                <select
-                  className="select"
-                  value={form.acmCurrency ?? "GBP (£)"}
-                  onChange={(e) => updateField("acmCurrency", e.target.value)}
-                >
-                  <option>GBP (£)</option>
-                  <option>EUR (€)</option>
-                  <option>USD ($)</option>
-                </select>
-              </div>
-              <div className="acm-field">
-                <label className="acm-label">Payment terms</label>
-                <select
-                  className="select"
-                  value={form.acmTerms ?? "Use firm default"}
-                  onChange={(e) => updateField("acmTerms", e.target.value)}
-                >
-                  <option>Use firm default</option>
-                  <option>Net 7</option>
-                  <option>Net 14</option>
-                  <option>Net 30</option>
-                  <option>Net 45</option>
-                  <option>Net 60</option>
-                </select>
-              </div>
-            </div>
-
-            <div className="acm-row-2">
-              <div className="acm-field">
-                <label className="acm-label">Fee structure</label>
-                <select
-                  className="select"
-                  value={form.acmFeeStructure ?? ""}
-                  onChange={(e) =>
-                    updateField("acmFeeStructure", e.target.value)
-                  }
-                >
-                  <option value="">Select...</option>
-                  <option>Fixed annual</option>
-                  <option>Fixed annual + ad hoc</option>
-                  <option>Time-based</option>
-                  <option>Per project</option>
-                  <option>Retainer</option>
-                </select>
-              </div>
-              <div className="acm-field">
-                <label className="acm-label">Annual fee</label>
-                <input
-                  type="text"
-                  className="input"
-                  placeholder="e.g. £12,000"
-                  value={form.acmAnnualFee ?? ""}
-                  onChange={(e) => updateField("acmAnnualFee", e.target.value)}
-                />
-              </div>
-            </div>
-
+            <div className="acm-section-label u-mt-20">Chasing</div>
             <div className="acm-field">
-              <label className="acm-label">Billing frequency</label>
+              <label className="acm-label">Chase enabled</label>
               <select
                 className="select"
-                style={{ maxWidth: 220 }}
-                value={form.acmBillingFreq ?? "Monthly"}
-                onChange={(e) => updateField("acmBillingFreq", e.target.value)}
+                value={form.chase_enabled ?? "true"}
+                onChange={(e) => updateField("chase_enabled", e.target.value)}
               >
-                <option>Monthly</option>
-                <option>Quarterly</option>
-                <option>Annually</option>
-                <option>Ad hoc</option>
+                <option value="true">On</option>
+                <option value="false">Off</option>
               </select>
             </div>
-
-            <div className="acm-section-label u-mt-20">Services</div>
-            <div className="acm-field">
-              <label className="acm-label">Service lines</label>
-              <input
-                type="text"
-                className="input"
-                placeholder="e.g. Accounts preparation, Corporation tax, VAT returns, Payroll"
-                value={form.acmServices ?? ""}
-                onChange={(e) => updateField("acmServices", e.target.value)}
-              />
-              <div className="u-text-muted-xs u-mt-4">
-                Separate multiple services with commas
-              </div>
-            </div>
-
-            <div className="acm-section-label u-mt-20">
-              Assignment &amp; Relationship
-            </div>
             <div className="acm-row-2">
               <div className="acm-field">
-                <label className="acm-label">Primary manager</label>
-                <select
-                  className="select"
-                  value={form.acmManager ?? ""}
-                  onChange={(e) => updateField("acmManager", e.target.value)}
-                >
-                  <option value="">Select...</option>
-                  <option>Richard Morrison</option>
-                  <option>Sarah O&apos;Brien</option>
-                  <option>Priya Kapoor</option>
-                </select>
-              </div>
-              <div className="acm-field">
-                <label className="acm-label">Secondary manager</label>
-                <select
-                  className="select"
-                  value={form.acmSecondary ?? ""}
-                  onChange={(e) => updateField("acmSecondary", e.target.value)}
-                >
-                  <option value="">None</option>
-                  <option>Richard Morrison</option>
-                  <option>Sarah O&apos;Brien</option>
-                  <option>Priya Kapoor</option>
-                </select>
-              </div>
-            </div>
-
-            <div className="acm-row-2">
-              <div className="acm-field">
-                <label className="acm-label">Referral source</label>
-                <select
-                  className="select"
-                  value={form.acmReferral ?? ""}
-                  onChange={(e) => updateField("acmReferral", e.target.value)}
-                >
-                  <option value="">Select...</option>
-                  <option>Existing client referral</option>
-                  <option>Website</option>
-                  <option>Google</option>
-                  <option>Accountancy body</option>
-                  <option>Networking</option>
-                  <option>Other</option>
-                </select>
-              </div>
-              <div className="acm-field">
-                <label className="acm-label">Client since</label>
+                <label className="acm-label">Chase frequency (days)</label>
                 <input
-                  type="text"
+                  type="number"
                   className="input"
-                  placeholder="e.g. March 2025"
-                  value={form.acmSince ?? ""}
-                  onChange={(e) => updateField("acmSince", e.target.value)}
+                  min={0}
+                  value={form.chase_frequency_days ?? "7"}
+                  onChange={(e) =>
+                    updateField("chase_frequency_days", e.target.value)
+                  }
+                />
+              </div>
+              <div className="acm-field">
+                <label className="acm-label">Escalation days</label>
+                <input
+                  type="number"
+                  className="input"
+                  min={0}
+                  value={form.escalation_days ?? "14"}
+                  onChange={(e) =>
+                    updateField("escalation_days", e.target.value)
+                  }
                 />
               </div>
             </div>
 
-            <div className="acm-section-label u-mt-20">Compliance</div>
+            <div className="acm-section-label u-mt-20">VAT</div>
+            <div className="acm-field">
+              <label className="acm-label">VAT tracking enabled</label>
+              <select
+                className="select"
+                value={form.vat_tracking_enabled ?? "false"}
+                onChange={(e) =>
+                  updateField("vat_tracking_enabled", e.target.value)
+                }
+              >
+                <option value="true">Yes</option>
+                <option value="false">No</option>
+              </select>
+            </div>
             <div className="acm-row-2">
               <div className="acm-field">
-                <label className="acm-label">AML/KYC status</label>
-                <select
-                  className="select"
-                  value={form.acmAml ?? "Pending"}
-                  onChange={(e) => updateField("acmAml", e.target.value)}
-                >
-                  <option>Pending</option>
-                  <option>Passed</option>
-                  <option>Failed</option>
-                  <option>Exempt</option>
-                </select>
+                <label className="acm-label">VAT period end date</label>
+                <input
+                  type="date"
+                  className="input"
+                  value={form.vat_period_end_date ?? ""}
+                  onChange={(e) =>
+                    updateField("vat_period_end_date", e.target.value)
+                  }
+                />
               </div>
               <div className="acm-field">
-                <label className="acm-label">Engagement letter</label>
-                <select
-                  className="select"
-                  value={form.acmEngagement ?? "Not sent"}
-                  onChange={(e) => updateField("acmEngagement", e.target.value)}
-                >
-                  <option>Not sent</option>
-                  <option>Sent</option>
-                  <option>Signed</option>
-                </select>
-              </div>
-            </div>
-
-            <div className="acm-vip-row">
-              <div
-                className={`checkbox${
-                  form.acmGdpr === "true" ? " checked" : ""
-                }`}
-                onClick={() =>
-                  updateField(
-                    "acmGdpr",
-                    form.acmGdpr === "true" ? "false" : "true",
-                  )
-                }
-              />
-              <div>
-                <div className="u-text-medium">
-                  Data protection consent received
-                </div>
-                <div className="u-text-muted-xs">
-                  Client has consented to data processing under GDPR
-                </div>
-              </div>
-            </div>
-            <div
-              className="acm-vip-row"
-              style={{
-                borderTop: "1px solid rgba(0,0,0,0.04)",
-                marginTop: "var(--sp-4)",
-              }}
-            >
-              <div
-                className={`checkbox${
-                  form.acmVipCheck === "true" ? " checked" : ""
-                }`}
-                onClick={() =>
-                  updateField(
-                    "acmVipCheck",
-                    form.acmVipCheck === "true" ? "false" : "true",
-                  )
-                }
-              />
-              <div>
-                <div className="u-text-medium">VIP client</div>
-                <div className="u-text-muted-xs">
-                  Requires approval before any automated action
-                </div>
+                <label className="acm-label">Chase paused until</label>
+                <input
+                  type="datetime-local"
+                  className="input"
+                  value={form.chase_paused_until ?? ""}
+                  onChange={(e) =>
+                    updateField("chase_paused_until", e.target.value)
+                  }
+                />
               </div>
             </div>
           </div>
@@ -648,6 +283,7 @@ export function ClientAddModal({
             className="btn btn-primary btn-sm"
             type="button"
             onClick={handleSubmit}
+            disabled={!form.name?.trim() || !form.email?.trim()}
           >
             Add Client
           </button>
