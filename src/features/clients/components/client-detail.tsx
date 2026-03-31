@@ -1,4 +1,4 @@
-import type { ListedClient } from "@/types/clients";
+import type { ListedClient, UpdateClientRequest } from "@/types/clients";
 import type {
   ClientNote,
   ClientNoteType,
@@ -57,6 +57,8 @@ export type ClientDetailProps = {
   onAddNote: () => void;
   onDeleteNote: (noteId: string) => void;
   onRequestAddClient: () => void;
+  onUpdateClient: (clientId: string, updates: UpdateClientRequest) => Promise<void>;
+  onDeleteClient: (clientId: string) => Promise<void>;
 };
 
 export function ClientDetail({
@@ -69,6 +71,8 @@ export function ClientDetail({
   onAddNote,
   onDeleteNote,
   onRequestAddClient,
+  onUpdateClient,
+  onDeleteClient,
 }: ClientDetailProps) {
   const healthScore = getHealthScore(client);
   const contactLine = formatContactLine(client);
@@ -79,6 +83,15 @@ export function ClientDetail({
     { key: "notes", label: "Notes" },
     { key: "settings", label: "Settings" },
   ];
+
+  const settingsDraft: UpdateClientRequest = {
+    chase_enabled: client.chase_enabled,
+    chase_frequency_days: client.chase_frequency_days,
+    escalation_days: client.escalation_days,
+    vat_tracking_enabled: client.vat_tracking_enabled,
+    vat_period_end_date: client.vat_period_end_date,
+    chase_paused_until: client.chase_paused_until,
+  };
 
   return (
     <>
@@ -292,41 +305,6 @@ export function ClientDetail({
 
           {tab === "notes" && (
             <>
-              <div className="ws-card ws-pinned">
-                <div className="ws-card-title u-text-warning">
-                  <svg
-                    viewBox="0 0 24 24"
-                    style={{
-                      width: 13,
-                      height: 13,
-                      fill: "none",
-                      stroke: "var(--warning)",
-                      strokeWidth: 2,
-                      strokeLinecap: "round",
-                      strokeLinejoin: "round",
-                      verticalAlign: "-1px",
-                      marginRight: "var(--sp-4)",
-                    }}
-                  >
-                    <path d="M12 17v5" />
-                    <path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H8a2 2 0 0 0 0 4 1 1 0 0 1 1 1z" />
-                  </svg>
-                  Pinned
-                </div>
-                {isVipClient(client) && (
-                  <div
-                    style={{
-                      fontSize: "var(--text-base)",
-                      fontWeight: "var(--fw-medium)",
-                      color: "var(--clr-secondary)",
-                      marginBottom: "var(--sp-4)",
-                    }}
-                  >
-                    VIP client — handle with extra care
-                  </div>
-                )}
-              </div>
-
               <div className="ws-card">
                 <textarea
                   className="textarea"
@@ -376,48 +354,6 @@ export function ClientDetail({
                   </button>
                 </div>
               </div>
-
-              <details className="ws-card" style={{ padding: 0 }}>
-                <summary
-                  style={{
-                    padding: "var(--sp-16) var(--sp-20)",
-                    cursor: "pointer",
-                    listStyle: "none",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                  }}
-                >
-                  <span className="ws-card-title u-mb-0">
-                    <span
-                      style={{
-                        fontSize: "var(--text-base)",
-                        color: "var(--brand)",
-                        verticalAlign: "-1px",
-                        marginRight: "var(--sp-4)",
-                      }}
-                    >
-                      ✦
-                    </span>
-                    What Offlode Has Learned
-                  </span>
-                </summary>
-                <div
-                  style={{
-                    padding: "0 var(--sp-20) var(--sp-16)",
-                    borderTop: "1px solid var(--clr-divider)",
-                  }}
-                >
-                  <div className="ws-ctx-row">
-                    <span className="ws-ctx-label">Best contact time</span>
-                    <span className="ws-ctx-value">Morning</span>
-                  </div>
-                  <div className="ws-ctx-row">
-                    <span className="ws-ctx-label">Preferred channel</span>
-                    <span className="ws-ctx-value">Email</span>
-                  </div>
-                </div>
-              </details>
 
               <div className="ws-card">
                 <div className="u-flex-between u-mb-8">
@@ -525,29 +461,54 @@ export function ClientDetail({
                 <div>
                   <div className="set-toggle-label">Active client</div>
                   <div className="set-toggle-hint">
-                    Controls whether this client appears in chases and
-                    reporting.
+                    Controls whether this client appears in chases and reporting.
                   </div>
                 </div>
                 <button
                   type="button"
                   className={`toggle${client.is_active ? " active" : ""}`}
-                  disabled
+                  onClick={() =>
+                    void onUpdateClient(client.id, {
+                      is_active: !client.is_active,
+                    } as UpdateClientRequest)
+                  }
                 />
               </div>
               <div className="set-toggle-row">
                 <div>
                   <div className="set-toggle-label">Document chasing</div>
                   <div className="set-toggle-hint">
-                    Automation settings are configured in the main configuration
-                    screens.
+                    Toggles automated chases for this client.
                   </div>
                 </div>
                 <button
                   type="button"
                   className={`toggle${client.chase_enabled ? " active" : ""}`}
-                  disabled
+                  onClick={() =>
+                    void onUpdateClient(client.id, {
+                      chase_enabled: !client.chase_enabled,
+                    })
+                  }
                 />
+              </div>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  marginTop: "var(--sp-16)",
+                }}
+              >
+                <button
+                  type="button"
+                  className="btn btn-danger btn-sm"
+                  onClick={() => void onDeleteClient(client.id)}
+                >
+                  Delete client
+                </button>
+                <span className="u-text-muted" style={{ fontSize: "var(--text-xs)" }}>
+                  Deleting will remove this client from your directory.
+                </span>
               </div>
             </div>
           )}

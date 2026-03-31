@@ -5,7 +5,7 @@ import { ClientDetail } from "./components/client-detail";
 import { ClientAddModal } from "./components/client-add-modal";
 import { ClientListPane } from "./components/client-list-pane";
 import { clientsApi } from "@/lib/api/clients-api";
-import type { ListedClient } from "@/types/clients";
+import type { ListedClient, UpdateClientRequest } from "@/types/clients";
 
 export type ClientTabKey =
   | "overview"
@@ -200,6 +200,45 @@ export function ClientsPageView() {
     }
   }
 
+  async function handleClientUpdated(
+    clientId: string,
+    updates: UpdateClientRequest,
+  ) {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const updated = await clientsApi.update(clientId, updates);
+      setClients((prev) =>
+        prev
+          ? prev.map((c) => (c.id === clientId ? { ...c, ...updated } : c))
+          : [updated],
+      );
+    } catch {
+      setError("Unable to update client. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  async function handleClientDeleted(clientId: string) {
+    setIsLoading(true);
+    setError(null);
+    try {
+      await clientsApi.delete(clientId);
+      const data = await clientsApi.list();
+      setClients(data);
+      if (data.length === 0) {
+        setSelectedClientId(null);
+      } else if (clientId === selectedClientId) {
+        setSelectedClientId(data[0].id);
+      }
+    } catch {
+      setError("Unable to delete client. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
   return (
     <div
       className="page active"
@@ -250,15 +289,6 @@ export function ClientsPageView() {
             flexDirection: "column",
           }}
         >
-        <div
-          style={{
-            flex: "0 0 var(--ws-list-w)",
-            minWidth: 0,
-            height: "100%",
-            display: "flex",
-            flexDirection: "column",
-          }}
-        >
           <ClientListPane
             clients={clients}
             filteredClients={filteredClients}
@@ -275,7 +305,6 @@ export function ClientsPageView() {
             totalClients={totalClients}
             onRequestAddClient={() => setIsAddClientOpen(true)}
           />
-        </div>
         </div>
 
         <div
@@ -326,6 +355,8 @@ export function ClientsPageView() {
                 handleDeleteNote(selectedClient.id, noteId)
               }
               onRequestAddClient={() => setIsAddClientOpen(true)}
+              onUpdateClient={handleClientUpdated}
+              onDeleteClient={handleClientDeleted}
             />
           )}
         </div>

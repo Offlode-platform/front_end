@@ -3,4 +3,3 @@ import { OrganizationsPageView } from "@/features/organizations/organizations-pa
 export default function OrganizationsPage() {
   return <OrganizationsPageView />;
 }
-
