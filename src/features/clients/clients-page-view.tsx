@@ -1,10 +1,13 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { ClientDetail } from "./components/client-detail";
+import { ClientAddModal } from "./components/client-add-modal";
+import { ClientListPane } from "./components/client-list-pane";
 import { clientsApi } from "@/lib/api/clients-api";
 import type { ListedClient } from "@/types/clients";
 
-type ClientTabKey =
+export type ClientTabKey =
   | "overview"
   | "details"
   | "documents"
@@ -13,43 +16,17 @@ type ClientTabKey =
   | "notes"
   | "settings";
 
-function getInitials(name: string): string {
-  if (!name) return "";
-  return name
-    .split(" ")
-    .filter(Boolean)
-    .map((w) => w[0])
-    .join("")
-    .toUpperCase()
-    .slice(0, 2);
-}
+type FilterKey = "all" | "attention" | "vip";
 
-function getHealthScore(client: ListedClient): number {
-  let score = 75;
+export type ClientNoteType = "pin" | "promise" | "dispute" | "critical" | null;
 
-  if (!client.is_active) {
-    score -= 25;
-  }
-
-  if (!client.chase_enabled) {
-    score -= 15;
-  }
-
-  if (!client.vat_period_completed_at) {
-    score -= 10;
-  }
-
-  if (score < 10) score = 10;
-  if (score > 100) score = 100;
-  return score;
-}
-
-function formatContactLine(client: ListedClient): string {
-  const parts: string[] = [];
-  if (client.email) parts.push(client.email);
-  if (client.phone) parts.push(client.phone);
-  return parts.join(" · ");
-}
+export type ClientNote = {
+  id: string;
+  text: string;
+  author: string;
+  time: string;
+  type: ClientNoteType;
+};
 
 type Severity = "action" | "review" | "handled";
 
@@ -60,11 +37,8 @@ function getClientSeverity(client: ListedClient): Severity {
 }
 
 function isVipClient(client: ListedClient): boolean {
-  // Derive a "VIP" signal from chase frequency – faster cadence => more important.
   return client.chase_frequency_days <= 7;
 }
-
-type FilterKey = "all" | "attention" | "vip";
 
 export function ClientsPageView() {
   const [clients, setClients] = useState<ListedClient[] | null>(null);
@@ -75,6 +49,17 @@ export function ClientsPageView() {
   const [search, setSearch] = useState("");
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<ClientTabKey>("overview");
+  const [isAddClientOpen, setIsAddClientOpen] = useState(false);
+
+  const [notesByClient, setNotesByClient] = useState<
+    Record<string, ClientNote[]>
+  >({});
+  const [noteDraftByClient, setNoteDraftByClient] = useState<
+    Record<string, { text: string; type: ClientNoteType }>
+  >({});
+  const [clientDrafts, setClientDrafts] = useState<
+    { id: string; name: string; savedAt: string }[]
+  >([]);
 
   useEffect(() => {
     let cancelled = false;
@@ -89,7 +74,7 @@ export function ClientsPageView() {
             setSelectedClientId(data[0].id);
           }
         }
-      } catch (e) {
+      } catch {
         if (!cancelled) {
           setError("Unable to load clients. Please try again.");
         }
@@ -154,173 +139,95 @@ export function ClientsPageView() {
 
   const totalClients = clients?.length ?? 0;
 
+  function handleAddNote(clientId: string) {
+    const draft = noteDraftByClient[clientId];
+    if (!draft || !draft.text.trim()) return;
+
+    setNotesByClient((prev) => {
+      const existing = prev[clientId] ?? [];
+      const next: ClientNote = {
+        id: `${Date.now()}`,
+        text: draft.text.trim(),
+        author: "You",
+        time: "Just now",
+        type: draft.type,
+      };
+      return { ...prev, [clientId]: [next, ...existing] };
+    });
+
+    setNoteDraftByClient((prev) => ({
+      ...prev,
+      [clientId]: { text: "", type: null },
+    }));
+  }
+
+  function handleDeleteNote(clientId: string, noteId: string) {
+    setNotesByClient((prev) => {
+      const existing = prev[clientId] ?? [];
+      return {
+        ...prev,
+        [clientId]: existing.filter((n) => n.id !== noteId),
+      };
+    });
+  }
+
+  function handleSaveClientDraft(payload: { id: string; name: string }) {
+    setClientDrafts((prev) => [
+      {
+        ...payload,
+        savedAt: new Date().toLocaleString(),
+      },
+      ...prev,
+    ]);
+  }
+
+  function handleClientCreated(newClient: ListedClient) {
+    setClients((prev) => {
+      if (!prev) return [newClient];
+      return [newClient, ...prev];
+    });
+    setSelectedClientId(newClient.id);
+  }
+
   return (
-    <div className="page active" id="page-clients">
-      <div style={{ flex: 1, minWidth: 0, display: "flex", overflow: "hidden" }}>
-        {/* Client list (left) */}
-        <div className="ws-list">
-          <div className="ws-list-header">
-            <div className="ws-search">
-              <svg viewBox="0 0 24 24">
-                <circle cx="11" cy="11" r="8" />
-                <path d="m21 21-4.3-4.3" />
-              </svg>
-              <input
-                type="text"
-                placeholder="Search clients..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-            </div>
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                gap: "var(--sp-6)",
-                width: "100%",
-              }}
-            >
-              <div className="ws-segment" id="clFilters" style={{ width: "100%" }}>
-                <button
-                  className={`ws-seg${filter === "all" ? " active" : ""}`}
-                  type="button"
-                  onClick={() => setFilter("all")}
-                  data-seg="all"
-                >
-                  All
-                </button>
-                <button
-                  className={`ws-seg${filter === "attention" ? " active" : ""}`}
-                  type="button"
-                  onClick={() => setFilter("attention")}
-                  data-seg="attention"
-                >
-                  Needs Input
-                  <span className="ws-seg-count" id="clAttCount">
-                    {attVipCounts.attention}
-                  </span>
-                </button>
-              </div>
-              <button
-                className={`ws-vip-toggle${filter === "vip" ? " active" : ""}`}
-                id="clVipToggle"
-                type="button"
-                style={{
-                  width: "100%",
-                  justifyContent: "center",
-                  padding: "var(--sp-6) var(--sp-12)",
-                  fontSize: "var(--text-xs)",
-                }}
-                onClick={() =>
-                  setFilter((prev) => (prev === "vip" ? "all" : "vip"))
-                }
-              >
-                <svg
-                  aria-hidden="true"
-                  viewBox="0 0 24 24"
-                  style={{
-                    width: 13,
-                    height: 13,
-                    fill: "var(--vip)",
-                    stroke: "var(--vip)",
-                    strokeWidth: 1,
-                  }}
-                >
-                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-                </svg>
-                VIP
-                <span className="ws-seg-count" id="clVipCount">
-                  {attVipCounts.vip}
-                </span>
-              </button>
-            </div>
-          </div>
+    <div
+      className="page active"
+      id="page-clients"
+      style={{ display: "flex", flexDirection: "column" }}
+    >
+      {isAddClientOpen && (
+        <ClientAddModal
+          onClose={() => setIsAddClientOpen(false)}
+          onSaveDraft={handleSaveClientDraft}
+          onCreated={handleClientCreated}
+          organizationId={clients?.[0]?.organization_id}
+        />
+      )}
+      <div
+        style={{
+          flex: 1,
+          minWidth: 0,
+          display: "flex",
+          overflow: "hidden",
+        }}
+      >
+        <ClientListPane
+          clients={clients}
+          filteredClients={filteredClients}
+          isLoading={isLoading}
+          error={error}
+          filter={filter}
+          onFilterChange={setFilter}
+          search={search}
+          onSearchChange={setSearch}
+          selectedClientId={selectedClientId}
+          onSelectClient={setSelectedClientId}
+          clientDrafts={clientDrafts}
+          attVipCounts={attVipCounts}
+          totalClients={totalClients}
+          onRequestAddClient={() => setIsAddClientOpen(true)}
+        />
 
-          <div
-            className="ws-items"
-            id="clListItems"
-            role="listbox"
-            aria-label="Client list"
-          >
-            {isLoading && !clients ? (
-              <div className="ws-empty-watermark">
-                <div className="ws-empty-title">Loading clients…</div>
-              </div>
-            ) : null}
-            {error ? (
-              <div className="ws-empty-watermark">
-                <div className="ws-empty-title">Unable to load clients</div>
-                <div className="ws-empty-desc">{error}</div>
-              </div>
-            ) : null}
-            {!isLoading && !error && filteredClients.length === 0 ? (
-              <div className="ws-empty-watermark">
-                <div className="ws-empty-title">No clients found</div>
-                <div className="ws-empty-desc">
-                  Try adjusting your filters or search term.
-                </div>
-              </div>
-            ) : null}
-            {filteredClients.map((client) => {
-              const selected = selectedClientId === client.id;
-              const severity = getClientSeverity(client);
-              const barColor =
-                severity === "action"
-                  ? "red"
-                  : severity === "review"
-                    ? "amber"
-                    : "green";
-              const desc = formatContactLine(client) || client.organization_id;
-              const vipBadge = isVipClient(client) ? (
-                <svg
-                  aria-hidden="true"
-                  viewBox="0 0 24 24"
-                  style={{
-                    width: 10,
-                    height: 10,
-                    fill: "var(--vip)",
-                    stroke: "var(--vip)",
-                    strokeWidth: 1,
-                    marginLeft: 4,
-                  }}
-                >
-                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-                </svg>
-              ) : null;
-
-              return (
-                <button
-                  key={client.id}
-                  type="button"
-                  role="option"
-                  aria-selected={selected}
-                  className={`ws-item${selected ? " selected" : ""}`}
-                  onClick={() => {
-                    setSelectedClientId(client.id);
-                  }}
-                >
-                  <span className={`ws-item-bar ${barColor}`} />
-                  <div className="ws-item-info">
-                    <div className="ws-item-name">
-                      {client.name}
-                      {vipBadge}
-                    </div>
-                    <div className="ws-item-meta">{desc}</div>
-                  </div>
-                  <svg className="ws-item-chevron" viewBox="0 0 24 24">
-                    <polyline points="9 6 15 12 9 18" />
-                  </svg>
-                </button>
-              );
-            })}
-          </div>
-
-          <div className="ws-list-footer" id="clListCount">
-            {totalClients} client{totalClients === 1 ? "" : "s"}
-          </div>
-        </div>
-
-        {/* Client detail pane (right) */}
         <div
           id="clDetail"
           style={{
@@ -350,304 +257,690 @@ export function ClientsPageView() {
               </div>
             </div>
           ) : (
-            <ClientDetail client={selectedClient} tab={activeTab} onTabChange={setActiveTab} />
+            <ClientDetail
+              client={selectedClient}
+              tab={activeTab}
+              onTabChange={setActiveTab}
+              notes={notesByClient[selectedClient.id] ?? []}
+              noteDraft={
+                noteDraftByClient[selectedClient.id] ?? { text: "", type: null }
+              }
+              onNoteDraftChange={(draft) =>
+                setNoteDraftByClient((prev) => ({
+                  ...prev,
+                  [selectedClient.id]: draft,
+                }))
+              }
+              onAddNote={() => handleAddNote(selectedClient.id)}
+              onDeleteNote={(noteId) =>
+                handleDeleteNote(selectedClient.id, noteId)
+              }
+              onRequestAddClient={() => setIsAddClientOpen(true)}
+            />
           )}
         </div>
       </div>
     </div>
   );
-}
+  type ClientAddModalProps = {
+    onClose: () => void;
+    onSaveDraft: (draft: { id: string; name: string }) => void;
+    onCreated: (client: ListedClient) => void;
+    organizationId?: string;
+  };
 
-type ClientDetailProps = {
-  client: ListedClient;
-  tab: ClientTabKey;
-  onTabChange: (tab: ClientTabKey) => void;
-};
+  function ClientAddModal({
+    onClose,
+    onSaveDraft,
+    onCreated,
+    organizationId,
+  }: ClientAddModalProps) {
+    const [form, setForm] = useState<Record<string, string>>({});
 
-function ClientDetail({ client, tab, onTabChange }: ClientDetailProps) {
-  const healthScore = getHealthScore(client);
-  const contactLine = formatContactLine(client);
+    function updateField(id: string, value: string) {
+      setForm((prev) => ({ ...prev, [id]: value }));
+    }
 
-  const tabs: { key: ClientTabKey; label: string }[] = [
-    { key: "overview", label: "Overview" },
-    { key: "details", label: "Details" },
-    { key: "documents", label: "Records" },
-    { key: "invoices", label: "Payments" },
-    { key: "comms", label: "Activity" },
-    { key: "notes", label: "Notes" },
-    { key: "settings", label: "Settings" },
-  ];
+    function handleSaveDraft() {
+      const name = form.acmName?.trim() || "Untitled client";
+      const id = `${Date.now()}`;
+      onSaveDraft({ id, name });
+      onClose();
+    }
 
-  return (
-    <>
-      {/* Fixed header */}
-      <div className="page-bar" style={{ flexShrink: 0 }}>
+    async function handleSubmit() {
+      const legalName = form.acmName?.trim();
+      const email = form.acmContactEmail?.trim();
+      if (!legalName || !email) {
+        onClose();
+        return;
+      }
+
+      const baseClient = {
+        name: legalName,
+        email,
+        phone: form.acmContactPhone?.trim() ?? "",
+        organization_id: organizationId ?? "mock-org",
+        xero_contact_id: "",
+        xero_files_inbox_email: "",
+        chase_enabled: true,
+        chase_frequency_days: 7,
+        escalation_days: 7,
+        vat_tracking_enabled: false,
+        vat_period_end_date: new Date().toISOString().slice(0, 10),
+        chase_paused_until: new Date().toISOString(),
+      };
+
+      const payload = baseClient as Parameters<typeof clientsApi.create>[0];
+      try {
+        const created = await clientsApi.create(payload);
+        onCreated(created);
+        onClose();
+        return;
+      } catch {
+        // fall through to mock client below if API fails
+      }
+
+      onCreated({
+        ...(baseClient as any),
+        id: `${Date.now()}`,
+        vat_period_completed_at: null,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        is_active: true,
+      });
+      onClose();
+    }
+
+    return (
+      <div
+        className="modal-overlay open"
+        role="dialog"
+        aria-label="Add client"
+        onClick={(e) => {
+          if (e.target === e.currentTarget) onClose();
+        }}
+      >
         <div
-          className="page-bar-left"
-          style={{ gap: "var(--sp-12)", minWidth: 0 }}
+          className="modal"
+          style={{
+            width: 540,
+            marginTop: "var(--sp-40)",
+            marginBottom: "var(--sp-40)",
+            maxHeight: "calc(100vh - var(--sp-80))",
+          }}
         >
-          <div className="cl-avatar">{getInitials(client.name)}</div>
-          <div>
-            <div className="pg-title">
-              {client.name}
-              {isVipClient(client) ? (
-                <span
-                  className="u-text-warning"
-                  style={{ marginLeft: "var(--sp-8)" }}
+          <div className="modal-header">
+            <span className="modal-title">Add Client</span>
+            <button className="modal-close" type="button" onClick={onClose}>
+              <svg aria-hidden="true" viewBox="0 0 24 24">
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
+            </button>
+          </div>
+          <div className="modal-body">
+            <div className="acm-step">
+              <div className="acm-section-label">Business Details</div>
+              <div className="acm-field">
+                <label className="acm-label">
+                  Legal name <span className="acm-required">*</span>
+                </label>
+                <input
+                  type="text"
+                  className="input"
+                  placeholder="e.g. Westbrook Holdings Ltd"
+                  value={form.acmName ?? ""}
+                  onChange={(e) => updateField("acmName", e.target.value)}
+                />
+              </div>
+              <div className="acm-row-2">
+                <div className="acm-field">
+                  <label className="acm-label">Trading name</label>
+                  <input
+                    type="text"
+                    className="input"
+                    placeholder="If different from legal name"
+                    value={form.acmTradingName ?? ""}
+                    onChange={(e) =>
+                      updateField("acmTradingName", e.target.value)
+                    }
+                  />
+                </div>
+                <div className="acm-field">
+                  <label className="acm-label">Entity type</label>
+                  <select
+                    className="select"
+                    value={form.acmEntity ?? "Limited Company"}
+                    onChange={(e) => updateField("acmEntity", e.target.value)}
+                  >
+                    <option>Limited Company</option>
+                    <option>LLP</option>
+                    <option>Sole Trader</option>
+                    <option>Partnership</option>
+                    <option>Charity</option>
+                    <option>Other</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="acm-row-2">
+                <div className="acm-field">
+                  <label className="acm-label">Company number</label>
+                  <input
+                    type="text"
+                    className="input"
+                    placeholder="e.g. 06543210"
+                    value={form.acmCompanyNo ?? ""}
+                    onChange={(e) =>
+                      updateField("acmCompanyNo", e.target.value)
+                    }
+                  />
+                </div>
+                <div className="acm-field">
+                  <label className="acm-label">UTR</label>
+                  <input
+                    type="text"
+                    className="input"
+                    placeholder="e.g. 4567890123"
+                    value={form.acmUtr ?? ""}
+                    onChange={(e) => updateField("acmUtr", e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div className="acm-row-2">
+                <div className="acm-field">
+                  <label className="acm-label">SIC code</label>
+                  <input
+                    type="text"
+                    className="input"
+                    placeholder="e.g. 69201"
+                    value={form.acmSic ?? ""}
+                    onChange={(e) => updateField("acmSic", e.target.value)}
+                  />
+                </div>
+                <div className="acm-field">
+                  <label className="acm-label">Industry</label>
+                  <input
+                    type="text"
+                    className="input"
+                    placeholder="e.g. Property & Investment"
+                    value={form.acmIndustry ?? ""}
+                    onChange={(e) => updateField("acmIndustry", e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div className="acm-row-2">
+                <div className="acm-field">
+                  <label className="acm-label">Employees</label>
+                  <input
+                    type="text"
+                    className="input"
+                    placeholder="e.g. 45"
+                    value={form.acmEmployees ?? ""}
+                    onChange={(e) =>
+                      updateField("acmEmployees", e.target.value)
+                    }
+                  />
+                </div>
+                <div className="acm-field">
+                  <label className="acm-label">Incorporation date</label>
+                  <input
+                    type="text"
+                    className="input"
+                    placeholder="e.g. 14 Mar 2012"
+                    value={form.acmIncDate ?? ""}
+                    onChange={(e) => updateField("acmIncDate", e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div className="acm-section-label u-mt-20">Tax &amp; VAT</div>
+              <div className="acm-row-2">
+                <div className="acm-field">
+                  <label className="acm-label">VAT number</label>
+                  <input
+                    type="text"
+                    className="input"
+                    placeholder="e.g. GB 654 3210 98"
+                    value={form.acmVat ?? ""}
+                    onChange={(e) => updateField("acmVat", e.target.value)}
+                  />
+                </div>
+                <div className="acm-field">
+                  <label className="acm-label">VAT scheme</label>
+                  <select
+                    className="select"
+                    value={form.acmVatScheme ?? "Standard"}
+                    onChange={(e) =>
+                      updateField("acmVatScheme", e.target.value)
+                    }
+                  >
+                    <option>Standard</option>
+                    <option>Flat Rate</option>
+                    <option>Cash Accounting</option>
+                    <option>Annual Accounting</option>
+                    <option>Not VAT registered</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="acm-row-2">
+                <div className="acm-field">
+                  <label className="acm-label">VAT quarter</label>
+                  <select
+                    className="select"
+                    value={form.acmVatQtr ?? ""}
+                    onChange={(e) => updateField("acmVatQtr", e.target.value)}
+                  >
+                    <option value="">Select...</option>
+                    <option>Q1 (Jan–Mar)</option>
+                    <option>Q2 (Apr–Jun)</option>
+                    <option>Q3 (Jul–Sep)</option>
+                    <option>Q4 (Oct–Dec)</option>
+                  </select>
+                </div>
+                <div className="acm-field">
+                  <label className="acm-label">Year end</label>
+                  <input
+                    type="text"
+                    className="input"
+                    placeholder="e.g. 31 December"
+                    value={form.acmYearEnd ?? ""}
+                    onChange={(e) => updateField("acmYearEnd", e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div className="acm-section-label u-mt-20">Addresses</div>
+              <div className="acm-field">
+                <label className="acm-label">Registered address</label>
+                <input
+                  type="text"
+                  className="input"
+                  placeholder="e.g. 100 Mayfair Place, London W1K 4QT"
+                  value={form.acmRegAddress ?? ""}
+                  onChange={(e) => updateField("acmRegAddress", e.target.value)}
+                />
+              </div>
+              <div className="acm-field">
+                <label className="acm-label">Trading address</label>
+                <input
+                  type="text"
+                  className="input"
+                  placeholder="Same as registered if blank"
+                  value={form.acmTradeAddress ?? ""}
+                  onChange={(e) =>
+                    updateField("acmTradeAddress", e.target.value)
+                  }
+                />
+              </div>
+
+              <div className="acm-section-label u-mt-20">
+                Primary Contact <span className="acm-required">*</span>
+              </div>
+              <div className="acm-row-2">
+                <div className="acm-field">
+                  <label className="acm-label">
+                    Full name <span className="acm-required">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    className="input"
+                    placeholder="e.g. Catherine Westbrook"
+                    value={form.acmContactName ?? ""}
+                    onChange={(e) =>
+                      updateField("acmContactName", e.target.value)
+                    }
+                  />
+                </div>
+                <div className="acm-field">
+                  <label className="acm-label">Role</label>
+                  <input
+                    type="text"
+                    className="input"
+                    placeholder="e.g. Managing Director"
+                    value={form.acmContactRole ?? ""}
+                    onChange={(e) =>
+                      updateField("acmContactRole", e.target.value)
+                    }
+                  />
+                </div>
+              </div>
+              <div className="acm-row-2">
+                <div className="acm-field">
+                  <label className="acm-label">
+                    Email <span className="acm-required">*</span>
+                  </label>
+                  <input
+                    type="email"
+                    className="input"
+                    placeholder="e.g. catherine@westbrook.co.uk"
+                    value={form.acmContactEmail ?? ""}
+                    onChange={(e) =>
+                      updateField("acmContactEmail", e.target.value)
+                    }
+                  />
+                </div>
+                <div className="acm-field">
+                  <label className="acm-label">Phone</label>
+                  <input
+                    type="tel"
+                    className="input"
+                    placeholder="e.g. 020 8765 4321"
+                    value={form.acmContactPhone ?? ""}
+                    onChange={(e) =>
+                      updateField("acmContactPhone", e.target.value)
+                    }
+                  />
+                </div>
+              </div>
+
+              <div className="acm-row-2">
+                <div className="acm-field">
+                  <label className="acm-label">Mobile</label>
+                  <input
+                    type="tel"
+                    className="input"
+                    placeholder="e.g. 07700 900321"
+                    value={form.acmContactMobile ?? ""}
+                    onChange={(e) =>
+                      updateField("acmContactMobile", e.target.value)
+                    }
+                  />
+                </div>
+                <div className="acm-field">
+                  <label className="acm-label">Preferred channels</label>
+                  <select
+                    className="select"
+                    value={form.acmContactPref ?? "Email"}
+                    onChange={(e) =>
+                      updateField("acmContactPref", e.target.value)
+                    }
+                  >
+                    <option>Email</option>
+                    <option>Phone</option>
+                    <option>SMS</option>
+                    <option>WhatsApp</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="acm-section-label u-mt-20">
+                Financials &amp; Billing
+              </div>
+              <div className="acm-row-2">
+                <div className="acm-field">
+                  <label className="acm-label">Currency</label>
+                  <select
+                    className="select"
+                    value={form.acmCurrency ?? "GBP (£)"}
+                    onChange={(e) => updateField("acmCurrency", e.target.value)}
+                  >
+                    <option>GBP (£)</option>
+                    <option>EUR (€)</option>
+                    <option>USD ($)</option>
+                  </select>
+                </div>
+                <div className="acm-field">
+                  <label className="acm-label">Payment terms</label>
+                  <select
+                    className="select"
+                    value={form.acmTerms ?? "Use firm default"}
+                    onChange={(e) => updateField("acmTerms", e.target.value)}
+                  >
+                    <option>Use firm default</option>
+                    <option>Net 7</option>
+                    <option>Net 14</option>
+                    <option>Net 30</option>
+                    <option>Net 45</option>
+                    <option>Net 60</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="acm-row-2">
+                <div className="acm-field">
+                  <label className="acm-label">Fee structure</label>
+                  <select
+                    className="select"
+                    value={form.acmFeeStructure ?? ""}
+                    onChange={(e) =>
+                      updateField("acmFeeStructure", e.target.value)
+                    }
+                  >
+                    <option value="">Select...</option>
+                    <option>Fixed annual</option>
+                    <option>Fixed annual + ad hoc</option>
+                    <option>Time-based</option>
+                    <option>Per project</option>
+                    <option>Retainer</option>
+                  </select>
+                </div>
+                <div className="acm-field">
+                  <label className="acm-label">Annual fee</label>
+                  <input
+                    type="text"
+                    className="input"
+                    placeholder="e.g. £12,000"
+                    value={form.acmAnnualFee ?? ""}
+                    onChange={(e) =>
+                      updateField("acmAnnualFee", e.target.value)
+                    }
+                  />
+                </div>
+              </div>
+
+              <div className="acm-field">
+                <label className="acm-label">Billing frequency</label>
+                <select
+                  className="select"
+                  style={{ maxWidth: 220 }}
+                  value={form.acmBillingFreq ?? "Monthly"}
+                  onChange={(e) =>
+                    updateField("acmBillingFreq", e.target.value)
+                  }
                 >
-                  ★
-                </span>
-              ) : null}
-              <span
+                  <option>Monthly</option>
+                  <option>Quarterly</option>
+                  <option>Annually</option>
+                  <option>Ad hoc</option>
+                </select>
+              </div>
+
+              <div className="acm-section-label u-mt-20">Services</div>
+              <div className="acm-field">
+                <label className="acm-label">Service lines</label>
+                <input
+                  type="text"
+                  className="input"
+                  placeholder="e.g. Accounts preparation, Corporation tax, VAT returns, Payroll"
+                  value={form.acmServices ?? ""}
+                  onChange={(e) => updateField("acmServices", e.target.value)}
+                />
+                <div className="u-text-muted-xs u-mt-4">
+                  Separate multiple services with commas
+                </div>
+              </div>
+
+              <div className="acm-section-label u-mt-20">
+                Assignment &amp; Relationship
+              </div>
+              <div className="acm-row-2">
+                <div className="acm-field">
+                  <label className="acm-label">Primary manager</label>
+                  <select
+                    className="select"
+                    value={form.acmManager ?? ""}
+                    onChange={(e) => updateField("acmManager", e.target.value)}
+                  >
+                    <option value="">Select...</option>
+                    <option>Richard Morrison</option>
+                    <option>Sarah O&apos;Brien</option>
+                    <option>Priya Kapoor</option>
+                  </select>
+                </div>
+                <div className="acm-field">
+                  <label className="acm-label">Secondary manager</label>
+                  <select
+                    className="select"
+                    value={form.acmSecondary ?? ""}
+                    onChange={(e) =>
+                      updateField("acmSecondary", e.target.value)
+                    }
+                  >
+                    <option value="">None</option>
+                    <option>Richard Morrison</option>
+                    <option>Sarah O&apos;Brien</option>
+                    <option>Priya Kapoor</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="acm-row-2">
+                <div className="acm-field">
+                  <label className="acm-label">Referral source</label>
+                  <select
+                    className="select"
+                    value={form.acmReferral ?? ""}
+                    onChange={(e) => updateField("acmReferral", e.target.value)}
+                  >
+                    <option value="">Select...</option>
+                    <option>Existing client referral</option>
+                    <option>Website</option>
+                    <option>Google</option>
+                    <option>Accountancy body</option>
+                    <option>Networking</option>
+                    <option>Other</option>
+                  </select>
+                </div>
+                <div className="acm-field">
+                  <label className="acm-label">Client since</label>
+                  <input
+                    type="text"
+                    className="input"
+                    placeholder="e.g. March 2025"
+                    value={form.acmSince ?? ""}
+                    onChange={(e) => updateField("acmSince", e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div className="acm-section-label u-mt-20">Compliance</div>
+              <div className="acm-row-2">
+                <div className="acm-field">
+                  <label className="acm-label">AML/KYC status</label>
+                  <select
+                    className="select"
+                    value={form.acmAml ?? "Pending"}
+                    onChange={(e) => updateField("acmAml", e.target.value)}
+                  >
+                    <option>Pending</option>
+                    <option>Passed</option>
+                    <option>Failed</option>
+                    <option>Exempt</option>
+                  </select>
+                </div>
+                <div className="acm-field">
+                  <label className="acm-label">Engagement letter</label>
+                  <select
+                    className="select"
+                    value={form.acmEngagement ?? "Not sent"}
+                    onChange={(e) =>
+                      updateField("acmEngagement", e.target.value)
+                    }
+                  >
+                    <option>Not sent</option>
+                    <option>Sent</option>
+                    <option>Signed</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="acm-vip-row">
+                <div
+                  className={`checkbox${
+                    form.acmGdpr === "true" ? " checked" : ""
+                  }`}
+                  onClick={() =>
+                    updateField(
+                      "acmGdpr",
+                      form.acmGdpr === "true" ? "false" : "true",
+                    )
+                  }
+                />
+                <div>
+                  <div className="u-text-medium">
+                    Data protection consent received
+                  </div>
+                  <div className="u-text-muted-xs">
+                    Client has consented to data processing under GDPR
+                  </div>
+                </div>
+              </div>
+              <div
+                className="acm-vip-row"
                 style={{
-                  fontSize: "var(--text-sm)",
-                  fontWeight: "var(--fw-medium)",
-                  marginLeft: "var(--sp-8)",
-                  verticalAlign: "middle",
-                  color:
-                    healthScore >= 70
-                      ? "var(--success)"
-                      : healthScore >= 40
-                        ? "var(--warning)"
-                        : "var(--danger)",
+                  borderTop: "1px solid rgba(0,0,0,0.04)",
+                  marginTop: "var(--sp-4)",
                 }}
               >
-                Health: {healthScore}
-              </span>
-            </div>
-            <div className="pg-subtitle">
-              {contactLine || "No contact details added yet"}
+                <div
+                  className={`checkbox${
+                    form.acmVipCheck === "true" ? " checked" : ""
+                  }`}
+                  onClick={() =>
+                    updateField(
+                      "acmVipCheck",
+                      form.acmVipCheck === "true" ? "false" : "true",
+                    )
+                  }
+                />
+                <div>
+                  <div className="u-text-medium">VIP client</div>
+                  <div className="u-text-muted-xs">
+                    Requires approval before any automated action
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-        <div className="page-bar-right">
-          <button className="btn btn-ghost btn-sm" type="button">
-            Import
-          </button>
-          <button className="btn btn-ghost btn-sm" type="button">
-            Export
-          </button>
-          <button className="btn btn-primary btn-sm" type="button">
-            Add Client
-          </button>
-        </div>
-      </div>
-
-      {/* Tab bar */}
-      <div
-        role="tablist"
-        aria-label="Client tabs"
-        style={{
-          display: "flex",
-          gap: 0,
-          padding: "0 var(--sp-32)",
-          borderBottom: "1px solid var(--clr-divider)",
-          flexShrink: 0,
-          background: "var(--canvas-bg)",
-        }}
-      >
-        {tabs.map((t) => (
-          <button
-            key={t.key}
-            type="button"
-            role="tab"
-            aria-selected={tab === t.key}
-            className={`rpt-tab-btn${tab === t.key ? " active" : ""}`}
-            onClick={() => onTabChange(t.key)}
-          >
-            {t.label}
-          </button>
-        ))}
-      </div>
-
-      {/* Scrollable content */}
-      <div
-        style={{
-          flex: 1,
-          overflowY: "auto",
-          padding: "var(--sp-24) var(--sp-32) var(--sp-48)",
-          background: "var(--canvas-bg)",
-        }}
-      >
-        <div className="detail-wrap">
-          {tab === "overview" && (
-            <div className="cl-kpi-strip">
-              <div className="ws-card kpi-mini u-mb-0">
-                <div
-                  className={`kpi-mini-val ${
-                    healthScore >= 70
-                      ? "success"
-                      : healthScore >= 40
-                        ? "warning"
-                        : "danger"
-                  }`}
-                >
-                  {healthScore}
-                </div>
-                <div className="kpi-mini-label">Health</div>
-              </div>
-              <div className="ws-card kpi-mini u-mb-0">
-                <div className="kpi-mini-val">
-                  {client.vat_tracking_enabled ? 1 : 0}
-                  <span className="kpi-mini-unit">/1</span>
-                </div>
-                <div className="kpi-mini-label">VAT Tracking</div>
-              </div>
-              <div className="ws-card kpi-mini u-mb-0">
-                <div className="kpi-mini-val">
-                  {client.chase_enabled ? "On" : "Off"}
-                </div>
-                <div className="kpi-mini-label">Chasing</div>
-              </div>
-              <div className="ws-card kpi-mini u-mb-0">
-                <div className="kpi-mini-val">
-                  {client.is_active ? "Active" : "Inactive"}
-                </div>
-                <div className="kpi-mini-label">Status</div>
-              </div>
+          <div className="modal-footer">
+            <div
+              style={{
+                flex: 1,
+                fontSize: "var(--text-xs)",
+                color: "var(--text-muted-lt)",
+              }}
+            >
+              <span className="acm-required">*</span> Required fields
             </div>
-          )}
-
-          {tab === "overview" && (
-            <div className="ws-card">
-              <div className="ws-card-title">Workflow Status</div>
-              <div className="agent-row">
-                <span className="agent-row-dot u-bg-brand" />
-                <div className="u-flex-1">
-                  <div className="agent-row-name">Document Chasing</div>
-                  <div className="dash-row-meta">
-                    {client.chase_enabled
-                      ? "Automated chases enabled"
-                      : "Chasing is currently turned off"}
-                  </div>
-                </div>
-                <span
-                  className="agent-row-status"
-                  style={{
-                    color: client.chase_enabled
-                      ? "var(--success)"
-                      : "var(--clr-muted)",
-                  }}
-                >
-                  {client.chase_enabled ? "On" : "Off"}
-                </span>
-              </div>
-            </div>
-          )}
-
-          {tab === "overview" && (
-            <div className="ws-card">
-              <div className="ws-card-title">Recent Activity</div>
-              <div className="act-dot-row">
-                <span className="act-dot u-bg-brand" />
-                <div className="u-flex-1-min">
-                  <div className="act-dot-text">
-                    Client record last updated
-                  </div>
-                  <div className="act-dot-sub">{client.updated_at}</div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {tab === "details" && (
-            <div className="ws-card">
-              <div className="ws-card-title">Client Details</div>
-              <div className="ws-settings-row">
-                <span className="ws-settings-label">Name</span>
-                <span>{client.name}</span>
-              </div>
-              {client.email && (
-                <div className="ws-settings-row">
-                  <span className="ws-settings-label">Email</span>
-                  <span>{client.email}</span>
-                </div>
-              )}
-              {client.phone && (
-                <div className="ws-settings-row">
-                  <span className="ws-settings-label">Phone</span>
-                  <span>{client.phone}</span>
-                </div>
-              )}
-              <div className="ws-settings-row">
-                <span className="ws-settings-label">Organization</span>
-                <span>{client.organization_id}</span>
-              </div>
-            </div>
-          )}
-
-          {tab === "documents" && (
-            <div className="ws-card">
-              <div className="ws-card-title">Records</div>
-              <div className="ws-empty-desc">
-                Document records integration will appear here once available.
-              </div>
-            </div>
-          )}
-
-          {tab === "invoices" && (
-            <div className="ws-card">
-              <div className="ws-card-title">Payments</div>
-              <div className="ws-empty-desc">
-                Payments data will appear here once connected.
-              </div>
-            </div>
-          )}
-
-          {tab === "comms" && (
-            <div className="ws-card">
-              <div className="ws-card-title">Activity</div>
-              <div className="ws-empty-desc">
-                Call and communication history will appear here.
-              </div>
-            </div>
-          )}
-
-          {tab === "notes" && (
-            <div className="ws-card">
-              <div className="ws-card-title">Notes</div>
-              <div className="ws-empty-desc">
-                Notes for this client will be available in a future update.
-              </div>
-            </div>
-          )}
-
-          {tab === "settings" && (
-            <div className="ws-card">
-              <div className="ws-card-title">Settings</div>
-              <div className="set-toggle-row">
-                <div>
-                  <div className="set-toggle-label">Active client</div>
-                  <div className="set-toggle-hint">
-                    Controls whether this client appears in chases and
-                    reporting.
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  className={`toggle${client.is_active ? " active" : ""}`}
-                  disabled
-                />
-              </div>
-              <div className="set-toggle-row">
-                <div>
-                  <div className="set-toggle-label">Document chasing</div>
-                  <div className="set-toggle-hint">
-                    Automation settings are configured in the main
-                    configuration screens.
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  className={`toggle${client.chase_enabled ? " active" : ""}`}
-                  disabled
-                />
-              </div>
-            </div>
-          )}
+            <button
+              className="btn btn-ghost btn-sm"
+              type="button"
+              onClick={onClose}
+            >
+              Cancel
+            </button>
+            <button
+              className="btn btn-secondary btn-sm"
+              type="button"
+              onClick={handleSaveDraft}
+            >
+              Save Draft
+            </button>
+            <button
+              className="btn btn-primary btn-sm"
+              type="button"
+              onClick={handleSubmit}
+            >
+              Add Client
+            </button>
+          </div>
         </div>
       </div>
-    </>
-  );
+    );
+  }
 }
-
