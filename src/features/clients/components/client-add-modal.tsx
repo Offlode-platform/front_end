@@ -15,14 +15,28 @@ export function ClientAddModal({
   onCreated,
   organizationId,
 }: ClientAddModalProps) {
-  const [form, setForm] = useState<Record<string, string>>({});
+  const [form, setForm] = useState<Record<string, string>>(() => {
+    const now = new Date();
+    const isoDate = now.toISOString().slice(0, 10);
+    const localIsoMinute = new Date(now.getTime() - now.getTimezoneOffset() * 60000)
+      .toISOString()
+      .slice(0, 16);
+    return {
+      chase_enabled: "true",
+      chase_frequency_days: "7",
+      escalation_days: "14",
+      vat_tracking_enabled: "false",
+      vat_period_end_date: isoDate,
+      chase_paused_until: localIsoMinute,
+    };
+  });
 
   function updateField(id: string, value: string) {
     setForm((prev) => ({ ...prev, [id]: value }));
   }
 
   function handleSaveDraft() {
-    const name = form.acmName?.trim() || "Untitled client";
+    const name = form.name?.trim() || "Untitled client";
     const id = `${Date.now()}`;
     onSaveDraft({ id, name });
     onClose();
@@ -118,75 +132,105 @@ export function ClientAddModal({
         >
           <div className="acm-step">
             <div className="acm-section-label">Client Details</div>
-            <div className="acm-field">
-              <label className="acm-label">
-                Name <span className="acm-required">*</span>
-              </label>
-              <input
-                type="text"
-                className="input"
-                placeholder="e.g. Westbrook Holdings Ltd"
-                value={form.name ?? ""}
-                onChange={(e) => updateField("name", e.target.value)}
-              />
+            <div className="acm-row-2">
+              <div className="acm-field">
+                <label className="acm-label">
+                  Name <span className="acm-required">*</span>
+                </label>
+                <input
+                  type="text"
+                  className="input"
+                  placeholder="e.g. Westbrook Holdings Ltd"
+                  value={form.name ?? ""}
+                  onChange={(e) => updateField("name", e.target.value)}
+                />
+              </div>
+              <div className="acm-field">
+                <label className="acm-label">
+                  Email <span className="acm-required">*</span>
+                </label>
+                <input
+                  type="email"
+                  className="input"
+                  placeholder="e.g. accounts@westbrook.co.uk"
+                  value={form.email ?? ""}
+                  onChange={(e) => updateField("email", e.target.value)}
+                />
+              </div>
             </div>
-            <div className="acm-field">
-              <label className="acm-label">
-                Email <span className="acm-required">*</span>
-              </label>
-              <input
-                type="email"
-                className="input"
-                placeholder="e.g. accounts@westbrook.co.uk"
-                value={form.email ?? ""}
-                onChange={(e) => updateField("email", e.target.value)}
-              />
-            </div>
-            <div className="acm-field">
-              <label className="acm-label">Phone</label>
-              <input
-                type="tel"
-                className="input"
-                placeholder="e.g. 020 8765 4321"
-                value={form.phone ?? ""}
-                onChange={(e) => updateField("phone", e.target.value)}
-              />
+            <div className="acm-row-2">
+              <div className="acm-field">
+                <label className="acm-label">Phone</label>
+                <input
+                  type="tel"
+                  className="input"
+                  placeholder="e.g. 020 8765 4321"
+                  value={form.phone ?? ""}
+                  onChange={(e) => updateField("phone", e.target.value)}
+                />
+              </div>
+              <div className="acm-field">
+                <label className="acm-label">Organization ID</label>
+                <input
+                  type="text"
+                  className="input"
+                  value={organizationId ?? ""}
+                  disabled
+                />
+              </div>
             </div>
 
             <div className="acm-section-label u-mt-20">Xero</div>
-            <div className="acm-field">
-              <label className="acm-label">Xero contact ID</label>
-              <input
-                type="text"
-                className="input"
-                value={form.xero_contact_id ?? ""}
-                onChange={(e) => updateField("xero_contact_id", e.target.value)}
-              />
-            </div>
-            <div className="acm-field">
-              <label className="acm-label">Xero files inbox email</label>
-              <input
-                type="email"
-                className="input"
-                placeholder="e.g. files+123@xero.com"
-                value={form.xero_files_inbox_email ?? ""}
-                onChange={(e) =>
-                  updateField("xero_files_inbox_email", e.target.value)
-                }
-              />
+            <div className="acm-row-2">
+              <div className="acm-field">
+                <label className="acm-label">Xero contact ID</label>
+                <input
+                  type="text"
+                  className="input"
+                  value={form.xero_contact_id ?? ""}
+                  onChange={(e) => updateField("xero_contact_id", e.target.value)}
+                />
+              </div>
+              <div className="acm-field">
+                <label className="acm-label">Xero files inbox email</label>
+                <input
+                  type="email"
+                  className="input"
+                  placeholder="e.g. files+123@xero.com"
+                  value={form.xero_files_inbox_email ?? ""}
+                  onChange={(e) =>
+                    updateField("xero_files_inbox_email", e.target.value)
+                  }
+                />
+              </div>
             </div>
 
             <div className="acm-section-label u-mt-20">Chasing</div>
-            <div className="acm-field">
-              <label className="acm-label">Chase enabled</label>
-              <select
-                className="select"
-                value={form.chase_enabled ?? "true"}
-                onChange={(e) => updateField("chase_enabled", e.target.value)}
-              >
-                <option value="true">On</option>
-                <option value="false">Off</option>
-              </select>
+            <div className="acm-row-2">
+              <div className="acm-field">
+                <label className="acm-label">Chase enabled</label>
+                <select
+                  className="select"
+                  value={form.chase_enabled ?? "true"}
+                  onChange={(e) => updateField("chase_enabled", e.target.value)}
+                >
+                  <option value="true">On</option>
+                  <option value="false">Off</option>
+                </select>
+              </div>
+              <div className="acm-field">
+                <label className="acm-label">VAT tracking enabled</label>
+                <select
+                  className="select"
+                  value={form.vat_tracking_enabled ?? "false"}
+                  onChange={(e) =>
+                    updateField("vat_tracking_enabled", e.target.value)
+                  }
+                >
+                  <option value="true">Yes</option>
+                  <option value="false">No</option>
+                </select>
+              </div>
             </div>
             <div className="acm-row-2">
               <div className="acm-field">
@@ -208,27 +252,12 @@ export function ClientAddModal({
                   className="input"
                   min={0}
                   value={form.escalation_days ?? "14"}
-                  onChange={(e) =>
-                    updateField("escalation_days", e.target.value)
-                  }
+                  onChange={(e) => updateField("escalation_days", e.target.value)}
                 />
               </div>
             </div>
 
-            <div className="acm-section-label u-mt-20">VAT</div>
-            <div className="acm-field">
-              <label className="acm-label">VAT tracking enabled</label>
-              <select
-                className="select"
-                value={form.vat_tracking_enabled ?? "false"}
-                onChange={(e) =>
-                  updateField("vat_tracking_enabled", e.target.value)
-                }
-              >
-                <option value="true">Yes</option>
-                <option value="false">No</option>
-              </select>
-            </div>
+            <div className="acm-section-label u-mt-20">Dates</div>
             <div className="acm-row-2">
               <div className="acm-field">
                 <label className="acm-label">VAT period end date</label>

@@ -188,7 +188,7 @@ export function ClientsPageView() {
       const data = await clientsApi.list();
       setClients(data);
       const exists = data.find((c) => c.id === newClient.id);
-      setSelectedClientId(exists ? newClient.id : data[0]?.id ?? null);
+      setSelectedClientId(exists ? newClient.id : (data[0]?.id ?? null));
     } catch {
       setError("Unable to refresh clients after creating a new one.");
     } finally {
@@ -202,6 +202,25 @@ export function ClientsPageView() {
       id="page-clients"
       style={{ display: "flex", flexDirection: "column" }}
     >
+      <div className="page-bar" style={{ flexShrink: 0 }}>
+        <div className="page-bar-left">
+          <div>
+            <div className="pg-title">Clients</div>
+            <div className="pg-subtitle">
+              View, filter, and manage your client directory.
+            </div>
+          </div>
+        </div>
+        <div className="page-bar-right">
+          <button
+            className="btn btn-primary btn-sm"
+            type="button"
+            onClick={() => setIsAddClientOpen(true)}
+          >
+            Add Client
+          </button>
+        </div>
+      </div>
       {isAddClientOpen && (
         <ClientAddModal
           onClose={() => setIsAddClientOpen(false)}

@@ -78,11 +78,7 @@ export function ClientListPane({
             width: "100%",
           }}
         >
-          <div
-            className="ws-segment"
-            id="clFilters"
-            style={{ width: "100%" }}
-          >
+          <div className="ws-segment" id="clFilters" style={{ width: "100%" }}>
             <button
               className={`ws-seg${filter === "all" ? " active" : ""}`}
               type="button"
@@ -113,9 +109,7 @@ export function ClientListPane({
               padding: "var(--sp-6) var(--sp-12)",
               fontSize: "var(--text-xs)",
             }}
-            onClick={() =>
-              onFilterChange(filter === "vip" ? "all" : "vip")
-            }
+            onClick={() => onFilterChange(filter === "vip" ? "all" : "vip")}
           >
             <svg
               aria-hidden="true"
@@ -153,6 +147,12 @@ export function ClientListPane({
         role="listbox"
         aria-label="Client list"
       >
+        {!isLoading && !error && filteredClients.length > 0 ? (
+          <div className="ws-list-section">
+            Client Directory
+            <span className="ws-list-section-count">{filteredClients.length}</span>
+          </div>
+        ) : null}
         {isLoading && !clients ? (
           <div className="ws-empty-watermark">
             <div className="ws-empty-title">Loading clients…</div>
@@ -235,9 +235,10 @@ export function ClientListPane({
       </div>
 
       <div className="ws-list-footer" id="clListCount">
-        {totalClients} client{totalClients === 1 ? "" : "s"}
+        {filteredClients.length}
+        {filteredClients.length === totalClients ? "" : ` of ${totalClients}`}{" "}
+        client{filteredClients.length === 1 ? "" : "s"}
       </div>
     </div>
   );
 }
-
