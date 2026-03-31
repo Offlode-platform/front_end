@@ -83,6 +83,18 @@ export function ClientDetail({
   const contactLine = formatContactLine(client);
   const [organization, setOrganization] = useState<Organization | null>(null);
   const [orgError, setOrgError] = useState<string | null>(null);
+  const [isEditingDetails, setIsEditingDetails] = useState(false);
+  const [detailsDraft, setDetailsDraft] = useState<UpdateClientRequest>({
+    name: client.name,
+    email: client.email,
+    phone: client.phone,
+    xero_files_inbox_email: client.xero_files_inbox_email,
+    chase_frequency_days: client.chase_frequency_days,
+    escalation_days: client.escalation_days,
+    vat_tracking_enabled: client.vat_tracking_enabled,
+    vat_period_end_date: client.vat_period_end_date,
+    chase_paused_until: client.chase_paused_until,
+  });
 
   const tabs: { key: ClientTabKey; label: string }[] = [
     { key: "overview", label: "Overview" },
@@ -125,6 +137,33 @@ export function ClientDetail({
       cancelled = true;
     };
   }, [client.organization_id]);
+
+  useEffect(() => {
+    setDetailsDraft({
+      name: client.name,
+      email: client.email,
+      phone: client.phone,
+      xero_files_inbox_email: client.xero_files_inbox_email,
+      chase_frequency_days: client.chase_frequency_days,
+      escalation_days: client.escalation_days,
+      vat_tracking_enabled: client.vat_tracking_enabled,
+      vat_period_end_date: client.vat_period_end_date,
+      chase_paused_until: client.chase_paused_until,
+    });
+    setIsEditingDetails(false);
+  }, [client]);
+
+  function updateDetailsDraft<K extends keyof UpdateClientRequest>(
+    key: K,
+    value: UpdateClientRequest[K],
+  ) {
+    setDetailsDraft((prev) => ({ ...prev, [key]: value }));
+  }
+
+  async function handleSaveDetails() {
+    await onUpdateClient(client.id, detailsDraft);
+    setIsEditingDetails(false);
+  }
 
   return (
     <>
@@ -296,42 +335,115 @@ export function ClientDetail({
 
           {tab === "details" && (
             <div className="ws-card">
-              <div className="ws-card-title">Client Details</div>
+              <div
+                className="u-flex-between"
+                style={{ marginBottom: "var(--sp-12)" }}
+              >
+                <div className="ws-card-title u-mb-0">Client Details</div>
+                <div style={{ display: "flex", gap: "var(--sp-8)" }}>
+                  {isEditingDetails ? (
+                    <>
+                      <button
+                        type="button"
+                        className="btn btn-ghost btn-sm"
+                        onClick={() => {
+                          setIsEditingDetails(false);
+                          setDetailsDraft({
+                            name: client.name,
+                            email: client.email,
+                            phone: client.phone,
+                            xero_files_inbox_email: client.xero_files_inbox_email,
+                            chase_frequency_days: client.chase_frequency_days,
+                            escalation_days: client.escalation_days,
+                            vat_tracking_enabled: client.vat_tracking_enabled,
+                            vat_period_end_date: client.vat_period_end_date,
+                            chase_paused_until: client.chase_paused_until,
+                          });
+                        }}
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-primary btn-sm"
+                        onClick={() => void handleSaveDetails()}
+                      >
+                        Save
+                      </button>
+                    </>
+                  ) : (
+                    <button
+                      type="button"
+                      className="btn btn-secondary btn-sm"
+                      onClick={() => setIsEditingDetails(true)}
+                    >
+                      Edit
+                    </button>
+                  )}
+                </div>
+              </div>
               <div className="ws-settings-row">
                 <span className="ws-settings-label">Name</span>
-                <span
-                  style={{
-                    fontSize: "var(--text-base)",
-                    color: "var(--clr-secondary)",
-                  }}
-                >
-                  {client.name}
-                </span>
-              </div>
-              {client.email && (
-                <div className="ws-settings-row">
-                  <span className="ws-settings-label">Email</span>
+                {isEditingDetails ? (
+                  <input
+                    type="text"
+                    className="input"
+                    value={detailsDraft.name ?? ""}
+                    onChange={(e) => updateDetailsDraft("name", e.target.value)}
+                  />
+                ) : (
                   <span
                     style={{
                       fontSize: "var(--text-base)",
                       color: "var(--clr-secondary)",
                     }}
                   >
-                    {client.email}
+                    {client.name}
                   </span>
+                )}
+              </div>
+              {client.email && (
+                <div className="ws-settings-row">
+                  <span className="ws-settings-label">Email</span>
+                  {isEditingDetails ? (
+                    <input
+                      type="email"
+                      className="input"
+                      value={detailsDraft.email ?? ""}
+                      onChange={(e) => updateDetailsDraft("email", e.target.value)}
+                    />
+                  ) : (
+                    <span
+                      style={{
+                        fontSize: "var(--text-base)",
+                        color: "var(--clr-secondary)",
+                      }}
+                    >
+                      {client.email}
+                    </span>
+                  )}
                 </div>
               )}
               {client.phone && (
                 <div className="ws-settings-row">
                   <span className="ws-settings-label">Phone</span>
-                  <span
-                    style={{
-                      fontSize: "var(--text-base)",
-                      color: "var(--clr-secondary)",
-                    }}
-                  >
-                    {client.phone}
-                  </span>
+                  {isEditingDetails ? (
+                    <input
+                      type="tel"
+                      className="input"
+                      value={detailsDraft.phone ?? ""}
+                      onChange={(e) => updateDetailsDraft("phone", e.target.value)}
+                    />
+                  ) : (
+                    <span
+                      style={{
+                        fontSize: "var(--text-base)",
+                        color: "var(--clr-secondary)",
+                      }}
+                    >
+                      {client.phone}
+                    </span>
+                  )}
                 </div>
               )}
               <div className="ws-settings-row">
@@ -349,58 +461,128 @@ export function ClientDetail({
               </div>
               <div className="ws-settings-row">
                 <span className="ws-settings-label">Chase frequency (days)</span>
-                <span
-                  style={{
-                    fontSize: "var(--text-base)",
-                    color: "var(--clr-secondary)",
-                  }}
-                >
-                  {client.chase_frequency_days}
-                </span>
+                {isEditingDetails ? (
+                  <input
+                    type="number"
+                    className="input"
+                    min={0}
+                    value={detailsDraft.chase_frequency_days ?? 0}
+                    onChange={(e) =>
+                      updateDetailsDraft(
+                        "chase_frequency_days",
+                        Number(e.target.value),
+                      )
+                    }
+                  />
+                ) : (
+                  <span
+                    style={{
+                      fontSize: "var(--text-base)",
+                      color: "var(--clr-secondary)",
+                    }}
+                  >
+                    {client.chase_frequency_days}
+                  </span>
+                )}
               </div>
               <div className="ws-settings-row">
                 <span className="ws-settings-label">Escalation days</span>
-                <span
-                  style={{
-                    fontSize: "var(--text-base)",
-                    color: "var(--clr-secondary)",
-                  }}
-                >
-                  {client.escalation_days}
-                </span>
+                {isEditingDetails ? (
+                  <input
+                    type="number"
+                    className="input"
+                    min={0}
+                    value={detailsDraft.escalation_days ?? 0}
+                    onChange={(e) =>
+                      updateDetailsDraft("escalation_days", Number(e.target.value))
+                    }
+                  />
+                ) : (
+                  <span
+                    style={{
+                      fontSize: "var(--text-base)",
+                      color: "var(--clr-secondary)",
+                    }}
+                  >
+                    {client.escalation_days}
+                  </span>
+                )}
               </div>
               <div className="ws-settings-row">
                 <span className="ws-settings-label">VAT tracking</span>
-                <span
-                  style={{
-                    fontSize: "var(--text-base)",
-                    color: "var(--clr-secondary)",
-                  }}
-                >
-                  {client.vat_tracking_enabled ? "Enabled" : "Disabled"}
-                </span>
+                {isEditingDetails ? (
+                  <select
+                    className="select"
+                    value={detailsDraft.vat_tracking_enabled ? "true" : "false"}
+                    onChange={(e) =>
+                      updateDetailsDraft("vat_tracking_enabled", e.target.value === "true")
+                    }
+                  >
+                    <option value="true">Enabled</option>
+                    <option value="false">Disabled</option>
+                  </select>
+                ) : (
+                  <span
+                    style={{
+                      fontSize: "var(--text-base)",
+                      color: "var(--clr-secondary)",
+                    }}
+                  >
+                    {client.vat_tracking_enabled ? "Enabled" : "Disabled"}
+                  </span>
+                )}
               </div>
               <div className="ws-settings-row">
                 <span className="ws-settings-label">VAT period end date</span>
-                <span
-                  style={{
-                    fontSize: "var(--text-base)",
-                    color: "var(--clr-secondary)",
-                  }}
-                >
-                  {formatDateTime(client.vat_period_end_date)}
-                </span>
+                {isEditingDetails ? (
+                  <input
+                    type="date"
+                    className="input"
+                    value={
+                      detailsDraft.vat_period_end_date
+                        ? String(detailsDraft.vat_period_end_date).slice(0, 10)
+                        : ""
+                    }
+                    onChange={(e) =>
+                      updateDetailsDraft("vat_period_end_date", e.target.value)
+                    }
+                  />
+                ) : (
+                  <span
+                    style={{
+                      fontSize: "var(--text-base)",
+                      color: "var(--clr-secondary)",
+                    }}
+                  >
+                    {formatDateTime(client.vat_period_end_date)}
+                  </span>
+                )}
               </div>
               <div className="ws-settings-row">
                 <span className="ws-settings-label">Chase paused until</span>
-                <span
-                  style={{
-                    fontSize: "var(--text-base)",
-                    color: "var(--clr-secondary)",
-                  }}
-                >
-                  {formatDateTime(client.chase_paused_until)}
-                </span>
+                {isEditingDetails ? (
+                  <input
+                    type="datetime-local"
+                    className="input"
+                    value={
+                      detailsDraft.chase_paused_until
+                        ? String(detailsDraft.chase_paused_until).slice(0, 16)
+                        : ""
+                    }
+                    onChange={(e) =>
+                      updateDetailsDraft("chase_paused_until", e.target.value)
+                    }
+                  />
+                ) : (
+                  <span
+                    style={{
+                      fontSize: "var(--text-base)",
+                      color: "var(--clr-secondary)",
+                    }}
+                  >
+                    {formatDateTime(client.chase_paused_until)}
+                  </span>
+                )}
               </div>
             </div>
           )}

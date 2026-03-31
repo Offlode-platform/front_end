@@ -175,8 +175,8 @@ export function ClientListPane({
         aria-label="Client list"
         style={{
           flex: 1,
-          height: "100dvh",
-          minHeight: "100dvh",
+
+          minHeight: 0,
           overflowY: "auto",
         }}
       >
