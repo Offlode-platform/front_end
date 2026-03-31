@@ -29,6 +29,9 @@ export const apiPaths = {
   users: {
     base: "/api/v1/users",
   },
+  organizations: {
+    base: "/api/v1/organizations",
+  },
 } as const;
 
 export function apiUrl(path: string): string {
