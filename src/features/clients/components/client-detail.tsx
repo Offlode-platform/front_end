@@ -124,21 +124,7 @@ export function ClientDetail({
             </div>
           </div>
         </div>
-        <div className="page-bar-right">
-          <button className="btn btn-ghost btn-sm" type="button">
-            Import
-          </button>
-          <button className="btn btn-ghost btn-sm" type="button">
-            Export
-          </button>
-          <button
-            className="btn btn-primary btn-sm"
-            type="button"
-            onClick={onRequestAddClient}
-          >
-            Add Client
-          </button>
-        </div>
+        <div className="page-bar-right" />
       </div>
 
       <div

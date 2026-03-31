@@ -66,4 +66,3 @@ export type UpdateClientRequest = {
 };
 
 export type UpdateClientResponse = Client;
-

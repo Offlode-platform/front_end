@@ -5,6 +5,24 @@ type FilterKey = "all" | "attention" | "vip";
 
 type Severity = "action" | "review" | "handled";
 
+function shortenName(name: string): string {
+  const max = 28;
+  if (name.length <= max) return name;
+  return `${name.slice(0, max - 1)}…`;
+}
+
+function shortenEmail(email: string): string {
+  const [local, domain] = email.split("@");
+  if (!domain) return email;
+
+  const localShort = local.length <= 6 ? local : `${local.slice(0, 5)}…`;
+
+  const domainShort =
+    domain.length <= 4 ? domain : `${domain.slice(0, 2)}…${domain.slice(-2)}`;
+
+  return `${localShort}@${domainShort}`;
+}
+
 function getClientSeverity(client: ListedClient): Severity {
   if (!client.is_active) return "review";
   if (!client.chase_enabled) return "action";
@@ -17,7 +35,7 @@ function isVipClient(client: ListedClient): boolean {
 
 function formatContactLine(client: ListedClient): string {
   const parts: string[] = [];
-  if (client.email) parts.push(client.email);
+  if (client.email) parts.push(shortenEmail(client.email));
   if (client.phone) parts.push(client.phone);
   return parts.join(" · ");
 }
@@ -58,7 +76,13 @@ export function ClientListPane({
   return (
     <div
       className="ws-list"
-      style={{ minWidth: 0, height: "100%", alignSelf: "stretch" }}
+      style={{
+        minWidth: 0,
+        height: "100%",
+        alignSelf: "stretch",
+        display: "flex",
+        flexDirection: "column",
+      }}
     >
       <div className="ws-list-header">
         <div className="ws-search">
@@ -149,11 +173,19 @@ export function ClientListPane({
         id="clListItems"
         role="listbox"
         aria-label="Client list"
+        style={{
+          flex: 1,
+          height: "100dvh",
+          minHeight: "100dvh",
+          overflowY: "auto",
+        }}
       >
         {!isLoading && !error && filteredClients.length > 0 ? (
           <div className="ws-list-section">
             Client Directory
-            <span className="ws-list-section-count">{filteredClients.length}</span>
+            <span className="ws-list-section-count">
+              {filteredClients.length}
+            </span>
           </div>
         ) : null}
         {isLoading && !clients ? (
@@ -222,12 +254,28 @@ export function ClientListPane({
               }}
             >
               <span className={`ws-item-bar ${barColor}`} />
-              <div className="ws-item-info">
-                <div className="ws-item-name">
-                  {client.name}
+              <div className="ws-item-info" style={{ textAlign: "left" }}>
+                <div
+                  className="ws-item-name"
+                  style={{
+                    whiteSpace: "nowrap",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                  }}
+                >
+                  {shortenName(client.name)}
                   {vipBadge}
                 </div>
-                <div className="ws-item-meta">{desc}</div>
+                <div
+                  className="ws-item-meta"
+                  style={{
+                    whiteSpace: "nowrap",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                  }}
+                >
+                  {desc}
+                </div>
               </div>
               <svg className="ws-item-chevron" viewBox="0 0 24 24">
                 <polyline points="9 6 15 12 9 18" />
@@ -239,7 +287,9 @@ export function ClientListPane({
 
       <div className="ws-list-footer" id="clListCount">
         {filteredClients.length}
-        {filteredClients.length === totalClients ? "" : ` of ${totalClients}`}{" "}
+        {filteredClients.length === totalClients
+          ? ""
+          : ` of ${totalClients}`}{" "}
         client{filteredClients.length === 1 ? "" : "s"}
       </div>
     </div>

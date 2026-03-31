@@ -241,22 +241,42 @@ export function ClientsPageView() {
           overflow: "hidden",
         }}
       >
-        <ClientListPane
-          clients={clients}
-          filteredClients={filteredClients}
-          isLoading={isLoading}
-          error={error}
-          filter={filter}
-          onFilterChange={setFilter}
-          search={search}
-          onSearchChange={setSearch}
-          selectedClientId={selectedClientId}
-          onSelectClient={setSelectedClientId}
-          clientDrafts={clientDrafts}
-          attVipCounts={attVipCounts}
-          totalClients={totalClients}
-          onRequestAddClient={() => setIsAddClientOpen(true)}
-        />
+        <div
+          style={{
+            flex: "0 0 var(--ws-list-w)",
+            minWidth: 0,
+            height: "100%",
+            display: "flex",
+            flexDirection: "column",
+          }}
+        >
+        <div
+          style={{
+            flex: "0 0 var(--ws-list-w)",
+            minWidth: 0,
+            height: "100%",
+            display: "flex",
+            flexDirection: "column",
+          }}
+        >
+          <ClientListPane
+            clients={clients}
+            filteredClients={filteredClients}
+            isLoading={isLoading}
+            error={error}
+            filter={filter}
+            onFilterChange={setFilter}
+            search={search}
+            onSearchChange={setSearch}
+            selectedClientId={selectedClientId}
+            onSelectClient={setSelectedClientId}
+            clientDrafts={clientDrafts}
+            attVipCounts={attVipCounts}
+            totalClients={totalClients}
+            onRequestAddClient={() => setIsAddClientOpen(true)}
+          />
+        </div>
+        </div>
 
         <div
           id="clDetail"
