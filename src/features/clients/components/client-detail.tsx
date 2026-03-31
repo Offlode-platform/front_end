@@ -1,5 +1,9 @@
 import type { ListedClient } from "@/types/clients";
-import type { ClientNote, ClientNoteType, ClientTabKey } from "../clients-page-view";
+import type {
+  ClientNote,
+  ClientNoteType,
+  ClientTabKey,
+} from "../clients-page-view";
 
 function getInitials(name: string): string {
   if (!name) return "";
@@ -18,7 +22,7 @@ function getHealthScore(client: ListedClient): number {
   if (!client.is_active) {
     score -= 25;
   }
-@
+
   if (!client.chase_enabled) {
     score -= 15;
   }
@@ -518,7 +522,12 @@ export function ClientDetail({
                     </div>
                   ))
                 ) : (
-                  <div style={{ color: "var(--clr-muted)", padding: "var(--sp-8)" }}>
+                  <div
+                    style={{
+                      color: "var(--clr-muted)",
+                      padding: "var(--sp-8)",
+                    }}
+                  >
                     No notes yet — add one above
                   </div>
                 )}
@@ -547,8 +556,8 @@ export function ClientDetail({
                 <div>
                   <div className="set-toggle-label">Document chasing</div>
                   <div className="set-toggle-hint">
-                    Automation settings are configured in the main
-                    configuration screens.
+                    Automation settings are configured in the main configuration
+                    screens.
                   </div>
                 </div>
                 <button
@@ -564,4 +573,3 @@ export function ClientDetail({
     </>
   );
 }
-
