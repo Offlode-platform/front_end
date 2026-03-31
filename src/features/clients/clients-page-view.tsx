@@ -200,7 +200,7 @@ export function ClientsPageView() {
     <div
       className="page active"
       id="page-clients"
-      style={{ display: "flex", flexDirection: "column" }}
+      style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}
     >
       <div className="page-bar" style={{ flexShrink: 0 }}>
         <div className="page-bar-left">

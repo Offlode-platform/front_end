@@ -56,7 +56,10 @@ export function ClientListPane({
   onRequestAddClient,
 }: ClientListPaneProps) {
   return (
-    <div className="ws-list" style={{ minWidth: 0 }}>
+    <div
+      className="ws-list"
+      style={{ minWidth: 0, height: "100%", alignSelf: "stretch" }}
+    >
       <div className="ws-list-header">
         <div className="ws-search">
           <svg viewBox="0 0 24 24">
