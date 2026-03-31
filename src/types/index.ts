@@ -31,3 +31,14 @@ export type {
   ExportClientsCsvRequestBody,
   ExportClientsCsvResponse,
 } from "./dashboard";
+export type {
+  Client,
+  CreateClientRequest,
+  CreateClientResponse,
+  ListClientsQuery,
+  ListedClient,
+  ListClientsResponse,
+  GetClientResponse,
+  UpdateClientRequest,
+  UpdateClientResponse,
+} from "./clients";
