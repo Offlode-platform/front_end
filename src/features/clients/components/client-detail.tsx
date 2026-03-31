@@ -76,9 +76,6 @@ export function ClientDetail({
   const tabs: { key: ClientTabKey; label: string }[] = [
     { key: "overview", label: "Overview" },
     { key: "details", label: "Details" },
-    { key: "documents", label: "Records" },
-    { key: "invoices", label: "Payments" },
-    { key: "comms", label: "Activity" },
     { key: "notes", label: "Notes" },
     { key: "settings", label: "Settings" },
   ];
@@ -229,14 +226,21 @@ export function ClientDetail({
 
           {tab === "overview" && (
             <div className="ws-card">
-              <div className="ws-card-title">Recent Activity</div>
-              <div className="act-dot-row">
-                <span className="act-dot u-bg-brand" />
-                <div className="u-flex-1-min">
-                  <div className="act-dot-text">Client record last updated</div>
-                  <div className="act-dot-sub">{client.updated_at}</div>
-                </div>
+              <div className="ws-card-title">Client Metadata</div>
+              <div className="ws-ctx-row">
+                <span className="ws-ctx-label">Created at</span>
+                <span className="ws-ctx-value">{client.created_at}</span>
               </div>
+              <div className="ws-ctx-row">
+                <span className="ws-ctx-label">Last updated</span>
+                <span className="ws-ctx-value">{client.updated_at}</span>
+              </div>
+              {client.assigned_user_name && (
+                <div className="ws-ctx-row">
+                  <span className="ws-ctx-label">Assigned to</span>
+                  <span className="ws-ctx-value">{client.assigned_user_name}</span>
+                </div>
+              )}
             </div>
           )}
 
@@ -263,32 +267,25 @@ export function ClientDetail({
                 <span className="ws-settings-label">Organization</span>
                 <span>{client.organization_id}</span>
               </div>
-            </div>
-          )}
-
-          {tab === "documents" && (
-            <div className="ws-card">
-              <div className="ws-card-title">Records</div>
-              <div className="ws-empty-desc">
-                Document records integration will appear here once available.
+              <div className="ws-settings-row">
+                <span className="ws-settings-label">Chase frequency (days)</span>
+                <span>{client.chase_frequency_days}</span>
               </div>
-            </div>
-          )}
-
-          {tab === "invoices" && (
-            <div className="ws-card">
-              <div className="ws-card-title">Payments</div>
-              <div className="ws-empty-desc">
-                Payments data will appear here once connected.
+              <div className="ws-settings-row">
+                <span className="ws-settings-label">Escalation days</span>
+                <span>{client.escalation_days}</span>
               </div>
-            </div>
-          )}
-
-          {tab === "comms" && (
-            <div className="ws-card">
-              <div className="ws-card-title">Activity</div>
-              <div className="ws-empty-desc">
-                Call and communication history will appear here.
+              <div className="ws-settings-row">
+                <span className="ws-settings-label">VAT tracking</span>
+                <span>{client.vat_tracking_enabled ? "Enabled" : "Disabled"}</span>
+              </div>
+              <div className="ws-settings-row">
+                <span className="ws-settings-label">VAT period end date</span>
+                <span>{client.vat_period_end_date}</span>
+              </div>
+              <div className="ws-settings-row">
+                <span className="ws-settings-label">Chase paused until</span>
+                <span>{client.chase_paused_until}</span>
               </div>
             </div>
           )}
