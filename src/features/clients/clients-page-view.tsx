@@ -7,26 +7,9 @@ import { ClientListPane } from "./components/client-list-pane";
 import { clientsApi } from "@/lib/api/clients-api";
 import type { ListedClient, UpdateClientRequest } from "@/types/clients";
 
-export type ClientTabKey =
-  | "overview"
-  | "details"
-  | "documents"
-  | "invoices"
-  | "comms"
-  | "notes"
-  | "settings";
+export type ClientTabKey = "overview" | "details" | "settings";
 
 type FilterKey = "all" | "attention" | "vip";
-
-export type ClientNoteType = "pin" | "promise" | "dispute" | "critical" | null;
-
-export type ClientNote = {
-  id: string;
-  text: string;
-  author: string;
-  time: string;
-  type: ClientNoteType;
-};
 
 type Severity = "action" | "review" | "handled";
 
@@ -51,12 +34,6 @@ export function ClientsPageView() {
   const [activeTab, setActiveTab] = useState<ClientTabKey>("overview");
   const [isAddClientOpen, setIsAddClientOpen] = useState(false);
 
-  const [notesByClient, setNotesByClient] = useState<
-    Record<string, ClientNote[]>
-  >({});
-  const [noteDraftByClient, setNoteDraftByClient] = useState<
-    Record<string, { text: string; type: ClientNoteType }>
-  >({});
   const [clientDrafts, setClientDrafts] = useState<
     { id: string; name: string; savedAt: string }[]
   >([]);
@@ -142,38 +119,6 @@ export function ClientsPageView() {
   }, [filteredClients, selectedClient]);
 
   const totalClients = clients?.length ?? 0;
-
-  function handleAddNote(clientId: string) {
-    const draft = noteDraftByClient[clientId];
-    if (!draft || !draft.text.trim()) return;
-
-    setNotesByClient((prev) => {
-      const existing = prev[clientId] ?? [];
-      const next: ClientNote = {
-        id: `${Date.now()}`,
-        text: draft.text.trim(),
-        author: "You",
-        time: "Just now",
-        type: draft.type,
-      };
-      return { ...prev, [clientId]: [next, ...existing] };
-    });
-
-    setNoteDraftByClient((prev) => ({
-      ...prev,
-      [clientId]: { text: "", type: null },
-    }));
-  }
-
-  function handleDeleteNote(clientId: string, noteId: string) {
-    setNotesByClient((prev) => {
-      const existing = prev[clientId] ?? [];
-      return {
-        ...prev,
-        [clientId]: existing.filter((n) => n.id !== noteId),
-      };
-    });
-  }
 
   function handleSaveClientDraft(payload: { id: string; name: string }) {
     setClientDrafts((prev) => [
@@ -340,20 +285,6 @@ export function ClientsPageView() {
               client={selectedClient}
               tab={activeTab}
               onTabChange={setActiveTab}
-              notes={notesByClient[selectedClient.id] ?? []}
-              noteDraft={
-                noteDraftByClient[selectedClient.id] ?? { text: "", type: null }
-              }
-              onNoteDraftChange={(draft) =>
-                setNoteDraftByClient((prev) => ({
-                  ...prev,
-                  [selectedClient.id]: draft,
-                }))
-              }
-              onAddNote={() => handleAddNote(selectedClient.id)}
-              onDeleteNote={(noteId) =>
-                handleDeleteNote(selectedClient.id, noteId)
-              }
               onRequestAddClient={() => setIsAddClientOpen(true)}
               onUpdateClient={handleClientUpdated}
               onDeleteClient={handleClientDeleted}

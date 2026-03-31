@@ -1,9 +1,8 @@
+import { useEffect, useState } from "react";
 import type { ListedClient, UpdateClientRequest } from "@/types/clients";
-import type {
-  ClientNote,
-  ClientNoteType,
-  ClientTabKey,
-} from "../clients-page-view";
+import type { ClientTabKey } from "../clients-page-view";
+import { organizationsApi } from "@/lib/api/organizations";
+import type { Organization } from "@/types/organizations";
 
 function getInitials(name: string): string {
   if (!name) return "";
@@ -47,15 +46,26 @@ function isVipClient(client: ListedClient): boolean {
   return client.chase_frequency_days <= 7;
 }
 
+function formatDateTime(value: string | null | undefined): string {
+  if (!value) return "—";
+  const dt = new Date(value);
+  if (Number.isNaN(dt.getTime())) return value;
+  const date = dt.toLocaleDateString(undefined, {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+  const time = dt.toLocaleTimeString(undefined, {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+  return `${date} at ${time}`;
+}
+
 export type ClientDetailProps = {
   client: ListedClient;
   tab: ClientTabKey;
   onTabChange: (tab: ClientTabKey) => void;
-  notes: ClientNote[];
-  noteDraft: { text: string; type: ClientNoteType };
-  onNoteDraftChange: (draft: { text: string; type: ClientNoteType }) => void;
-  onAddNote: () => void;
-  onDeleteNote: (noteId: string) => void;
   onRequestAddClient: () => void;
   onUpdateClient: (clientId: string, updates: UpdateClientRequest) => Promise<void>;
   onDeleteClient: (clientId: string) => Promise<void>;
@@ -65,22 +75,18 @@ export function ClientDetail({
   client,
   tab,
   onTabChange,
-  notes,
-  noteDraft,
-  onNoteDraftChange,
-  onAddNote,
-  onDeleteNote,
   onRequestAddClient,
   onUpdateClient,
   onDeleteClient,
 }: ClientDetailProps) {
   const healthScore = getHealthScore(client);
   const contactLine = formatContactLine(client);
+  const [organization, setOrganization] = useState<Organization | null>(null);
+  const [orgError, setOrgError] = useState<string | null>(null);
 
   const tabs: { key: ClientTabKey; label: string }[] = [
     { key: "overview", label: "Overview" },
     { key: "details", label: "Details" },
-    { key: "notes", label: "Notes" },
     { key: "settings", label: "Settings" },
   ];
 
@@ -92,6 +98,33 @@ export function ClientDetail({
     vat_period_end_date: client.vat_period_end_date,
     chase_paused_until: client.chase_paused_until,
   };
+
+  useEffect(() => {
+    let cancelled = false;
+    async function loadOrganization() {
+      if (!client.organization_id) {
+        setOrganization(null);
+        return;
+      }
+      try {
+        const data = await organizationsApi.get(client.organization_id);
+        if (!cancelled) {
+          setOrganization(data);
+          setOrgError(null);
+        }
+      } catch {
+        if (!cancelled) {
+          setOrganization(null);
+          setOrgError("Unable to load organization");
+        }
+      }
+    }
+
+    void loadOrganization();
+    return () => {
+      cancelled = true;
+    };
+  }, [client.organization_id]);
 
   return (
     <>
@@ -242,11 +275,15 @@ export function ClientDetail({
               <div className="ws-card-title">Client Metadata</div>
               <div className="ws-ctx-row">
                 <span className="ws-ctx-label">Created at</span>
-                <span className="ws-ctx-value">{client.created_at}</span>
+                <span className="ws-ctx-value">
+                  {formatDateTime(client.created_at)}
+                </span>
               </div>
               <div className="ws-ctx-row">
                 <span className="ws-ctx-label">Last updated</span>
-                <span className="ws-ctx-value">{client.updated_at}</span>
+                <span className="ws-ctx-value">
+                  {formatDateTime(client.updated_at)}
+                </span>
               </div>
               {client.assigned_user_name && (
                 <div className="ws-ctx-row">
@@ -262,196 +299,110 @@ export function ClientDetail({
               <div className="ws-card-title">Client Details</div>
               <div className="ws-settings-row">
                 <span className="ws-settings-label">Name</span>
-                <span>{client.name}</span>
+                <span
+                  style={{
+                    fontSize: "var(--text-base)",
+                    color: "var(--clr-secondary)",
+                  }}
+                >
+                  {client.name}
+                </span>
               </div>
               {client.email && (
                 <div className="ws-settings-row">
                   <span className="ws-settings-label">Email</span>
-                  <span>{client.email}</span>
+                  <span
+                    style={{
+                      fontSize: "var(--text-base)",
+                      color: "var(--clr-secondary)",
+                    }}
+                  >
+                    {client.email}
+                  </span>
                 </div>
               )}
               {client.phone && (
                 <div className="ws-settings-row">
                   <span className="ws-settings-label">Phone</span>
-                  <span>{client.phone}</span>
+                  <span
+                    style={{
+                      fontSize: "var(--text-base)",
+                      color: "var(--clr-secondary)",
+                    }}
+                  >
+                    {client.phone}
+                  </span>
                 </div>
               )}
               <div className="ws-settings-row">
                 <span className="ws-settings-label">Organization</span>
-                <span>{client.organization_id}</span>
+                <span
+                  style={{
+                    fontSize: "var(--text-base)",
+                    color: "var(--clr-secondary)",
+                  }}
+                  title={client.organization_id}
+                >
+                  {organization?.name ?? client.organization_id}
+                  {orgError ? " (unknown)" : ""}
+                </span>
               </div>
               <div className="ws-settings-row">
                 <span className="ws-settings-label">Chase frequency (days)</span>
-                <span>{client.chase_frequency_days}</span>
+                <span
+                  style={{
+                    fontSize: "var(--text-base)",
+                    color: "var(--clr-secondary)",
+                  }}
+                >
+                  {client.chase_frequency_days}
+                </span>
               </div>
               <div className="ws-settings-row">
                 <span className="ws-settings-label">Escalation days</span>
-                <span>{client.escalation_days}</span>
+                <span
+                  style={{
+                    fontSize: "var(--text-base)",
+                    color: "var(--clr-secondary)",
+                  }}
+                >
+                  {client.escalation_days}
+                </span>
               </div>
               <div className="ws-settings-row">
                 <span className="ws-settings-label">VAT tracking</span>
-                <span>{client.vat_tracking_enabled ? "Enabled" : "Disabled"}</span>
+                <span
+                  style={{
+                    fontSize: "var(--text-base)",
+                    color: "var(--clr-secondary)",
+                  }}
+                >
+                  {client.vat_tracking_enabled ? "Enabled" : "Disabled"}
+                </span>
               </div>
               <div className="ws-settings-row">
                 <span className="ws-settings-label">VAT period end date</span>
-                <span>{client.vat_period_end_date}</span>
+                <span
+                  style={{
+                    fontSize: "var(--text-base)",
+                    color: "var(--clr-secondary)",
+                  }}
+                >
+                  {formatDateTime(client.vat_period_end_date)}
+                </span>
               </div>
               <div className="ws-settings-row">
                 <span className="ws-settings-label">Chase paused until</span>
-                <span>{client.chase_paused_until}</span>
+                <span
+                  style={{
+                    fontSize: "var(--text-base)",
+                    color: "var(--clr-secondary)",
+                  }}
+                >
+                  {formatDateTime(client.chase_paused_until)}
+                </span>
               </div>
             </div>
-          )}
-
-          {tab === "notes" && (
-            <>
-              <div className="ws-card">
-                <textarea
-                  className="textarea"
-                  rows={3}
-                  placeholder={`Add a note about ${client.name}...`}
-                  value={noteDraft.text}
-                  onChange={(e) =>
-                    onNoteDraftChange({ ...noteDraft, text: e.target.value })
-                  }
-                />
-                <div className="u-flex-between">
-                  <div className="u-flex" style={{ gap: "var(--sp-4)" }}>
-                    {(
-                      [
-                        ["pin", "Pin"],
-                        ["promise", "Promise"],
-                        ["dispute", "Dispute"],
-                        ["critical", "Critical"],
-                      ] as [ClientNoteType, string][]
-                    ).map(([val, label]) => {
-                      const active = noteDraft.type === val;
-                      return (
-                        <button
-                          key={val ?? "none"}
-                          type="button"
-                          className={`btn btn-ghost btn-sm${
-                            active ? " btn-primary" : ""
-                          }`}
-                          onClick={() =>
-                            onNoteDraftChange({
-                              ...noteDraft,
-                              type: active ? null : val,
-                            })
-                          }
-                        >
-                          {label}
-                        </button>
-                      );
-                    })}
-                  </div>
-                  <button
-                    className="btn btn-primary btn-sm"
-                    type="button"
-                    onClick={onAddNote}
-                  >
-                    Add note
-                  </button>
-                </div>
-              </div>
-
-              <div className="ws-card">
-                <div className="u-flex-between u-mb-8">
-                  <div className="ws-card-title u-mb-0">Notes</div>
-                  <span className="u-text-faint">
-                    {notes.length} note{notes.length === 1 ? "" : "s"}
-                  </span>
-                </div>
-                {notes.length > 0 ? (
-                  notes.map((n) => (
-                    <div
-                      key={n.id}
-                      style={{
-                        padding: "var(--sp-12) 0",
-                        borderBottom: "1px solid var(--clr-divider)",
-                      }}
-                    >
-                      <div
-                        style={{
-                          fontSize: "var(--text-base)",
-                          color: "var(--clr-secondary)",
-                          lineHeight: "var(--lh-relaxed)",
-                        }}
-                      >
-                        {n.text}
-                      </div>
-                      <div
-                        style={{
-                          display: "flex",
-                          justifyContent: "space-between",
-                          alignItems: "center",
-                          marginTop: "var(--sp-4)",
-                        }}
-                      >
-                        <span className="u-text-muted">
-                          {n.author}
-                          {n.time ? ` · ${n.time}` : ""}
-                        </span>
-                        <div className="u-flex" style={{ gap: "var(--sp-4)" }}>
-                          {n.type && (
-                            <span className="tag tag-neutral">{n.type}</span>
-                          )}
-                          <button
-                            type="button"
-                            style={{
-                              fontSize: "var(--text-xs)",
-                              color: "var(--clr-muted)",
-                              background: "none",
-                              border: "none",
-                              cursor: "pointer",
-                              fontFamily: "inherit",
-                            }}
-                          >
-                            Edit
-                          </button>
-                          <button
-                            type="button"
-                            style={{
-                              fontSize: "var(--text-xs)",
-                              color: "var(--clr-muted)",
-                              background: "none",
-                              border: "none",
-                              cursor: "pointer",
-                              fontFamily: "inherit",
-                            }}
-                          >
-                            Pin
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => onDeleteNote(n.id)}
-                            style={{
-                              fontSize: "var(--text-xs)",
-                              color: "var(--danger)",
-                              background: "none",
-                              border: "none",
-                              cursor: "pointer",
-                              fontFamily: "inherit",
-                            }}
-                          >
-                            Delete
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <div
-                    style={{
-                      color: "var(--clr-muted)",
-                      padding: "var(--sp-8)",
-                    }}
-                  >
-                    No notes yet — add one above
-                  </div>
-                )}
-              </div>
-            </>
           )}
 
           {tab === "settings" && (
