@@ -1,5 +1,5 @@
-import { PageComingSoon } from "@/components/layout/page-coming-soon";
+import { ClientsPageView } from "@/features/clients/clients-page-view";
 
 export default function ClientsPage() {
-  return <PageComingSoon title="Clients" />;
+  return <ClientsPageView />;
 }

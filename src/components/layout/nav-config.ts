@@ -19,7 +19,7 @@ export type NavItem = {
 export const PRIMARY_NAV_ITEMS: NavItem[] = [
   { href: routes.dashboard, label: "Dashboard", icon: LayoutDashboard, implemented: true },
   { href: routes.workspace, label: "Workspace", icon: Briefcase, implemented: false },
-  { href: routes.clients, label: "Clients", icon: UsersRound, implemented: false },
+  { href: routes.clients, label: "Clients", icon: UsersRound, implemented: true },
   { href: routes.team, label: "Team", icon: Users, implemented: false },
   { href: routes.schedule, label: "Schedule", icon: Calendar, implemented: false },
   { href: routes.reports, label: "Reports", icon: FileText, implemented: false },
