@@ -23,6 +23,15 @@ export const apiPaths = {
     bulkAction: "/api/v1/dashboard/bulk-action",
     exportCsv: "/api/v1/dashboard/export/csv",
   },
+  clients: {
+    base: "/api/v1/clients",
+  },
+  users: {
+    base: "/api/v1/users",
+  },
+  organizations: {
+    base: "/api/v1/organizations",
+  },
 } as const;
 
 export function apiUrl(path: string): string {

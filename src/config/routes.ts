@@ -3,6 +3,7 @@ export const routes = {
   dashboard: "/dashboard",
   workspace: "/workspace",
   clients: "/clients",
+  organizations: "/organizations",
   team: "/team",
   schedule: "/schedule",
   reports: "/reports",

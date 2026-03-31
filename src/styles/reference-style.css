@@ -8546,8 +8546,8 @@ button.ws-ref-icon {
 }
 .pg-title {
   font-family: var(--font-display);
-  font-size: var(--text-xl);
-  font-weight: var(--fw-semibold);
+  font-size: var(--text-lg);
+  font-weight: var(--fw-medium);
   color: var(--text-primary-lt);
   letter-spacing: var(--ls-display);
 }
@@ -12578,6 +12578,65 @@ details.ws-card[open] summary {
 /* Dividers — use dark alpha on light surfaces */
 [data-theme="light"] .ws-list-footer {
   border-top-color: rgba(0, 0, 0, 0.06);
+}
+
+/* Toast notifications */
+.toast-stack {
+  position: fixed;
+  right: var(--sp-24);
+  bottom: var(--sp-24);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-8);
+  z-index: var(--z-toast);
+}
+.toast {
+  min-width: 260px;
+  max-width: 360px;
+  padding: var(--sp-10) var(--sp-14);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-dropdown);
+  font-size: var(--text-sm);
+  display: flex;
+  align-items: center;
+  gap: var(--sp-8);
+}
+.toast-success {
+  background: rgba(34, 160, 107, 0.12);
+  color: var(--text-success-dk);
+}
+.toast-error {
+  background: rgba(239, 68, 68, 0.12);
+  color: var(--text-danger-dk);
+}
+.toast-info {
+  background: rgba(59, 130, 246, 0.12);
+  color: var(--text-info-dk);
+}
+
+/* Full-page loading overlay */
+.page-loading-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: var(--z-modal);
+}
+.page-loading-spinner {
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  border: 3px solid rgba(255, 255, 255, 0.25);
+  border-top-color: var(--brand);
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 [data-theme="light"] .ws-focus-header {
   border-bottom-color: rgba(0, 0, 0, 0.06);
