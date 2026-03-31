@@ -13,6 +13,14 @@ type FilterKey = "all" | "attention" | "vip";
 
 type Severity = "action" | "review" | "handled";
 
+type ToastKind = "success" | "error" | "info";
+
+type Toast = {
+  id: number;
+  kind: ToastKind;
+  message: string;
+};
+
 function getClientSeverity(client: ListedClient): Severity {
   if (!client.is_active) return "review";
   if (!client.chase_enabled) return "action";
@@ -37,6 +45,19 @@ export function ClientsPageView() {
   const [clientDrafts, setClientDrafts] = useState<
     { id: string; name: string; savedAt: string }[]
   >([]);
+  const [toasts, setToasts] = useState<Toast[]>([]);
+  const [confirmDelete, setConfirmDelete] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
+
+  function pushToast(kind: ToastKind, message: string) {
+    const id = Date.now();
+    setToasts((prev) => [...prev, { id, kind, message }]);
+    setTimeout(() => {
+      setToasts((prev) => prev.filter((t) => t.id !== id));
+    }, 4000);
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -58,6 +79,7 @@ export function ClientsPageView() {
       } catch {
         if (!cancelled) {
           setError("Unable to load clients. Please try again.");
+          pushToast("error", "Unable to load clients. Please try again.");
         }
       } finally {
         if (!cancelled) {
@@ -143,6 +165,7 @@ export function ClientsPageView() {
     } finally {
       setIsLoading(false);
     }
+    pushToast("success", `Client "${newClient.name}" created successfully.`);
   }
 
   async function handleClientUpdated(
@@ -158,8 +181,10 @@ export function ClientsPageView() {
           ? prev.map((c) => (c.id === clientId ? { ...c, ...updated } : c))
           : [updated],
       );
+      pushToast("success", "Client details updated.");
     } catch {
       setError("Unable to update client. Please try again.");
+      pushToast("error", "Unable to update client. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -177,8 +202,10 @@ export function ClientsPageView() {
       } else if (clientId === selectedClientId) {
         setSelectedClientId(data[0].id);
       }
+      pushToast("success", "Client deleted.");
     } catch {
       setError("Unable to delete client. Please try again.");
+      pushToast("error", "Unable to delete client. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -287,11 +314,80 @@ export function ClientsPageView() {
               onTabChange={setActiveTab}
               onRequestAddClient={() => setIsAddClientOpen(true)}
               onUpdateClient={handleClientUpdated}
-              onDeleteClient={handleClientDeleted}
+              onDeleteClient={async (id) => {
+                setConfirmDelete({ id, name: selectedClient.name });
+              }}
             />
           )}
         </div>
       </div>
+      {confirmDelete && (
+        <div
+          className="modal-overlay open"
+          role="dialog"
+          aria-label="Confirm delete client"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setConfirmDelete(null);
+          }}
+        >
+          <div
+            className="modal"
+            style={{
+              width: "100%",
+              maxWidth: 420,
+              margin: "var(--sp-24) auto",
+            }}
+          >
+            <div className="modal-header">
+              <span className="modal-title">Delete client</span>
+            </div>
+            <div className="modal-body">
+              <p
+                style={{
+                  fontSize: "var(--text-base)",
+                  color: "var(--clr-secondary)",
+                  lineHeight: "var(--lh-body)",
+                }}
+              >
+                Are you sure you want to delete{" "}
+                <strong>{confirmDelete.name}</strong>? This will remove the
+                client from your directory.
+              </p>
+            </div>
+            <div className="modal-footer">
+              <button
+                type="button"
+                className="btn btn-ghost btn-sm"
+                onClick={() => setConfirmDelete(null)}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="btn btn-danger btn-sm"
+                onClick={async () => {
+                  await handleClientDeleted(confirmDelete.id);
+                  setConfirmDelete(null);
+                }}
+              >
+                Delete client
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {toasts.length > 0 && (
+        <div className="toast-stack">
+          {toasts.map((t) => (
+            <div
+              key={t.id}
+              className={`toast toast-${t.kind}`}
+            >
+              <span>{t.message}</span>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
