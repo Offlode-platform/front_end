@@ -1,4 +1,4 @@
-\"use client\";
+"use client";
 
 import { useEffect, useMemo, useState } from "react";
 import { clientsApi } from "@/lib/api/clients-api";
@@ -60,7 +60,7 @@ function getClientSeverity(client: ListedClient): Severity {
 }
 
 function isVipClient(client: ListedClient): boolean {
-  // Derive a \"VIP\" signal from chase frequency – faster cadence => more important.
+  // Derive a "VIP" signal from chase frequency – faster cadence => more important.
   return client.chase_frequency_days <= 7;
 }
 
