@@ -1,5 +1,4 @@
 import type { ListedClient } from "@/types/clients";
-import type { ClientNoteType } from "../clients-page-view";
 
 type FilterKey = "all" | "attention" | "vip";
 
