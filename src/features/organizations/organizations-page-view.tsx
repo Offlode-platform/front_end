@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { organizationsApi } from "@/lib/api/organizations";
 import type { Organization } from "@/types/organizations";
 import { OrganizationAddModal } from "./components/organization-add-modal";
@@ -10,6 +10,7 @@ export function OrganizationsPageView() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isAddOpen, setIsAddOpen] = useState(false);
+  const [search, setSearch] = useState("");
 
   async function loadOrganizations() {
     setIsLoading(true);
@@ -32,6 +33,19 @@ export function OrganizationsPageView() {
     await loadOrganizations();
     setIsAddOpen(false);
   }
+
+  const filteredOrganizations = useMemo(() => {
+    if (!organizations) return [];
+    const q = search.trim().toLowerCase();
+    if (!q) return organizations;
+    return organizations.filter((org) => {
+      return (
+        org.name.toLowerCase().includes(q) ||
+        org.slug.toLowerCase().includes(q) ||
+        org.subscription_tier.toLowerCase().includes(q)
+      );
+    });
+  }, [organizations, search]);
 
   return (
     <div
@@ -79,6 +93,18 @@ export function OrganizationsPageView() {
           style={{ minWidth: 0, height: "100%", alignSelf: "stretch" }}
         >
           <div className="ws-list-header">
+            <div className="ws-search">
+              <svg viewBox="0 0 24 24">
+                <circle cx="11" cy="11" r="8" />
+                <path d="m21 21-4.3-4.3" />
+              </svg>
+              <input
+                type="text"
+                placeholder="Search organizations..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
             <div
               style={{
                 display: "flex",
@@ -90,7 +116,7 @@ export function OrganizationsPageView() {
               <div className="ws-list-section">
                 Organizations
                 <span className="ws-list-section-count">
-                  {organizations?.length ?? 0}
+                  {filteredOrganizations.length}
                 </span>
               </div>
             </div>
@@ -127,23 +153,54 @@ export function OrganizationsPageView() {
               </div>
             ) : null}
 
-            {organizations?.map((org) => (
-              <div key={org.id} className="ws-item">
-                <span className="ws-item-bar green" />
-                <div className="ws-item-info">
-                  <div className="ws-item-name">{org.name}</div>
-                  <div className="ws-item-meta">
-                    {org.slug} · {org.subscription_tier} ·{" "}
-                    {org.subscription_status || "status unknown"}
-                  </div>
+            {!isLoading && !error && filteredOrganizations.length === 0 && (
+              <div className="ws-empty-watermark">
+                <div className="ws-empty-title">No organizations found</div>
+                <div className="ws-empty-desc">
+                  Try adjusting your search term or add a new organization.
                 </div>
               </div>
-            ))}
+            )}
+
+            {filteredOrganizations.map((org) => {
+              const status =
+                org.subscription_status?.toLowerCase() === "active"
+                  ? "Active"
+                  : org.subscription_status?.toLowerCase() === "trialing"
+                    ? "Trial"
+                    : org.subscription_status || "Unknown";
+              const hasXero = org.xero_connected;
+              return (
+                <div key={org.id} className="ws-item">
+                  <span className="ws-item-bar green" />
+                  <div className="ws-item-info">
+                    <div className="ws-item-name">
+                      {org.name}
+                      {hasXero ? (
+                        <span
+                          className="pill pill-xs"
+                          style={{ marginLeft: "var(--sp-6)" }}
+                        >
+                          Xero connected
+                        </span>
+                      ) : null}
+                    </div>
+                    <div className="ws-item-meta">
+                      <span>{org.slug}</span>
+                      <span style={{ margin: "0 var(--sp-4)" }}>·</span>
+                      <span>{org.subscription_tier}</span>
+                      <span style={{ margin: "0 var(--sp-4)" }}>·</span>
+                      <span>{status}</span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
 
           <div className="ws-list-footer">
-            {(organizations?.length ?? 0)} organization
-            {(organizations?.length ?? 0) === 1 ? "" : "s"}
+            {filteredOrganizations.length} organization
+            {filteredOrganizations.length === 1 ? "" : "s"}
           </div>
         </div>
       </div>

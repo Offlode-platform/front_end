@@ -1,6 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { clientsApi } from "@/lib/api/clients-api";
+import { organizationsApi } from "@/lib/api/organizations";
 import type { ListedClient } from "@/types/clients";
+import type { Organization } from "@/types/organizations";
 
 export type ClientAddModalProps = {
   onClose: () => void;
@@ -30,10 +32,51 @@ export function ClientAddModal({
       chase_paused_until: localIsoMinute,
     };
   });
+  const [organizations, setOrganizations] = useState<Organization[] | null>(null);
+  const [selectedOrganizationId, setSelectedOrganizationId] = useState<
+    string | undefined
+  >(organizationId);
+  const [isLoadingOrganizations, setIsLoadingOrganizations] = useState(false);
+  const [organizationsError, setOrganizationsError] = useState<string | null>(null);
 
   function updateField(id: string, value: string) {
     setForm((prev) => ({ ...prev, [id]: value }));
   }
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadOrganizations = async () => {
+      setIsLoadingOrganizations(true);
+      setOrganizationsError(null);
+      try {
+        const data = await organizationsApi.list();
+        if (cancelled) return;
+        setOrganizations(data);
+
+        if (!selectedOrganizationId) {
+          const first = data[0];
+          if (first) {
+            setSelectedOrganizationId(first.id);
+          }
+        }
+      } catch {
+        if (!cancelled) return;
+        setOrganizationsError("Unable to load organizations.");
+      } finally {
+        if (!cancelled) {
+          setIsLoadingOrganizations(false);
+        }
+      }
+    };
+
+    void loadOrganizations();
+
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   function handleSaveDraft() {
     const name = form.name?.trim() || "Untitled client";
@@ -44,7 +87,11 @@ export function ClientAddModal({
 
   async function handleSubmit() {
     // Basic guard + debug log so we can see when submit fires
-    console.log("[ClientAddModal] Submit clicked", { form, organizationId });
+    console.log("[ClientAddModal] Submit clicked", {
+      form,
+      organizationIdProp: organizationId,
+      selectedOrganizationId,
+    });
 
     const legalName = form.name?.trim();
     const email = form.email?.trim();
@@ -53,9 +100,9 @@ export function ClientAddModal({
       return;
     }
 
-    if (!organizationId) {
+    if (!selectedOrganizationId) {
       console.error(
-        "[ClientAddModal] Cannot create client – missing organizationId",
+        "[ClientAddModal] Cannot create client – missing selectedOrganizationId",
       );
       alert("Cannot create client: no organization is selected.");
       return;
@@ -66,7 +113,7 @@ export function ClientAddModal({
       name: legalName,
       email,
       phone: form.phone?.trim() ?? "",
-      organization_id: organizationId,
+      organization_id: selectedOrganizationId,
       xero_contact_id: form.xero_contact_id?.trim() ?? "",
       xero_files_inbox_email: form.xero_files_inbox_email?.trim() ?? "",
       chase_enabled: form.chase_enabled === "false" ? false : true,
@@ -170,13 +217,32 @@ export function ClientAddModal({
                 />
               </div>
               <div className="acm-field">
-                <label className="acm-label">Organization ID</label>
-                <input
-                  type="text"
-                  className="input"
-                  value={organizationId ?? ""}
-                  disabled
-                />
+                <label className="acm-label">
+                  Organization <span className="acm-required">*</span>
+                </label>
+                <select
+                  className="select"
+                  value={selectedOrganizationId ?? ""}
+                  onChange={(e) => setSelectedOrganizationId(e.target.value || undefined)}
+                  disabled={isLoadingOrganizations || !!organizationsError}
+                >
+                  {isLoadingOrganizations ? (
+                    <option value="">Loading organizations…</option>
+                  ) : organizationsError ? (
+                    <option value="">{organizationsError}</option>
+                  ) : organizations && organizations.length > 0 ? (
+                    <>
+                      <option value="">Select an organization</option>
+                      {organizations.map((org) => (
+                        <option key={org.id} value={org.id}>
+                          {org.name}
+                        </option>
+                      ))}
+                    </>
+                  ) : (
+                    <option value="">No organizations available</option>
+                  )}
+                </select>
               </div>
             </div>
 
