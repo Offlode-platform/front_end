@@ -68,6 +68,10 @@ export function ClientsPageView() {
       setError(null);
       try {
         const data = await clientsApi.list();
+        // Debug log so we can see what the API returned
+        // and verify it matches the expected ListedClient[] shape.
+        // eslint-disable-next-line no-console
+        console.log("[ClientsPageView] Loaded clients response", data);
         if (!cancelled) {
           setClients(data);
           if (!selectedClientId && data.length > 0) {

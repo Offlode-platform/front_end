@@ -18,7 +18,7 @@ function getHealthScore(client: ListedClient): number {
   if (!client.is_active) {
     score -= 25;
   }
-
+@
   if (!client.chase_enabled) {
     score -= 15;
   }
