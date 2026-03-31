@@ -42,3 +42,20 @@ export type {
   UpdateClientRequest,
   UpdateClientResponse,
 } from "./clients";
+export type {
+  ManagerPermission,
+  User,
+  CreateUserRequestUser,
+  CreateUserRequestPermissions,
+  CreateUserRequest,
+  CreateUserResponse,
+  ListUsersQuery,
+  ListUsersResponse,
+  GetUserResponse,
+  UpdateUserRequest,
+  UpdateUserResponse,
+  DeactivateUserRequest,
+  DeactivateUserResponse,
+  ManagerPermissionsRequest,
+  ManagerPermissionsResponse,
+} from "./users";
