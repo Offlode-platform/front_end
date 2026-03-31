@@ -376,6 +376,11 @@ export function ClientsPageView() {
           </div>
         </div>
       )}
+      {isLoading && (
+        <div className="page-loading-overlay">
+          <div className="page-loading-spinner" />
+        </div>
+      )}
       {toasts.length > 0 && (
         <div className="toast-stack">
           {toasts.map((t) => (
