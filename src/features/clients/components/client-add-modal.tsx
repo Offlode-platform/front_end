@@ -76,7 +76,7 @@ export function ClientAddModal({
 
   return (
     <div
-      className="modal-overlay open"
+      className="modal-overlay open "
       role="dialog"
       aria-label="Add client"
       onClick={(e) => {
@@ -131,7 +131,9 @@ export function ClientAddModal({
                   className="input"
                   placeholder="If different from legal name"
                   value={form.acmTradingName ?? ""}
-                  onChange={(e) => updateField("acmTradingName", e.target.value)}
+                  onChange={(e) =>
+                    updateField("acmTradingName", e.target.value)
+                  }
                 />
               </div>
               <div className="acm-field">
@@ -310,7 +312,9 @@ export function ClientAddModal({
                   className="input"
                   placeholder="e.g. Catherine Westbrook"
                   value={form.acmContactName ?? ""}
-                  onChange={(e) => updateField("acmContactName", e.target.value)}
+                  onChange={(e) =>
+                    updateField("acmContactName", e.target.value)
+                  }
                 />
               </div>
               <div className="acm-field">
@@ -320,7 +324,9 @@ export function ClientAddModal({
                   className="input"
                   placeholder="e.g. Managing Director"
                   value={form.acmContactRole ?? ""}
-                  onChange={(e) => updateField("acmContactRole", e.target.value)}
+                  onChange={(e) =>
+                    updateField("acmContactRole", e.target.value)
+                  }
                 />
               </div>
             </div>
@@ -371,7 +377,9 @@ export function ClientAddModal({
                 <select
                   className="select"
                   value={form.acmContactPref ?? "Email"}
-                  onChange={(e) => updateField("acmContactPref", e.target.value)}
+                  onChange={(e) =>
+                    updateField("acmContactPref", e.target.value)
+                  }
                 >
                   <option>Email</option>
                   <option>Phone</option>
@@ -648,4 +656,3 @@ export function ClientAddModal({
     </div>
   );
 }
-
