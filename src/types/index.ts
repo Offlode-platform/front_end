@@ -79,3 +79,12 @@ export type {
   Document,
   DocumentListResponse,
 } from "./documents";
+export type {
+  ClientAssignment,
+  ClientAssignmentCreate,
+  ClientAssignmentBulk,
+  ListClientAssignmentsQuery,
+  ClientAssignmentResponse,
+  ListClientAssignmentsResponse,
+  BulkAssignResponse,
+} from "./client-assignments";
