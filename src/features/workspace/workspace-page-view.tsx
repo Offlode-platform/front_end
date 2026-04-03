@@ -13,7 +13,7 @@ import { WorkspaceActivityTab } from "./components/workspace-activity-tab";
 import { WorkspaceSettingsTab } from "./components/workspace-settings-tab";
 import { WorkspaceContextSidebar } from "./components/workspace-context-sidebar";
 
-type FilterKey = "all" | "needs" | "clear";
+type FilterKey = "needs" | "clear";
 
 function clientNeedsInput(c: ListedClient): boolean {
   return !c.chase_enabled;
@@ -26,7 +26,7 @@ function isVip(c: ListedClient): boolean {
 export function WorkspacePageView() {
   const [clients, setClients] = useState<ListedClient[] | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [filter, setFilter] = useState<FilterKey>("all");
+  const [filter, setFilter] = useState<FilterKey>("needs");
   const [search, setSearch] = useState("");
   const [vipOnly, setVipOnly] = useState(false);
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
@@ -72,8 +72,7 @@ export function WorkspacePageView() {
       }
       if (vipOnly && !isVip(c)) return false;
       if (filter === "needs") return clientNeedsInput(c);
-      if (filter === "clear") return !clientNeedsInput(c);
-      return true; // "all"
+      return !clientNeedsInput(c);
     });
   }, [clients, filter, search, vipOnly]);
 
@@ -177,7 +176,7 @@ export function WorkspacePageView() {
                 hasPrev={selectedIndex > 0}
                 hasNext={selectedIndex < filteredClients.length - 1}
               />
-              <div className="ws-content-pane" style={{ flex: 1, overflowY: "auto", background: "var(--canvas-bg)" }}>
+              <div style={{ flex: 1, overflowY: "auto", background: "var(--canvas-bg)", position: "relative" }}>
                 {renderTabContent()}
               </div>
             </>

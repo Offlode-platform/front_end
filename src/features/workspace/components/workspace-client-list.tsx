@@ -3,7 +3,7 @@
 import { Search } from "lucide-react";
 import type { ListedClient } from "@/types/clients";
 
-type FilterKey = "all" | "needs" | "clear";
+type FilterKey = "needs" | "clear";
 
 function getStatusColor(client: ListedClient): "green" | "amber" | "red" {
   if (!client.is_active) return "red";
@@ -62,13 +62,6 @@ export function WorkspaceClientList({
         <div className="ws-segment" id="wsSegment">
           <button
             type="button"
-            className={`ws-seg${filter === "all" ? " active" : ""}`}
-            onClick={() => onFilterChange("all")}
-          >
-            All
-          </button>
-          <button
-            type="button"
             className={`ws-seg${filter === "needs" ? " active" : ""}`}
             onClick={() => onFilterChange("needs")}
           >
@@ -114,27 +107,23 @@ export function WorkspaceClientList({
             <div style={{ fontSize: "var(--text-sm)", color: "var(--clr-muted)", marginBottom: "var(--sp-4)" }}>
               {filter === "clear"
                 ? "No handled clients yet."
-                : filter === "needs"
-                  ? "No clients need input."
-                  : "No clients found."}
+                : "No clients need input."}
             </div>
-            {filter !== "all" && (
-              <button
-                type="button"
-                onClick={() => onFilterChange("all")}
-                style={{
-                  fontSize: "var(--text-xs)",
-                  color: "var(--brand)",
-                  background: "none",
-                  border: "none",
-                  cursor: "pointer",
-                  fontFamily: "inherit",
-                  fontWeight: "var(--fw-medium)",
-                }}
-              >
-                Show all clients
-              </button>
-            )}
+            <button
+              type="button"
+              onClick={() => onFilterChange(filter === "needs" ? "clear" : "needs")}
+              style={{
+                fontSize: "var(--text-xs)",
+                color: "var(--brand)",
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                fontFamily: "inherit",
+                fontWeight: "var(--fw-medium)",
+              }}
+            >
+              {filter === "needs" ? "Show handled" : "Show needs input"}
+            </button>
           </div>
         )}
         {filteredClients.map((client) => (

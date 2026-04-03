@@ -198,7 +198,7 @@ function FieldRow({
           fontSize: "var(--text-sm)",
           color: "var(--clr-primary)",
           fontWeight: "var(--fw-medium)",
-          textAlign: "right",
+          textAlign: "left",
           flex: 1,
           overflow: "hidden",
           textOverflow: "ellipsis",

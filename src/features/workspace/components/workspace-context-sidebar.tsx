@@ -10,6 +10,10 @@ function isVip(client: ListedClient): boolean {
   return client.chase_frequency_days <= 7;
 }
 
+function CtxValue({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) {
+  return <span className="ws-ctx-value" style={{ textAlign: "left", ...style }}>{children}</span>;
+}
+
 export function WorkspaceContextSidebar({ client }: Props) {
   const isPaused = client.chase_paused_until && new Date(client.chase_paused_until) > new Date();
 
@@ -28,19 +32,19 @@ export function WorkspaceContextSidebar({ client }: Props) {
         <div className="ws-ctx-title">Contact</div>
         <div className="ws-ctx-row">
           <span className="ws-ctx-label">Name</span>
-          <span className="ws-ctx-value">{client.name}</span>
+          <CtxValue>{client.name}</CtxValue>
         </div>
         <div className="ws-ctx-row">
           <span className="ws-ctx-label">Email</span>
-          <span className="ws-ctx-value">{client.email || "—"}</span>
+          <CtxValue>{client.email || "—"}</CtxValue>
         </div>
         <div className="ws-ctx-row">
           <span className="ws-ctx-label">Phone</span>
-          <span className="ws-ctx-value">{client.phone || "—"}</span>
+          <CtxValue>{client.phone || "—"}</CtxValue>
         </div>
         <div className="ws-ctx-row">
           <span className="ws-ctx-label">Manager</span>
-          <span className="ws-ctx-value">{client.assigned_user_name || "Unassigned"}</span>
+          <CtxValue>{client.assigned_user_name || "Unassigned"}</CtxValue>
         </div>
       </div>
 
@@ -71,23 +75,23 @@ export function WorkspaceContextSidebar({ client }: Props) {
         <div className="ws-ctx-title">Key Dates</div>
         <div className="ws-ctx-row">
           <span className="ws-ctx-label">VAT period end</span>
-          <span className="ws-ctx-value">
+          <CtxValue>
             {client.vat_period_end_date
               ? new Date(client.vat_period_end_date).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })
               : "—"}
-          </span>
+          </CtxValue>
         </div>
         <div className="ws-ctx-row">
           <span className="ws-ctx-label">Created</span>
-          <span className="ws-ctx-value">
+          <CtxValue>
             {new Date(client.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
-          </span>
+          </CtxValue>
         </div>
         <div className="ws-ctx-row">
           <span className="ws-ctx-label">Updated</span>
-          <span className="ws-ctx-value">
+          <CtxValue>
             {new Date(client.updated_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
-          </span>
+          </CtxValue>
         </div>
       </div>
 
@@ -96,11 +100,11 @@ export function WorkspaceContextSidebar({ client }: Props) {
         <div className="ws-ctx-title">Chase Config</div>
         <div className="ws-ctx-row">
           <span className="ws-ctx-label">Frequency</span>
-          <span className="ws-ctx-value">Every {client.chase_frequency_days} day{client.chase_frequency_days !== 1 ? "s" : ""}</span>
+          <CtxValue>Every {client.chase_frequency_days} day{client.chase_frequency_days !== 1 ? "s" : ""}</CtxValue>
         </div>
         <div className="ws-ctx-row">
           <span className="ws-ctx-label">Escalation</span>
-          <span className="ws-ctx-value">After {client.escalation_days} day{client.escalation_days !== 1 ? "s" : ""}</span>
+          <CtxValue>After {client.escalation_days} day{client.escalation_days !== 1 ? "s" : ""}</CtxValue>
         </div>
         {isVip(client) && (
           <div style={{ marginTop: "var(--sp-4)" }}>
@@ -114,16 +118,16 @@ export function WorkspaceContextSidebar({ client }: Props) {
         <div className="ws-ctx-title">Xero</div>
         <div className="ws-ctx-row">
           <span className="ws-ctx-label">Connected</span>
-          <span className="ws-ctx-value" style={{ color: client.xero_contact_id ? "var(--success)" : "var(--clr-muted)" }}>
+          <CtxValue style={{ color: client.xero_contact_id ? "var(--success)" : "var(--clr-muted)" }}>
             {client.xero_contact_id ? "Yes" : "No"}
-          </span>
+          </CtxValue>
         </div>
         {client.xero_files_inbox_email && (
           <div className="ws-ctx-row">
             <span className="ws-ctx-label">Files inbox</span>
-            <span className="ws-ctx-value" style={{ fontSize: "var(--text-xs)" }}>
+            <CtxValue style={{ fontSize: "var(--text-xs)" }}>
               {client.xero_files_inbox_email}
-            </span>
+            </CtxValue>
           </div>
         )}
       </div>

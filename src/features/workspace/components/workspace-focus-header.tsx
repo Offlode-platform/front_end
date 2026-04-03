@@ -47,7 +47,7 @@ export function WorkspaceFocusHeader({
           </button>
           <div className="ws-focus-identity">
             <div className="ws-focus-name">{client.name}</div>
-            <div className="ws-focus-meta">
+            <div className="ws-focus-meta" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
               {client.email || "No email"}
               {isVip(client) && (
                 <span style={{ color: "var(--vip)", marginLeft: 6, fontSize: "var(--text-xs)" }}>

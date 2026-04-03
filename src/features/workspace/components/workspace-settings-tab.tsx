@@ -36,9 +36,25 @@ export function WorkspaceSettingsTab({ client, onUpdated }: Props) {
         const updated = await clientsApi.update(client.id, updates);
         onUpdated({ ...client, ...updated });
       }
+
+      // Also sync chase schedule config if chase fields changed
+      const chaseChanged =
+        chaseEnabled !== client.chase_enabled ||
+        frequencyDays !== client.chase_frequency_days ||
+        escalationDays !== client.escalation_days;
+      if (chaseChanged) {
+        await chasesApi.configure(client.id, {
+          client_id: client.id,
+          frequency_days: frequencyDays,
+          escalation_days: escalationDays,
+          enabled: chaseEnabled,
+        });
+      }
+
       setDirty(false);
     } catch {
-      // Error silently handled
+      setPauseMsg("Failed to save settings.");
+      setTimeout(() => setPauseMsg(null), 3000);
     } finally {
       setSaving(false);
     }
