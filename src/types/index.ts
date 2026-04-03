@@ -26,6 +26,9 @@ export type {
   NeedsAttentionResponse,
   OnTrackResponse,
   ClientDashboardDetailsResponse,
+  ClientDashboardMissingTransaction,
+  ClientDashboardChaseEntry,
+  ClientDashboardUpload,
   BulkActionRequestBody,
   BulkActionResponse,
   ExportClientsCsvRequestBody,
@@ -59,3 +62,20 @@ export type {
   ManagerPermissionsRequest,
   ManagerPermissionsResponse,
 } from "./users";
+export type {
+  Chase,
+  ChaseHistoryResponse,
+  ChaseManualSendRequest,
+  ChaseScheduleConfig,
+  BulkChaseRequest,
+  BulkChaseResponse,
+} from "./chases";
+export type {
+  Transaction,
+  TransactionListResponse,
+  TransactionUpdate,
+} from "./transactions";
+export type {
+  Document,
+  DocumentListResponse,
+} from "./documents";

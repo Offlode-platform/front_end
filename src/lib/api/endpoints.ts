@@ -32,6 +32,21 @@ export const apiPaths = {
   organizations: {
     base: "/api/v1/organizations",
   },
+  chases: {
+    send: "/api/v1/chases",
+    bulk: "/api/v1/chases/bulk",
+    configure: "/api/v1/chases",
+    pause: "/api/v1/chases",
+    resume: "/api/v1/chases",
+    history: "/api/v1/chases",
+    get: "/api/v1/chases",
+  },
+  transactions: {
+    base: "/api/v1/transactions",
+  },
+  documents: {
+    base: "/api/v1/documents",
+  },
 } as const;
 
 export function apiUrl(path: string): string {
