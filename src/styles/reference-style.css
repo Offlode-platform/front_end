@@ -1439,6 +1439,25 @@ select {
   z-index: 1;
 }
 
+/* Workspace route: lock outer scroll, keep sidebar list scrollable */
+#page-workspace.workspace-page-lock {
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+#page-workspace.workspace-page-lock .ws {
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+#page-workspace.workspace-page-lock .ws-list {
+  min-height: 0;
+}
+#page-workspace.workspace-page-lock .ws-items {
+  min-height: 0;
+  overflow-y: auto;
+}
+
 /* =============================================================================
    11. COMPONENT LIBRARY
    
@@ -5742,6 +5761,52 @@ select {
   border-top-color: rgba(255, 255, 255, 0.04);
 }
 
+/* Workspace client list — full-width selectable rows (button reset + alignment) */
+.ws-list .ws-items {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+.ws-list button.ws-item {
+  width: 100%;
+  max-width: 100%;
+  align-self: stretch;
+  box-sizing: border-box;
+  text-align: left;
+  justify-content: flex-start;
+  border: none;
+  background: transparent;
+  font: inherit;
+  color: inherit;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.ws-list button.ws-item:hover {
+  background: rgba(0, 0, 0, 0.025);
+}
+[data-theme="dark"] .ws-list button.ws-item:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+.ws-list button.ws-item.selected {
+  background: rgba(0, 0, 0, 0.04);
+}
+[data-theme="dark"] .ws-list button.ws-item.selected {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.ws-list-header-controls {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-6);
+  width: 100%;
+  align-items: stretch;
+}
+
+.ws-vip-toggle--full {
+  width: 100%;
+  justify-content: center;
+}
+
 /* ── Triage Preview — right side of triage view ── */
 .ws-preview {
   flex: 1;
@@ -7033,6 +7098,7 @@ select {
 .ws-cmd-row {
   display: flex;
   align-items: center;
+  justify-content: flex-start;
   gap: var(--sp-12);
   padding: var(--sp-16) var(--sp-24);
   background: var(--card-lt);
@@ -7042,6 +7108,7 @@ select {
   box-shadow: var(--shadow-rest);
   cursor: pointer;
   transition: all 0.15s;
+  text-align: left;
 }
 
 .ws-cmd-row:active {
@@ -7119,6 +7186,7 @@ select {
   white-space: nowrap;
   font-size: var(--text-base);
   color: var(--text-tertiary-lt);
+  text-align: left;
 }
 [data-theme="dark"] .ws-cmd-headline {
   color: var(--text-tertiary-dk);
@@ -7142,6 +7210,7 @@ select {
   align-items: center;
   gap: var(--sp-8);
   flex-shrink: 0;
+  margin-left: auto;
 }
 .ws-cmd-urg {
   font-size: var(--text-micro);
@@ -7423,6 +7492,15 @@ select {
 .ws-ref-icon svg {
   width: 16px;
   height: 16px;
+}
+button.ws-ref-icon {
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  padding: 0;
+  margin: 0;
 }
 [data-theme="dark"] .ws-ref-icon {
   color: var(--text-muted-dk);
@@ -7706,6 +7784,32 @@ select {
   stroke-linejoin: round;
   flex-shrink: 0;
 }
+/* Unified activity timeline (reference: _buildUnifiedTimeline) */
+.ws-timeline-filter {
+  font-size: var(--text-xs);
+  padding: var(--sp-4) var(--sp-12);
+  border-radius: 99px;
+  border: 1px solid var(--clr-divider-strong);
+  background: transparent;
+  color: var(--clr-muted);
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: var(--fw-medium);
+  transition:
+    border-color 0.15s,
+    background 0.15s,
+    color 0.15s;
+}
+.ws-timeline-filter:hover {
+  border-color: var(--brand);
+  color: var(--brand);
+}
+.ws-timeline-filter.active {
+  border-color: var(--brand);
+  background: rgba(53, 126, 146, 0.06);
+  color: var(--brand);
+}
+
 .ws-areas-item .ws-areas-count {
   margin-left: auto;
   font-size: var(--text-xs);
@@ -13735,4 +13839,286 @@ details.ws-card[open] summary {
 }
 [data-theme="light"] #page-help [style*="position:sticky"] {
   background: var(--card-lt);
+}
+
+/* =============================================================================
+   WORKSPACE RESPONSIVE ADAPTATIONS
+   Professional mobile/tablet behavior:
+   - Preserve desktop tri-column experience.
+   - Stack into list -> workspace -> context on smaller screens.
+   - Keep scroll ownership explicit to avoid nested scroll jank.
+   ============================================================================= */
+
+@media (max-width: 1280px) {
+  .ws-list {
+    width: 300px;
+  }
+  .ws-focus-content {
+    padding: var(--sp-20) var(--sp-20) var(--sp-32);
+  }
+  .ws-ctx {
+    width: 300px;
+    padding: var(--sp-24);
+  }
+}
+
+@media (max-width: 1024px) {
+  #page-workspace.workspace-page-lock .ws {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .ws-list {
+    width: 100%;
+    max-height: 44%;
+    border-right: none;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  }
+  [data-theme="dark"] .ws-list {
+    border-bottom-color: rgba(255, 255, 255, 0.06);
+  }
+  #page-workspace.workspace-page-lock .ws-list {
+    min-height: 180px;
+  }
+
+  .ws.focused .ws-list {
+    display: none;
+    transform: none;
+    margin-right: 0;
+    opacity: 1;
+    pointer-events: none;
+  }
+
+  .ws-middle {
+    flex: 1;
+    min-height: 0;
+    width: 100%;
+  }
+
+  .ws-prev-header,
+  .ws-focus-header {
+    padding-left: var(--sp-16);
+    padding-right: var(--sp-16);
+  }
+  .ws-prev-header-top {
+    gap: var(--sp-12);
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+  .ws-header-row1 {
+    min-height: auto;
+    padding: var(--sp-10) var(--sp-16);
+    gap: var(--sp-10);
+    flex-wrap: wrap;
+  }
+  .ws-header-left {
+    min-width: 0;
+    width: 100%;
+  }
+  .ws-header-right {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .ws-content-pane {
+    position: absolute;
+  }
+  .ws-focus-content {
+    padding: var(--sp-16) var(--sp-16) var(--sp-28);
+  }
+  .ws-mode-banner {
+    margin-bottom: var(--sp-16);
+    padding: var(--sp-14) var(--sp-16);
+  }
+
+  .ws-content-nav {
+    padding: var(--sp-6) 0 var(--sp-16);
+    flex-wrap: wrap;
+  }
+  .ws-switch-pill {
+    margin-right: 0;
+    margin-bottom: var(--sp-6);
+  }
+
+  .ws-list-header {
+    padding: var(--sp-12);
+  }
+  .ws-list-header-controls {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-8);
+  }
+  .ws-vip-toggle--full {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .ws-ctx {
+    width: 100%;
+    max-height: 38%;
+    min-height: 180px;
+    padding: var(--sp-16);
+    border-top: 1px solid rgba(0, 0, 0, 0.06);
+  }
+  [data-theme="dark"] .ws-ctx {
+    border-top-color: rgba(255, 255, 255, 0.06);
+  }
+  .ws-ctx::before {
+    display: none;
+  }
+  .ws-ctx.ws-ctx-hidden {
+    transform: translateY(100%);
+    margin-left: 0;
+    opacity: 0;
+    max-height: 0;
+    min-height: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    border-top: none;
+  }
+}
+
+@media (max-width: 640px) {
+  /* Mobile should be single-pane, not split-pane */
+  #page-workspace.workspace-page-lock .ws:not(.focused) .ws-middle {
+    display: none;
+  }
+  #page-workspace.workspace-page-lock .ws.focused .ws-middle {
+    display: flex;
+    width: 100%;
+  }
+  #page-workspace.workspace-page-lock .ws.focused .ws-list {
+    display: none;
+  }
+
+  #page-workspace.workspace-page-lock .ws-list {
+    max-height: 100%;
+    min-height: 0;
+    flex: 1;
+    width: 100%;
+    border-bottom: none;
+  }
+
+  .ws-list-header {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: inherit;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+  }
+  [data-theme="dark"] .ws-list-header {
+    border-bottom-color: rgba(255, 255, 255, 0.06);
+  }
+
+  .ws-segment {
+    width: 100%;
+  }
+  .ws-seg {
+    font-size: var(--text-xs);
+    padding: var(--sp-8) var(--sp-6);
+  }
+  .ws-seg-count {
+    min-width: 18px;
+    height: 18px;
+  }
+
+  .ws-prev-title,
+  .ws-focus-name {
+    font-size: var(--text-base);
+    line-height: 1.25;
+  }
+  .ws-prev-subtitle,
+  .ws-focus-meta {
+    font-size: var(--text-xs);
+    line-height: 1.35;
+    white-space: normal;
+  }
+  .ws-back {
+    min-height: 30px;
+    padding: 0 var(--sp-10);
+  }
+
+  .ws-header-right {
+    justify-content: flex-start;
+    gap: var(--sp-6);
+  }
+  .ws-ref-icon {
+    width: 30px;
+    height: 30px;
+  }
+  .ws-ref-icon svg {
+    width: 13px;
+    height: 13px;
+  }
+
+  .ws-focus-content {
+    padding: var(--sp-12) var(--sp-12) var(--sp-20);
+  }
+  .ws-mode-banner {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: var(--sp-6);
+  }
+  .ws-mode-count {
+    margin-left: 0;
+  }
+
+  .ws-content-nav {
+    gap: var(--sp-6);
+    padding-bottom: var(--sp-12);
+  }
+  .ws-areas-btn {
+    width: 100%;
+    justify-content: center;
+  }
+  .ws-areas-menu {
+    width: min(260px, 92vw);
+  }
+  .ws-switch-pill {
+    font-size: var(--text-2xs);
+    padding: var(--sp-4) var(--sp-10);
+  }
+  .ws-switch-count {
+    min-width: 14px;
+    height: 14px;
+  }
+
+  .ws-timeline-item {
+    gap: var(--sp-8) !important;
+  }
+  .ws-timeline-item > :first-child {
+    width: 62px !important;
+    font-size: var(--text-2xs) !important;
+  }
+  .ws-timeline-filter {
+    font-size: var(--text-2xs);
+    padding: var(--sp-4) var(--sp-10);
+  }
+
+  .ws-cmd-row {
+    padding: var(--sp-10) var(--sp-12);
+  }
+  .ws-cmd-headline {
+    font-size: var(--text-xs);
+    line-height: 1.35;
+  }
+
+  .ws-card {
+    padding: var(--sp-12);
+  }
+  .ws-ctx {
+    max-height: 38%;
+    min-height: 160px;
+    padding: var(--sp-12);
+  }
+  .ws-ctx-row {
+    gap: var(--sp-8);
+  }
+  .ws-ctx-value {
+    max-width: 60%;
+    font-size: var(--text-sm);
+  }
 }

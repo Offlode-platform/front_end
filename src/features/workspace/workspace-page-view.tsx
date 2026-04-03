@@ -1,192 +1,77 @@
 "use client";
 
-import { useEffect, useMemo, useState, useCallback } from "react";
-import { clientsApi } from "@/lib/api/clients-api";
-import type { ListedClient } from "@/types/clients";
+import { useMemo, useState } from "react";
 import { WorkspaceClientList } from "./components/workspace-client-list";
-import { WorkspaceBrief } from "./components/workspace-brief";
-import { WorkspaceFocusHeader, type WorkspaceTab } from "./components/workspace-focus-header";
-import { WorkspaceOverviewTab } from "./components/workspace-overview-tab";
-import { WorkspaceContactTab } from "./components/workspace-contact-tab";
-import { WorkspaceItemsTab } from "./components/workspace-items-tab";
-import { WorkspaceActivityTab } from "./components/workspace-activity-tab";
-import { WorkspaceSettingsTab } from "./components/workspace-settings-tab";
-import { WorkspaceContextSidebar } from "./components/workspace-context-sidebar";
+import { WorkspaceContextPanel } from "./components/workspace-context-panel";
+import { WorkspaceMiddlePane } from "./components/workspace-middle-pane";
+import type { RefSurface } from "./components/workspace-ref-surface";
+import type { WorkspaceDemoClient, WorkspaceZone } from "./types";
 
-type FilterKey = "needs" | "clear";
+type WorkspacePageViewProps = {
+  clients: WorkspaceDemoClient[];
+};
 
-function clientNeedsInput(c: ListedClient): boolean {
-  return !c.chase_enabled;
-}
+export function WorkspacePageView({ clients }: WorkspacePageViewProps) {
+  const [activeFilter, setActiveFilter] = useState<"needs-input" | "handled">(
+    "needs-input",
+  );
+  const [showVipOnly, setShowVipOnly] = useState(false);
+  const [selectedClientId, setSelectedClientId] = useState<string | null>(
+    clients[0] ? String(clients[0].id) : null,
+  );
+  const [focusedZone, setFocusedZone] = useState<WorkspaceZone | null>(null);
+  const [refSurface, setRefSurface] = useState<RefSurface | null>(null);
 
-function isVip(c: ListedClient): boolean {
-  return c.chase_frequency_days <= 7;
-}
-
-export function WorkspacePageView() {
-  const [clients, setClients] = useState<ListedClient[] | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [filter, setFilter] = useState<FilterKey>("needs");
-  const [search, setSearch] = useState("");
-  const [vipOnly, setVipOnly] = useState(false);
-  const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
-  const [focused, setFocused] = useState(false);
-  const [activeTab, setActiveTab] = useState<WorkspaceTab>("overview");
-
-  // Load clients
-  useEffect(() => {
-    let cancelled = false;
-    clientsApi.list().then(
-      (data) => {
-        if (!cancelled) {
-          setClients(data);
-          setIsLoading(false);
-        }
-      },
-      () => {
-        if (!cancelled) setIsLoading(false);
-      },
-    );
-    return () => { cancelled = true; };
-  }, []);
-
-  // Counts
-  const { needsCount, vipCount } = useMemo(() => {
-    let needs = 0;
-    let vip = 0;
-    if (!clients) return { needsCount: 0, vipCount: 0 };
-    for (const c of clients) {
-      if (clientNeedsInput(c)) needs++;
-      if (isVip(c)) vip++;
-    }
-    return { needsCount: needs, vipCount: vip };
-  }, [clients]);
-
-  // Filtered list
-  const filteredClients = useMemo(() => {
-    if (!clients) return [];
-    const q = search.trim().toLowerCase();
-    return clients.filter((c) => {
-      if (q && !c.name.toLowerCase().includes(q) && !(c.email || "").toLowerCase().includes(q)) {
-        return false;
-      }
-      if (vipOnly && !isVip(c)) return false;
-      if (filter === "needs") return clientNeedsInput(c);
-      return !clientNeedsInput(c);
-    });
-  }, [clients, filter, search, vipOnly]);
-
-  // Selected client — derive from filtered list, fallback to first item
-  const selectedClient = useMemo(() => {
-    const found = filteredClients.find((c) => c.id === selectedClientId);
-    return found ?? filteredClients[0] ?? null;
-  }, [filteredClients, selectedClientId]);
-
-  const selectedIndex = selectedClient
-    ? filteredClients.findIndex((c) => c.id === selectedClient.id)
-    : -1;
-
-  function handleSelectClient(id: string) {
-    setSelectedClientId(id);
-    setFocused(true);
-    setActiveTab("overview");
-  }
-
-  function handleBack() {
-    setFocused(false);
-  }
-
-  function handlePrev() {
-    if (selectedIndex > 0) {
-      setSelectedClientId(filteredClients[selectedIndex - 1].id);
-      setActiveTab("overview");
-    }
-  }
-
-  function handleNext() {
-    if (selectedIndex < filteredClients.length - 1) {
-      setSelectedClientId(filteredClients[selectedIndex + 1].id);
-      setActiveTab("overview");
-    }
-  }
-
-  const handleClientUpdated = useCallback((updated: ListedClient) => {
-    setClients((prev) =>
-      prev ? prev.map((c) => (c.id === updated.id ? updated : c)) : prev,
-    );
-  }, []);
-
-  // Render active tab content
-  function renderTabContent() {
-    if (!selectedClient) return null;
-    switch (activeTab) {
-      case "overview":
-        return <WorkspaceOverviewTab client={selectedClient} />;
-      case "contact":
-        return <WorkspaceContactTab client={selectedClient} onUpdated={handleClientUpdated} />;
-      case "items":
-        return <WorkspaceItemsTab client={selectedClient} />;
-      case "activity":
-        return <WorkspaceActivityTab client={selectedClient} />;
-      case "settings":
-        return <WorkspaceSettingsTab client={selectedClient} onUpdated={handleClientUpdated} />;
-      default:
-        return null;
-    }
-  }
+  const selectedClient = useMemo(
+    () =>
+      clients.find((client) => String(client.id) === selectedClientId) ?? null,
+    [clients, selectedClientId],
+  );
 
   return (
-    <div className={`page active${focused && selectedClient ? " ws-focused" : ""}`} id="page-workspace">
-      <div className="ws" id="ws" style={{ display: "flex", flex: 1, minHeight: 0 }}>
-        {/* Left column — client list */}
+    <div className="page active workspace-page-lock" id="page-workspace">
+      <div
+        className={`ws ${focusedZone || refSurface ? "focused" : ""}`}
+        id="ws"
+      >
         <WorkspaceClientList
           clients={clients}
-          filteredClients={filteredClients}
-          isLoading={isLoading}
-          filter={filter}
-          onFilterChange={setFilter}
-          search={search}
-          onSearchChange={setSearch}
-          selectedClientId={selectedClient?.id ?? null}
-          onSelectClient={handleSelectClient}
-          vipOnly={vipOnly}
-          onToggleVip={() => setVipOnly((v) => !v)}
-          needsCount={needsCount}
-          vipCount={vipCount}
+          activeFilter={activeFilter}
+          showVipOnly={showVipOnly}
+          onFilterChange={(next) => {
+            setActiveFilter(next);
+            setFocusedZone(null);
+            setRefSurface(null);
+          }}
+          onToggleVip={() => setShowVipOnly((prev) => !prev)}
+          selectedClientId={selectedClientId}
+          onSelectClient={(clientId) => {
+            setSelectedClientId(clientId);
+            setFocusedZone(null);
+            setRefSurface(null);
+          }}
         />
 
-        {/* Middle column — content */}
-        <div className="ws-middle">
-          {!focused || !selectedClient ? (
-            <div className="ws-content">
-              <WorkspaceBrief
-                needsCount={needsCount}
-                totalClients={clients?.length ?? 0}
-              />
-            </div>
-          ) : (
-            <>
-              <WorkspaceFocusHeader
-                client={selectedClient}
-                activeTab={activeTab}
-                onTabChange={setActiveTab}
-                onBack={handleBack}
-                onPrev={handlePrev}
-                onNext={handleNext}
-                hasPrev={selectedIndex > 0}
-                hasNext={selectedIndex < filteredClients.length - 1}
-              />
-              <div style={{ flex: 1, overflowY: "auto", background: "var(--canvas-bg)", position: "relative" }}>
-                {renderTabContent()}
-              </div>
-            </>
-          )}
-        </div>
+        <WorkspaceMiddlePane
+          client={selectedClient}
+          focusedZone={focusedZone}
+          refSurface={refSurface}
+          onOpenZone={(zone) => {
+            setRefSurface(null);
+            setFocusedZone(zone);
+          }}
+          onExitFocus={() => setFocusedZone(null)}
+          onOpenRef={(surface) => {
+            setFocusedZone(null);
+            setRefSurface(surface);
+          }}
+          onCloseRef={() => setRefSurface(null)}
+        />
 
-        {/* Right column — context sidebar (focus mode only) */}
-        {focused && selectedClient && (
-          <WorkspaceContextSidebar client={selectedClient} />
-        )}
+        <WorkspaceContextPanel
+          client={selectedClient}
+          isVisible={Boolean(focusedZone || refSurface)}
+        />
       </div>
     </div>
   );
