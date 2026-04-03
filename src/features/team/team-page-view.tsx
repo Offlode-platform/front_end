@@ -131,20 +131,37 @@ export function TeamPageView() {
           position: "relative",
         }}
       >
-        {/* Page bar */}
-        <div className="page-bar" style={{ flexShrink: 0 }}>
-          <div className="page-bar-left">
-            <div>
-              <div className="pg-title">Team</div>
-              <div className="pg-subtitle">
+        {/* Scrollable content: page-bar + team list */}
+        <div
+          style={{
+            flex: 1,
+            overflowY: "auto",
+            padding: 0,
+            background: "var(--canvas-bg)",
+          }}
+        >
+          {/* Page bar (scrolls with content) */}
+          <div className="page-bar">
+            <div className="page-bar-left">
+              <div className="pg-subtitle" style={{ margin: 0 }}>
                 {activeCount} member{activeCount !== 1 ? "s" : ""} &middot; All
                 active
               </div>
             </div>
+            <div className="page-bar-right" style={{ gap: "var(--sp-8)" }}>
+              <button
+                type="button"
+                className="btn btn-primary btn-sm"
+                onClick={() => setIsInviteOpen(true)}
+              >
+                Invite
+              </button>
+            </div>
           </div>
-          <div className="page-bar-right" style={{ gap: "var(--sp-8)" }}>
-            {/* Search */}
-            <div className="ws-search" style={{ maxWidth: 220 }}>
+
+          {/* Search bar */}
+          <div style={{ padding: "0 var(--sp-32)" }}>
+            <div className="ws-search">
               <svg viewBox="0 0 24 24">
                 <circle cx="11" cy="11" r="8" />
                 <path d="m21 21-4.3-4.3" />
@@ -156,25 +173,9 @@ export function TeamPageView() {
                 onChange={(e) => setSearch(e.target.value)}
               />
             </div>
-            <button
-              type="button"
-              className="btn btn-primary btn-sm"
-              onClick={() => setIsInviteOpen(true)}
-            >
-              Invite
-            </button>
           </div>
-        </div>
 
-        {/* Team list */}
-        <div
-          style={{
-            flex: 1,
-            overflowY: "auto",
-            padding: 0,
-            background: "var(--canvas-bg)",
-          }}
-        >
+          {/* Team member cards */}
           <TeamList
             users={filteredUsers}
             isLoading={isLoading}

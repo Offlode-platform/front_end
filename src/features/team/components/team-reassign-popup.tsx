@@ -113,7 +113,7 @@ export function TeamReassignPopup({
                 display: "flex",
                 alignItems: "center",
                 gap: "var(--sp-8)",
-                padding: "var(--sp-8) var(--sp-12)",
+                padding: "var(--sp-8) var(--sp-16)",
                 cursor: "pointer",
               }}
             >

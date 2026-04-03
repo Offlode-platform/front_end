@@ -151,14 +151,7 @@ export function TeamInviteModal({
     >
       <div
         className="modal"
-        style={{
-          width: "100%",
-          maxWidth: 480,
-          margin: "var(--sp-24) auto",
-          maxHeight: "85vh",
-          display: "flex",
-          flexDirection: "column",
-        }}
+        style={{ width: 480 }}
       >
         {/* Header */}
         <div className="modal-header">

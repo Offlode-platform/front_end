@@ -418,7 +418,6 @@ export function TeamDetailPanel({
               filteredAssignments.map((a) => (
                 <div
                   key={a.id}
-                  className="tm-client-row"
                   style={{
                     display: "flex",
                     alignItems: "center",

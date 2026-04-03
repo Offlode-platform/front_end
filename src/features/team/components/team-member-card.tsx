@@ -97,21 +97,14 @@ export function TeamMemberCard({
         style={{
           width: 1,
           height: 28,
-          background: "var(--clr-divider)",
+          background: "var(--clr-divider-strong)",
           flexShrink: 0,
         }}
       />
 
       {/* Stats */}
-      <div
-        style={{
-          display: "flex",
-          gap: "var(--sp-24)",
-          flex: 1,
-          minWidth: 0,
-        }}
-      >
-        <div>
+      <div style={{ display: "flex", flex: 1, minWidth: 0 }}>
+        <div style={{ flex: 1, textAlign: "center" }}>
           <div
             style={{
               fontSize: "var(--text-sm)",
@@ -122,20 +115,19 @@ export function TeamMemberCard({
             {clientCount}
           </div>
           <div
-            className="tm-stat-label"
             style={{
               fontSize: "var(--text-2xs)",
-              color: "var(--clr-muted)",
+              color: "var(--clr-faint)",
               textTransform: "uppercase",
-              letterSpacing: "0.04em",
-              marginTop: 2,
+              letterSpacing: "0.06em",
+              marginBottom: "var(--sp-2)",
             }}
           >
             Clients
           </div>
         </div>
 
-        <div>
+        <div style={{ flex: 1, textAlign: "center" }}>
           <div
             style={{
               fontSize: "var(--text-sm)",
@@ -146,13 +138,12 @@ export function TeamMemberCard({
             {formatRelativeTime(user.last_login_at)}
           </div>
           <div
-            className="tm-stat-label"
             style={{
               fontSize: "var(--text-2xs)",
-              color: "var(--clr-muted)",
+              color: "var(--clr-faint)",
               textTransform: "uppercase",
-              letterSpacing: "0.04em",
-              marginTop: 2,
+              letterSpacing: "0.06em",
+              marginBottom: "var(--sp-2)",
             }}
           >
             Last active
@@ -165,7 +156,7 @@ export function TeamMemberCard({
         style={{
           width: 1,
           height: 28,
-          background: "var(--clr-divider)",
+          background: "var(--clr-divider-strong)",
           flexShrink: 0,
         }}
       />
