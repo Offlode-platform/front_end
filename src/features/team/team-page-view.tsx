@@ -117,7 +117,7 @@ export function TeamPageView() {
       style={{
         display: "flex",
         flexDirection: "column",
-        flex: 1,
+        height: "100%",
         minHeight: 0,
       }}
     >
