@@ -1,5 +1,5 @@
-import { PageComingSoon } from "@/components/layout/page-coming-soon";
+import { WorkspacePageView } from "@/features/workspace";
 
 export default function WorkspacePage() {
-  return <PageComingSoon title="Workspace" />;
+  return <WorkspacePageView />;
 }

@@ -1,0 +1,43 @@
+export type Document = {
+  id: string;
+  organization_id: string;
+  client_id: string;
+  transaction_id: string | null;
+  filename: string;
+  original_filename: string;
+  file_size: number | null;
+  mime_type: string | null;
+  s3_key: string;
+  s3_bucket: string;
+  s3_url: string;
+  ocr_status: string;
+  ocr_text: string | null;
+  ocr_confidence: string | null;
+  virus_scan_status: string;
+  virus_scanned_at: string | null;
+  extracted_amount: string | null;
+  extracted_date: string | null;
+  extracted_supplier: string | null;
+  xero_file_id: string | null;
+  forwarded_to_xero: boolean;
+  forwarded_at: string | null;
+  forwarding_status: string;
+  forwarding_attempts: number;
+  forwarding_last_error: string | null;
+  flagged: boolean;
+  flag_reason: string | null;
+  flag_category: string | null;
+  file_hash: string | null;
+  uploaded_by: string | null;
+  uploaded_at: string;
+  created_at: string;
+  is_processed: boolean;
+};
+
+export type DocumentListResponse = {
+  total: number;
+  processed: number;
+  pending: number;
+  flagged: number;
+  documents: Document[];
+};

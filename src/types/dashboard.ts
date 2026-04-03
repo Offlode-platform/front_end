@@ -58,7 +58,41 @@ export type NeedsAttentionResponse =
 
 export type OnTrackResponse = string | Record<string, unknown>;
 
-export type ClientDashboardDetailsResponse = string;
+export type ClientDashboardMissingTransaction = {
+  date: string;
+  amount: number;
+  description: string;
+};
+
+export type ClientDashboardChaseEntry = {
+  type: string;
+  status: string;
+  sent_at: string | null;
+  delivered: boolean;
+};
+
+export type ClientDashboardUpload = {
+  filename: string;
+  uploaded_at: string;
+  status: string;
+  forwarded_to_xero: boolean;
+};
+
+export type ClientDashboardDetailsResponse = {
+  client_id: string;
+  client_name: string;
+  email: string;
+  phone: string;
+  chase_enabled: boolean;
+  chase_frequency_days: number;
+  missing_documents: {
+    total: number;
+    grouped_by_supplier: Record<string, ClientDashboardMissingTransaction[]>;
+  };
+  pending_reconciliation: number;
+  chase_history: ClientDashboardChaseEntry[];
+  recent_uploads: ClientDashboardUpload[];
+};
 
 export type BulkActionRequestBody = {
   client_ids: string[];
