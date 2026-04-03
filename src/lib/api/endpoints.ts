@@ -47,6 +47,9 @@ export const apiPaths = {
   documents: {
     base: "/api/v1/documents",
   },
+  clientAssignments: {
+    base: "/api/v1/client-assignments",
+  },
 } as const;
 
 export function apiUrl(path: string): string {

@@ -11,3 +11,4 @@ export {
 export { apiPaths, apiUrl } from "./endpoints";
 export { publicApi } from "./public-client";
 export { transactionsApi } from "./transactions-api";
+export { clientAssignmentsApi } from "./client-assignments-api";
