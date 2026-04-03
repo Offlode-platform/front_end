@@ -70,13 +70,16 @@ export function TeamMemberCard({
       </div>
 
       {/* Name + Email */}
-      <div style={{ minWidth: 170, flex: "0 0 auto" }}>
+      <div style={{ minWidth: 120, maxWidth: 220, flex: "1 1 170px", overflow: "hidden" }}>
         <div
           style={{
             fontWeight: "var(--fw-medium)" as string,
             color: "var(--clr-secondary)",
             fontSize: "var(--text-sm)",
             lineHeight: 1.3,
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
           }}
         >
           {user.name}
@@ -86,6 +89,9 @@ export function TeamMemberCard({
             fontSize: "var(--text-xs)",
             color: "var(--clr-muted)",
             marginTop: 2,
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
           }}
         >
           {user.email}
@@ -103,7 +109,7 @@ export function TeamMemberCard({
       />
 
       {/* Stats */}
-      <div style={{ display: "flex", flex: 1, minWidth: 0 }}>
+      <div style={{ display: "flex", flex: "0 0 auto", minWidth: 180 }}>
         <div style={{ flex: 1, textAlign: "center" }}>
           <div
             style={{

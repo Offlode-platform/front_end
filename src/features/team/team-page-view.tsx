@@ -141,14 +141,20 @@ export function TeamPageView() {
           }}
         >
           {/* Page bar (scrolls with content) */}
-          <div className="page-bar">
-            <div className="page-bar-left">
-              <div className="pg-subtitle" style={{ margin: 0 }}>
-                {activeCount} member{activeCount !== 1 ? "s" : ""} &middot; All
-                active
-              </div>
+          <div
+            className="page-bar"
+            style={{
+              padding: "var(--sp-16) var(--sp-32)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
+          >
+            <div className="pg-subtitle" style={{ margin: 0 }}>
+              {activeCount} member{activeCount !== 1 ? "s" : ""} &middot; All
+              active
             </div>
-            <div className="page-bar-right" style={{ gap: "var(--sp-8)" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "var(--sp-8)", flexShrink: 0 }}>
               <button
                 type="button"
                 className="btn btn-primary btn-sm"
@@ -160,8 +166,8 @@ export function TeamPageView() {
           </div>
 
           {/* Search bar */}
-          <div style={{ padding: "0 var(--sp-32)" }}>
-            <div className="ws-search">
+          <div style={{ padding: "0 var(--sp-32)", marginBottom: "var(--sp-8)" }}>
+            <div className="ws-search" style={{ maxWidth: 320 }}>
               <svg viewBox="0 0 24 24">
                 <circle cx="11" cy="11" r="8" />
                 <path d="m21 21-4.3-4.3" />

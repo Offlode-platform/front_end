@@ -162,19 +162,30 @@ export function TeamDetailPanel({
           type="button"
           onClick={onClose}
           style={{
-            position: "absolute",
-            top: "var(--sp-12)",
-            right: "var(--sp-12)",
-            background: "none",
-            border: "none",
+            position: "sticky",
+            top: 0,
+            float: "right",
+            width: 32,
+            height: 32,
+            borderRadius: "var(--r-sm)",
+            background: "rgba(0,0,0,0.04)",
+            border: "1px solid rgba(0,0,0,0.06)",
             cursor: "pointer",
-            fontSize: "var(--text-xl)",
-            color: "var(--clr-muted)",
+            fontSize: 18,
+            color: "var(--clr-secondary)",
             lineHeight: 1,
-            padding: "var(--sp-4)",
+            padding: 0,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 2,
+            marginBottom: "-32px",
           }}
         >
-          &times;
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
         </button>
 
         {/* Header */}
@@ -183,9 +194,9 @@ export function TeamDetailPanel({
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
-            gap: "var(--sp-8)",
-            marginBottom: "var(--sp-24)",
-            paddingTop: "var(--sp-8)",
+            gap: "var(--sp-6)",
+            marginBottom: "var(--sp-20)",
+            paddingTop: "var(--sp-4)",
           }}
         >
           <div
@@ -263,22 +274,15 @@ export function TeamDetailPanel({
             style={{
               display: "grid",
               gridTemplateColumns: "1fr",
-              gap: "var(--sp-4)",
+              gap: 0,
             }}
           >
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "center",
-                marginBottom: "var(--sp-8)",
-              }}
-            >
-              <div style={{ textAlign: "center" }}>
-                <div className="kpi-mini-val">{assignments.length}</div>
-                <div className="kpi-mini-label">Clients</div>
-              </div>
+            <div className="ws-settings-row">
+              <span className="ws-settings-label">Clients</span>
+              <span className="ws-settings-value" style={{ fontWeight: "var(--fw-semibold)" as string }}>
+                {assignments.length}
+              </span>
             </div>
-
             <div className="ws-settings-row">
               <span className="ws-settings-label">Joined</span>
               <span className="ws-settings-value">
