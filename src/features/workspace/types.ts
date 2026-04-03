@@ -91,7 +91,7 @@ export type DemoInvoice = {
 };
 
 export type WorkspaceDemoClient = {
-  id: number;
+  id: number | string;
   name: string;
   intent?: string;
   intentDetail?: string;

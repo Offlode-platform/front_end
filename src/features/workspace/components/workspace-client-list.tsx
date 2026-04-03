@@ -1,11 +1,12 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import type { WorkspaceDemoClient } from "../types";
-import { getClientWorkspaceTaskCount, listSeverityRaw } from "../workspace-task-stream";
+import type { ListedClient } from "@/types/clients";
 
 type WorkspaceClientListProps = {
-  clients: WorkspaceDemoClient[];
+  clients: ListedClient[];
+  isLoading: boolean;
+  error: string | null;
   activeFilter: "needs-input" | "handled";
   showVipOnly: boolean;
   onFilterChange: (next: "needs-input" | "handled") => void;
@@ -14,6 +15,14 @@ type WorkspaceClientListProps = {
   onSelectClient: (clientId: string) => void;
 };
 
+function isVip(c: ListedClient): boolean {
+  return c.chase_frequency_days <= 7;
+}
+
+function clientNeedsInput(c: ListedClient): boolean {
+  return !c.chase_enabled;
+}
+
 function truncateDesc(text: string, max = 50): string {
   if (text.length <= max) return text;
   return `${text.slice(0, max)}…`;
@@ -21,6 +30,8 @@ function truncateDesc(text: string, max = 50): string {
 
 export function WorkspaceClientList({
   clients,
+  isLoading,
+  error,
   activeFilter,
   showVipOnly,
   onFilterChange,
@@ -34,33 +45,21 @@ export function WorkspaceClientList({
 
   const filtered = useMemo(() => {
     return clients.filter((c) => {
-      if (searchLower && !c.name.toLowerCase().includes(searchLower)) return false;
-      if (showVipOnly) return Boolean(c.vip);
-      const listSev = listSeverityRaw(c);
-      const bucket = listSev === "action" || listSev === "review" ? "needs-input" : "handled";
-      return bucket === activeFilter;
+      if (searchLower && !c.name.toLowerCase().includes(searchLower) && !c.email.toLowerCase().includes(searchLower))
+        return false;
+      if (showVipOnly) return isVip(c);
+      const needsInput = clientNeedsInput(c);
+      if (activeFilter === "needs-input") return needsInput;
+      return !needsInput;
     });
   }, [clients, searchLower, showVipOnly, activeFilter]);
 
-  const actionClients = useMemo(
-    () => filtered.filter((c) => c.urgentItem?.severity === "action"),
-    [filtered],
-  );
-  const reviewClients = useMemo(
-    () => filtered.filter((c) => c.urgentItem?.severity === "review"),
-    [filtered],
+  const needsCount = useMemo(
+    () => clients.filter((c) => clientNeedsInput(c)).length,
+    [clients],
   );
 
-  const needsCount = useMemo(() => {
-    return clients.filter((c) => {
-      const sev = c.urgentItem?.severity ?? "handled";
-      return sev === "action" || sev === "review";
-    }).length;
-  }, [clients]);
-
-  const vipCount = useMemo(() => clients.filter((c) => c.vip).length, [clients]);
-
-  const showActionReviewGroups = activeFilter === "needs-input" && !showVipOnly;
+  const vipCount = useMemo(() => clients.filter((c) => isVip(c)).length, [clients]);
 
   return (
     <div className="ws-list" id="wsList">
@@ -120,53 +119,36 @@ export function WorkspaceClientList({
       </div>
 
       <div className="ws-items" id="wsItems" role="listbox" aria-label="Client list">
-        {showActionReviewGroups ? (
-          <>
-            {actionClients.length > 0 ? (
-              <>
-                <div className="ws-list-section">
-                  Action Required <span className="ws-list-section-count">{actionClients.length}</span>
-                </div>
-                {actionClients.map((client) => (
-                  <ClientListRow
-                    key={client.id}
-                    client={client}
-                    selected={String(client.id) === selectedClientId}
-                    onSelect={() => onSelectClient(String(client.id))}
-                  />
-                ))}
-              </>
-            ) : null}
-            {reviewClients.length > 0 ? (
-              <>
-                <div className="ws-list-section">
-                  Review <span className="ws-list-section-count">{reviewClients.length}</span>
-                </div>
-                {reviewClients.map((client) => (
-                  <ClientListRow
-                    key={client.id}
-                    client={client}
-                    selected={String(client.id) === selectedClientId}
-                    onSelect={() => onSelectClient(String(client.id))}
-                  />
-                ))}
-              </>
-            ) : null}
-          </>
+        {isLoading ? (
+          <div className="ws-empty-watermark">
+            <div className="ws-empty-title">Loading clients...</div>
+          </div>
+        ) : error ? (
+          <div className="ws-empty-watermark">
+            <div className="ws-empty-title">Unable to load</div>
+            <div className="ws-empty-desc">{error}</div>
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="ws-empty-watermark">
+            <div className="ws-empty-title">No clients found</div>
+            <div className="ws-empty-desc">
+              {clients.length === 0
+                ? "Add clients to get started."
+                : "Try adjusting your filters or search."}
+            </div>
+          </div>
         ) : (
           <>
-            {filtered.length > 0 ? (
-              <div className="ws-list-section">
-                {showVipOnly ? "VIP Clients" : "Handled"}{" "}
-                <span className="ws-list-section-count">{filtered.length}</span>
-              </div>
-            ) : null}
+            <div className="ws-list-section">
+              {showVipOnly ? "VIP Clients" : activeFilter === "needs-input" ? "Needs Input" : "Handled"}{" "}
+              <span className="ws-list-section-count">{filtered.length}</span>
+            </div>
             {filtered.map((client) => (
               <ClientListRow
                 key={client.id}
                 client={client}
-                selected={String(client.id) === selectedClientId}
-                onSelect={() => onSelectClient(String(client.id))}
+                selected={client.id === selectedClientId}
+                onSelect={() => onSelectClient(client.id)}
               />
             ))}
           </>
@@ -181,21 +163,16 @@ export function WorkspaceClientList({
 }
 
 type ClientListRowProps = {
-  client: WorkspaceDemoClient;
+  client: ListedClient;
   selected: boolean;
   onSelect: () => void;
 };
 
 function ClientListRow({ client, selected, onSelect }: ClientListRowProps) {
-  const rawSev = client.urgentItem?.severity ?? "handled";
-  const barColor = rawSev === "action" ? "red" : rawSev === "review" ? "amber" : "green";
-  const desc = truncateDesc(client.urgentItem?.desc ?? "");
-  const taskCount = getClientWorkspaceTaskCount(client);
-  const rawSevClass = rawSev === "action" ? " urgent" : rawSev === "review" ? " review" : "";
-  const countBadge =
-    taskCount > 0 ? (
-      <span className={`ws-item-task-count${rawSevClass}`}>{taskCount}</span>
-    ) : null;
+  const needsInput = clientNeedsInput(client);
+  const barColor = needsInput ? "amber" : "green";
+  const desc = truncateDesc(client.email || "");
+  const vip = isVip(client);
 
   return (
     <button
@@ -209,7 +186,7 @@ function ClientListRow({ client, selected, onSelect }: ClientListRowProps) {
       <div className="ws-item-info">
         <div className="ws-item-name">
           {client.name}
-          {client.vip ? (
+          {vip ? (
             <svg
               viewBox="0 0 24 24"
               style={{ width: 10, height: 10, fill: "var(--vip)", stroke: "var(--vip)", strokeWidth: 1, marginLeft: 4, verticalAlign: "middle" }}
@@ -221,7 +198,6 @@ function ClientListRow({ client, selected, onSelect }: ClientListRowProps) {
         </div>
         <div className="ws-item-meta">{desc}</div>
       </div>
-      {countBadge}
       <svg className="ws-item-chevron" viewBox="0 0 24 24" aria-hidden="true">
         <polyline points="9 6 15 12 9 18" />
       </svg>
