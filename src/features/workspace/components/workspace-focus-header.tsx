@@ -28,6 +28,16 @@ function isVip(client: ListedClient): boolean {
   return client.chase_frequency_days <= 7;
 }
 
+function shortEmail(email: string | null | undefined): string {
+  if (!email) return "No email";
+  const at = email.indexOf("@");
+  if (at <= 0) return email.length > 30 ? email.slice(0, 30) + "…" : email;
+  const user = email.slice(0, at);
+  const domain = email.slice(at + 1);
+  const shortDomain = domain.split(".")[0];
+  return `${user.length > 20 ? user.slice(0, 20) + "…" : user}@${shortDomain}`;
+}
+
 export function WorkspaceFocusHeader({
   client,
   activeTab,
@@ -48,7 +58,7 @@ export function WorkspaceFocusHeader({
           <div className="ws-focus-identity">
             <div className="ws-focus-name">{client.name}</div>
             <div className="ws-focus-meta" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-              {client.email || "No email"}
+              {shortEmail(client.email)}
               {isVip(client) && (
                 <span style={{ color: "var(--vip)", marginLeft: 6, fontSize: "var(--text-xs)" }}>
                   VIP

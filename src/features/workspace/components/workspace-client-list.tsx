@@ -5,6 +5,20 @@ import type { ListedClient } from "@/types/clients";
 
 type FilterKey = "needs" | "clear";
 
+function truncate(str: string, max: number): string {
+  return str.length > max ? str.slice(0, max) + "…" : str;
+}
+
+function shortEmail(email: string | null | undefined): string {
+  if (!email) return "No email";
+  const at = email.indexOf("@");
+  if (at <= 0) return truncate(email, 24);
+  const user = email.slice(0, at);
+  const domain = email.slice(at + 1);
+  const shortDomain = domain.split(".")[0];
+  return `${truncate(user, 16)}@${shortDomain}`;
+}
+
 function getStatusColor(client: ListedClient): "green" | "amber" | "red" {
   if (!client.is_active) return "red";
   if (!client.chase_enabled) return "amber";
@@ -136,9 +150,9 @@ export function WorkspaceClientList({
             onClick={() => onSelectClient(client.id)}
           >
             <div className={`ws-item-bar ${getStatusColor(client)}`} />
-            <div className="ws-item-info">
+            <div className="ws-item-info" style={{ textAlign: "left" }}>
               <div className="ws-item-name">
-                {client.name}
+                {truncate(client.name, 28)}
                 {isVip(client) && (
                   <svg
                     width="10"
@@ -152,8 +166,8 @@ export function WorkspaceClientList({
                 )}
               </div>
               <div className="ws-item-meta">
-                {client.email || "No email"}
-                {client.assigned_user_name ? ` · ${client.assigned_user_name}` : ""}
+                {shortEmail(client.email)}
+                {client.assigned_user_name ? ` · ${truncate(client.assigned_user_name, 16)}` : ""}
               </div>
             </div>
             <svg className="ws-item-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
