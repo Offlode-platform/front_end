@@ -17,6 +17,8 @@ export function TeamPageView() {
   const [search, setSearch] = useState("");
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [isInviteOpen, setIsInviteOpen] = useState(false);
+  const [confirmRemove, setConfirmRemove] = useState<{ id: string; name: string } | null>(null);
+  const [isDeactivating, setIsDeactivating] = useState(false);
 
   const loadData = useCallback(async () => {
     setIsLoading(true);
@@ -93,13 +95,31 @@ export function TeamPageView() {
 
   async function handleInviteCreated(newUser: User) {
     setIsInviteOpen(false);
+    // Optimistically add the new user so they appear immediately
     setUsers((prev) => (prev ? [...prev, newUser] : [newUser]));
-    await loadData();
+    // Only refresh assignments (not users) to avoid overwriting the optimistic update
+    // with potentially stale data from the backend
+    try {
+      const newAssignments = await clientAssignmentsApi.list();
+      setAssignments(newAssignments);
+    } catch {
+      // Assignments will sync on next page load
+    }
   }
 
-  async function handleUserDeactivated() {
-    setSelectedUserId(null);
-    await loadData();
+  async function handleConfirmRemove() {
+    if (!confirmRemove) return;
+    setIsDeactivating(true);
+    try {
+      await usersApi.deactivate(confirmRemove.id, { reason: "Removed by team admin" });
+      setConfirmRemove(null);
+      setSelectedUserId(null);
+      await loadData();
+    } catch {
+      console.error("[TeamPageView] Failed to deactivate user");
+    } finally {
+      setIsDeactivating(false);
+    }
   }
 
   async function handleAssignmentChanged() {
@@ -202,8 +222,9 @@ export function TeamPageView() {
             allUsers={users ?? []}
             assignmentsByUser={assignmentsByUser}
             onClose={handleClosePanel}
-            onDeactivated={handleUserDeactivated}
+            onDeactivated={() => { setSelectedUserId(null); void loadData(); }}
             onAssignmentChanged={handleAssignmentChanged}
+            onRequestRemove={() => setConfirmRemove({ id: selectedUser.id, name: selectedUser.name })}
           />
         )}
       </div>
@@ -215,6 +236,62 @@ export function TeamPageView() {
           onClose={() => setIsInviteOpen(false)}
           onCreated={handleInviteCreated}
         />
+      )}
+
+      {/* Confirm remove modal */}
+      {confirmRemove && (
+        <div
+          className="modal-overlay open"
+          role="dialog"
+          aria-label="Confirm remove team member"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setConfirmRemove(null);
+          }}
+        >
+          <div
+            className="modal"
+            style={{
+              width: "100%",
+              maxWidth: 420,
+              margin: "var(--sp-24) auto",
+            }}
+          >
+            <div className="modal-header">
+              <span className="modal-title">Remove team member</span>
+            </div>
+            <div className="modal-body">
+              <p
+                style={{
+                  fontSize: "var(--text-base)",
+                  color: "var(--clr-secondary)",
+                  lineHeight: "var(--lh-body)",
+                }}
+              >
+                Are you sure you want to remove{" "}
+                <strong>{confirmRemove.name}</strong> from the team? Their
+                assigned clients will need to be reassigned.
+              </p>
+            </div>
+            <div className="modal-footer">
+              <button
+                type="button"
+                className="btn btn-ghost btn-sm"
+                onClick={() => setConfirmRemove(null)}
+                disabled={isDeactivating}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="btn btn-danger btn-sm"
+                onClick={handleConfirmRemove}
+                disabled={isDeactivating}
+              >
+                {isDeactivating ? "Removing..." : "Remove member"}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

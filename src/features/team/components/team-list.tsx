@@ -21,7 +21,7 @@ export function TeamList({
   onSelectUser,
   onOpenInvite,
 }: TeamListProps) {
-  if (isLoading && !users) {
+  if (isLoading && (!users || users.length === 0)) {
     return (
       <div className="ws-empty-watermark">
         <div className="ws-empty-title">Loading team members...</div>
@@ -29,7 +29,7 @@ export function TeamList({
     );
   }
 
-  if (error) {
+  if (error && (!users || users.length === 0)) {
     return (
       <div className="ws-empty-watermark">
         <div className="ws-empty-title">Unable to load team</div>
@@ -38,7 +38,7 @@ export function TeamList({
     );
   }
 
-  if (!users || users.length === 0) {
+  if (!isLoading && (!users || users.length === 0)) {
     return (
       <div className="ws-empty-watermark">
         <div className="ws-empty-title">No team members yet</div>
@@ -66,7 +66,7 @@ export function TeamList({
         padding: "var(--sp-16) var(--sp-32) var(--sp-48)",
       }}
     >
-      {users.map((user, idx) => (
+      {users?.map((user, idx) => (
         <TeamMemberCard
           key={user.id}
           user={user}

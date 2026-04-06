@@ -9,7 +9,7 @@ import type { ListedClient } from "@/types/clients";
 export type TeamInviteModalProps = {
   organizationId: string;
   onClose: () => void;
-  onCreated: (newUser: import("@/types/users").User) => void;
+  onCreated: (newUser: import("@/types/users").User) => void | Promise<void>;
 };
 
 type InviteRole = "manager" | "admin";
@@ -86,22 +86,27 @@ export function TeamInviteModal({
           organization_id: organizationId,
           password,
         },
-        permissions:
-          role === "manager"
-            ? {
-                client_visibility: clientVisibility,
-                document_chasing: "full",
-                upload_portal: "upload",
-                ai_receptionist: "full",
-                billing_module: "full",
-                reporting:
-                  clientVisibility === "all_clients" ? "firm_wide" : "own_only",
-                firm_settings: "view_only",
-                can_override_ai_validation: false,
-                user_id: "",
-              }
-            : undefined,
       });
+
+      // Set permissions after user is created (requires valid user_id)
+      if (role === "manager") {
+        try {
+          await usersApi.setPermissions(newUser.id, {
+            client_visibility: clientVisibility,
+            document_chasing: "full",
+            upload_portal: "upload",
+            ai_receptionist: "full",
+            billing_module: "full",
+            reporting:
+              clientVisibility === "all_clients" ? "firm_wide" : "own_only",
+            firm_settings: "view_only",
+            can_override_ai_validation: false,
+            user_id: newUser.id,
+          });
+        } catch {
+          console.error("[TeamInviteModal] Failed to set permissions");
+        }
+      }
 
       // Assign selected clients
       if (selectedClients.length > 0) {
@@ -115,7 +120,7 @@ export function TeamInviteModal({
         }
       }
 
-      onCreated(newUser);
+      await onCreated(newUser);
     } catch (err) {
       console.error("[TeamInviteModal] Failed to create user", err);
       alert("Failed to create team member. Please try again.");
