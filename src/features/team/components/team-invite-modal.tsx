@@ -9,7 +9,7 @@ import type { ListedClient } from "@/types/clients";
 export type TeamInviteModalProps = {
   organizationId: string;
   onClose: () => void;
-  onCreated: () => void;
+  onCreated: (newUser: import("@/types/users").User) => void;
 };
 
 type InviteRole = "manager" | "admin";
@@ -115,7 +115,7 @@ export function TeamInviteModal({
         }
       }
 
-      onCreated();
+      onCreated(newUser);
     } catch (err) {
       console.error("[TeamInviteModal] Failed to create user", err);
       alert("Failed to create team member. Please try again.");

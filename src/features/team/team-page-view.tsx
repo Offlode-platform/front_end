@@ -91,8 +91,9 @@ export function TeamPageView() {
     setSelectedUserId(null);
   }
 
-  async function handleInviteCreated() {
+  async function handleInviteCreated(newUser: User) {
     setIsInviteOpen(false);
+    setUsers((prev) => (prev ? [...prev, newUser] : [newUser]));
     await loadData();
   }
 
