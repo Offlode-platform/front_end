@@ -128,8 +128,8 @@ export function TwoFaBootstrapSetupPage({
         setup_token: twoFaSetupToken,
         code: code.trim(),
       });
-      router.push(routes.dashboard);
-      router.refresh();
+      window.location.href = routes.dashboard;
+      return;
     } catch (err) {
       setError(formatAuthError(err));
     } finally {
@@ -274,6 +274,7 @@ export function TwoFaBootstrapSetupPage({
                     placeholder="Enter 6-digit code"
                     autoComplete="one-time-code"
                     inputMode="numeric"
+                    autoFocus
                     value={code}
                     onChange={(e) => setCode(e.target.value)}
                     disabled={loading}
