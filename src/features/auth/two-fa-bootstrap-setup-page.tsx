@@ -128,6 +128,8 @@ export function TwoFaBootstrapSetupPage({
         setup_token: twoFaSetupToken,
         code: code.trim(),
       });
+      router.push(routes.dashboard);
+      router.refresh();
     } catch (err) {
       setError(formatAuthError(err));
     } finally {
