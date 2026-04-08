@@ -50,6 +50,37 @@ export const apiPaths = {
   clientAssignments: {
     base: "/api/v1/client-assignments",
   },
+  imports: {
+    base: "/api/v1/imports",
+  },
+  importTemplates: {
+    base: "/api/v1/import-templates",
+  },
+  ledger: {
+    invoices: "/api/v1/ledger/invoices",
+    contacts: "/api/v1/ledger/contacts",
+    payments: "/api/v1/ledger/payments",
+  },
+  auditLogs: {
+    base: "/api/v1/audit-logs",
+    critical: "/api/v1/audit-logs/critical/recent",
+    actionsSummary: "/api/v1/audit-logs/actions/summary",
+  },
+  exclusionRules: {
+    base: "/api/v1/exclusion-rules",
+    bulkCreate: "/api/v1/exclusion-rules/bulk-create",
+    initUk: "/api/v1/exclusion-rules/init-common-uk-rules",
+  },
+  magicLinks: {
+    base: "/api/v1/magic-links",
+  },
+  portal: {
+    base: "/api/v1/portal",
+  },
+  xero: {
+    connect: "/api/v1/auth/xero/connect",
+    callback: "/api/v1/auth/xero/callback",
+  },
 } as const;
 
 export function apiUrl(path: string): string {

@@ -7,6 +7,8 @@ export const routes = {
   team: "/team",
   schedule: "/schedule",
   reports: "/reports",
+  auditLog: "/audit-log",
+  imports: "/imports",
   login: "/login",
   signup: "/signup",
   twoFaBootstrapSetup: "/login/2fa-setup",

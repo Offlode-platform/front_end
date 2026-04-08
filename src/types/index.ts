@@ -78,6 +78,7 @@ export type {
 export type {
   Document,
   DocumentListResponse,
+  S3PresignedUrlResponse,
 } from "./documents";
 export type {
   ClientAssignment,
@@ -88,3 +89,57 @@ export type {
   ListClientAssignmentsResponse,
   BulkAssignResponse,
 } from "./client-assignments";
+export type {
+  ImportPlatform,
+  ImportDataType,
+  ValidationSeverity,
+  PreviewRowStatus,
+  ImportValidationError,
+  ImportPreviewRow,
+  ImportPreviewResponse,
+  FieldDetectionResponse,
+  ImportSessionResponse,
+  ImportSessionListResponse,
+  ColumnMappingRequest,
+} from "./imports";
+export type {
+  ImportMappingTemplateCreate,
+  ImportMappingTemplateResponse,
+  ImportMappingTemplateListResponse,
+} from "./import-templates";
+export type {
+  AuditLogResponse,
+  AuditLogFilter,
+  AuditActionSummary,
+} from "./audit-logs";
+export type {
+  ExclusionRuleType,
+  ExclusionMatchType,
+  ExclusionRuleCreate,
+  ExclusionRuleUpdate,
+  ExclusionRuleResponse,
+  ExclusionRuleListResponse,
+  BulkExclusionRuleCreate,
+} from "./exclusion-rules";
+export type {
+  InvoiceType,
+  ContactType,
+  UniversalInvoice,
+  UniversalInvoiceListResponse,
+  UniversalContact,
+  UniversalContactListResponse,
+  UniversalPayment,
+  UniversalPaymentListResponse,
+  InvoiceListQuery,
+  ContactListQuery,
+  PaymentListQuery,
+} from "./ledger";
+export type {
+  MagicLinkCreateRequest,
+  MagicLinkResponse,
+} from "./magic-links";
+export type {
+  CantProvideRequest,
+  AskQuestionRequest,
+  PortalActionResponse,
+} from "./portal";
