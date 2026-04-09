@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState, useMemo } from "react";
 import type { User } from "@/types/users";
 import type { ClientAssignment } from "@/types/client-assignments";
-import { usersApi } from "@/lib/api/users";
 import { TeamReassignPopup } from "./team-reassign-popup";
 import {
   getInitials,
@@ -25,6 +24,7 @@ export type TeamDetailPanelProps = {
   onClose: () => void;
   onDeactivated: () => void;
   onAssignmentChanged: () => void;
+  onRequestRemove: () => void;
 };
 
 const PERMISSION_KEYS = [
@@ -45,11 +45,11 @@ export function TeamDetailPanel({
   onClose,
   onDeactivated,
   onAssignmentChanged,
+  onRequestRemove,
 }: TeamDetailPanelProps) {
   const panelRef = useRef<HTMLDivElement>(null);
   const [clientSearch, setClientSearch] = useState("");
   const [isOpen, setIsOpen] = useState(false);
-  const [isDeactivating, setIsDeactivating] = useState(false);
   const [reassignPopup, setReassignPopup] = useState<{
     assignment: ClientAssignment;
     clientName: string;
@@ -125,19 +125,6 @@ export function TeamDetailPanel({
       };
     });
   }, [user.manager_permission]);
-
-  async function handleDeactivate() {
-    if (!confirm(`Remove ${user.name} from the team?`)) return;
-    setIsDeactivating(true);
-    try {
-      await usersApi.deactivate(user.id, { reason: "Removed by team admin" });
-      onDeactivated();
-    } catch {
-      console.error("[TeamDetailPanel] Failed to deactivate user");
-    } finally {
-      setIsDeactivating(false);
-    }
-  }
 
   function handleReassignClick(
     e: React.MouseEvent<HTMLButtonElement>,
@@ -562,15 +549,14 @@ export function TeamDetailPanel({
               <button
                 type="button"
                 className="btn btn-sm"
-                disabled={isDeactivating}
-                onClick={handleDeactivate}
+                onClick={onRequestRemove}
                 style={{
                   background: "rgba(239,68,68,0.08)",
                   color: "var(--danger)",
                   border: "1px solid rgba(239,68,68,0.15)",
                 }}
               >
-                {isDeactivating ? "Removing..." : "Remove"}
+                Remove
               </button>
             </div>
           </div>
