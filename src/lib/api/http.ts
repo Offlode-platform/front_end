@@ -36,7 +36,6 @@ export function createAxiosInstance(options: { withAuth: boolean }) {
       const token = getBearerToken();
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
-        config.params = { ...config.params, token };
       }
       return config;
     });
