@@ -36,7 +36,7 @@ export const importsApi = {
     formData.append("data_type", dataType);
     return readData<FieldDetectionResponse>(
       authenticatedApi.post(`${apiPaths.imports.base}/upload`, formData, {
-        headers: { "Content-Type": "multipart/form-data" },
+        headers: { "Content-Type": undefined },
       }),
     );
   },
@@ -85,7 +85,7 @@ export const importsApi = {
   list(params?: { limit?: number; offset?: number }) {
     return readData<ImportSessionListResponse>(
       authenticatedApi.get(
-        withQuery(`${apiPaths.imports.base}/`, {
+        withQuery(apiPaths.imports.base, {
           limit: params?.limit,
           offset: params?.offset,
         }),
