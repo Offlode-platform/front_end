@@ -41,3 +41,10 @@ export type DocumentListResponse = {
   flagged: number;
   documents: Document[];
 };
+
+export type S3PresignedUrlResponse = {
+  upload_url: string;
+  upload_key: string;
+  expires_in: number;
+  content_type: string;
+};

@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import { AUTH_STORAGE_KEY } from "@/constants/auth-storage";
@@ -194,6 +195,28 @@ export const useAuthStore = create<AuthState>()(
     }
   )
 );
+
+/**
+ * Hook that returns `true` only after Zustand has finished rehydrating
+ * persisted auth state from localStorage.  Components that gate navigation
+ * decisions on auth state (e.g. AuthGuard) should wait for this before
+ * redirecting, otherwise a page refresh will briefly see `accessToken: null`
+ * and incorrectly redirect to the login page.
+ */
+export function useAuthHasHydrated(): boolean {
+  const [hydrated, setHydrated] = useState(false);
+  useEffect(() => {
+    if (useAuthStore.persist.hasHydrated()) {
+      setHydrated(true);
+      return;
+    }
+    const unsub = useAuthStore.persist.onFinishHydration(() =>
+      setHydrated(true),
+    );
+    return unsub;
+  }, []);
+  return hydrated;
+}
 
 registerUnauthorizedHandler(() => {
   useAuthStore.getState().clearSession();

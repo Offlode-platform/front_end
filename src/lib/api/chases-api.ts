@@ -5,6 +5,8 @@ import type {
   ChaseHistoryResponse,
   ChaseManualSendRequest,
   ChaseScheduleConfig,
+  BulkChaseRequest,
+  BulkChaseResponse,
 } from "@/types/chases";
 
 type QueryValue = string | number | boolean | undefined | null;
@@ -82,6 +84,12 @@ export const chasesApi = {
       authenticatedApi.get(
         `${apiPaths.chases.get}/${encodeURIComponent(chaseId)}`,
       ),
+    );
+  },
+
+  bulk(body: BulkChaseRequest) {
+    return readData<BulkChaseResponse>(
+      authenticatedApi.post(apiPaths.chases.bulk, body),
     );
   },
 };

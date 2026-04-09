@@ -3,6 +3,7 @@ import { apiPaths } from "./endpoints";
 import type {
   Transaction,
   TransactionListResponse,
+  TransactionUpdate,
 } from "@/types/transactions";
 
 type QueryValue = string | number | boolean | undefined | null;
@@ -51,6 +52,40 @@ export const transactionsApi = {
       authenticatedApi.get(
         `${apiPaths.transactions.base}/${encodeURIComponent(transactionId)}`,
       ),
+    );
+  },
+
+  update(transactionId: string, body: TransactionUpdate) {
+    return readData<Transaction>(
+      authenticatedApi.patch(
+        `${apiPaths.transactions.base}/${encodeURIComponent(transactionId)}`,
+        body,
+      ),
+    );
+  },
+
+  detectMissing() {
+    return readData<{ status: string; message: string }>(
+      authenticatedApi.post(`${apiPaths.transactions.base}/detect-missing`),
+    );
+  },
+
+  manualUpload(file: File, clientId?: string) {
+    const formData = new FormData();
+    formData.append("file", file);
+    if (clientId) formData.append("client_id", clientId);
+    return readData<{ created: number }>(
+      authenticatedApi.post(
+        `${apiPaths.transactions.base}/manual-upload`,
+        formData,
+        { headers: { "Content-Type": "multipart/form-data" } },
+      ),
+    );
+  },
+
+  statsSummary() {
+    return readData<Record<string, unknown>>(
+      authenticatedApi.get(`${apiPaths.transactions.base}/stats/summary`),
     );
   },
 };

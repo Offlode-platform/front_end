@@ -131,8 +131,8 @@ export function LoginCredentialsForm() {
           password,
         });
         persistRememberEmail();
-        router.push(routes.dashboard);
-        router.refresh();
+        window.location.href = routes.dashboard;
+        return;
       } catch (err) {
         if (err instanceof ApiRequestError) {
           if (hasTwoFaSetupRequired(err)) {
@@ -172,8 +172,8 @@ export function LoginCredentialsForm() {
           two_factor_code: twoFactorCode.trim(),
         });
         persistRememberEmail();
-        router.push(routes.dashboard);
-        router.refresh();
+        window.location.href = routes.dashboard;
+        return;
       } catch (err) {
         if (err instanceof ApiRequestError && hasTwoFaSetupRequired(err)) {
           redirectToBootstrapSetup();
@@ -341,6 +341,7 @@ export function LoginCredentialsForm() {
               placeholder="Enter your 2FA code"
               autoComplete="one-time-code"
               inputMode="numeric"
+              autoFocus
               value={twoFactorCode}
               onChange={(e) => setTwoFactorCode(e.target.value)}
               disabled={loading}
