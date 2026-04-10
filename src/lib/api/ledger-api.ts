@@ -10,6 +10,13 @@ import type {
   InvoiceListQuery,
   ContactListQuery,
   PaymentListQuery,
+  UnlinkedContactsResponse,
+  ContactSuggestionsResponse,
+  LinkContactRequest,
+  CreateClientFromContactRequest,
+  ReconciliationResult,
+  BulkLinkRequest,
+  BulkReconciliationResult,
 } from "@/types/ledger";
 
 type QueryValue = string | number | boolean | undefined | null;
@@ -73,6 +80,53 @@ export const ledgerApi = {
       authenticatedApi.get(
         `${apiPaths.ledger.payments}/${encodeURIComponent(paymentId)}`,
       ),
+    );
+  },
+
+  // ==========================================================================
+  // Reconciliation
+  // ==========================================================================
+
+  listUnlinkedContacts(params?: { limit?: number; offset?: number }) {
+    return readData<UnlinkedContactsResponse>(
+      authenticatedApi.get(
+        withQuery(apiPaths.ledger.contactsUnlinked, {
+          limit: params?.limit,
+          offset: params?.offset,
+        }),
+      ),
+    );
+  },
+
+  getContactSuggestions(contactId: string, limit: number = 5) {
+    return readData<ContactSuggestionsResponse>(
+      authenticatedApi.get(
+        withQuery(apiPaths.ledger.contactSuggestions(contactId), { limit }),
+      ),
+    );
+  },
+
+  linkContact(contactId: string, body: LinkContactRequest) {
+    return readData<ReconciliationResult>(
+      authenticatedApi.post(apiPaths.ledger.contactLink(contactId), body),
+    );
+  },
+
+  createClientFromContact(
+    contactId: string,
+    body: CreateClientFromContactRequest = {},
+  ) {
+    return readData<ReconciliationResult>(
+      authenticatedApi.post(
+        apiPaths.ledger.contactCreateClient(contactId),
+        body,
+      ),
+    );
+  },
+
+  bulkLinkContacts(body: BulkLinkRequest) {
+    return readData<BulkReconciliationResult>(
+      authenticatedApi.post(apiPaths.ledger.contactBulkLink, body),
     );
   },
 };

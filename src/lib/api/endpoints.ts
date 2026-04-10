@@ -60,6 +60,17 @@ export const apiPaths = {
     invoices: "/api/v1/ledger/invoices",
     contacts: "/api/v1/ledger/contacts",
     payments: "/api/v1/ledger/payments",
+    contactsUnlinked: "/api/v1/ledger/contacts/unlinked",
+    contactSuggestions: (id: string) =>
+      `/api/v1/ledger/contacts/${encodeURIComponent(id)}/suggestions`,
+    contactLink: (id: string) =>
+      `/api/v1/ledger/contacts/${encodeURIComponent(id)}/link`,
+    contactCreateClient: (id: string) =>
+      `/api/v1/ledger/contacts/${encodeURIComponent(id)}/create-client`,
+    contactBulkLink: "/api/v1/ledger/contacts/bulk-link",
+  },
+  integrations: {
+    xeroStatus: "/api/v1/integrations/xero/status",
   },
   auditLogs: {
     base: "/api/v1/audit-logs",
@@ -80,6 +91,8 @@ export const apiPaths = {
   xero: {
     connect: "/api/v1/auth/xero/connect",
     callback: "/api/v1/auth/xero/callback",
+    authorizeUrl: "/api/v1/auth/xero/authorize-url",
+    disconnect: "/api/v1/auth/xero/disconnect",
   },
 } as const;
 
