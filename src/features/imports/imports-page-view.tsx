@@ -123,9 +123,7 @@ export function ImportsPageView() {
       {/* Scrollable content area — same paddings as Dashboard's dash-content */}
       <div className="dash-content">
         {showHistory ? (
-          <div className="ws-card" style={{ padding: 0, overflow: "hidden" }}>
-            <ImportHistoryPanel />
-          </div>
+          <ImportHistoryPanel />
         ) : (
           <>
             {/* Source selector — only on the first step of the wizard */}
