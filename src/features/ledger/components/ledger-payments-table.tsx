@@ -49,16 +49,16 @@ export function LedgerPaymentsTable() {
   }, [search]);
 
   return (
-    <div>
-      <div style={{ display: "flex", gap: "var(--sp-8)", marginBottom: "var(--sp-12)" }}>
+    <>
+      <div className="ws-card" style={{ marginBottom: "var(--sp-16)" }}>
+        <div className="ws-card-title">Filters</div>
         <input
           type="text"
           placeholder="Search by contact name..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           style={{
-            flex: 1,
-            minWidth: 220,
+            width: "100%",
             padding: "var(--sp-8) var(--sp-12)",
             border: "1px solid var(--clr-divider-strong)",
             borderRadius: "var(--r-md)",
@@ -72,38 +72,25 @@ export function LedgerPaymentsTable() {
       </div>
 
       {loading && (
-        <div style={{ padding: "var(--sp-24)", textAlign: "center", color: "var(--clr-muted)", fontSize: "var(--text-sm)" }}>
+        <div className="ws-card" style={{ textAlign: "center", color: "var(--clr-muted)", fontSize: "var(--text-sm)" }}>
           Loading payments...
         </div>
       )}
 
       {error && (
-        <div style={{ padding: "var(--sp-12) var(--sp-16)", background: "rgba(239,68,68,0.08)", borderRadius: "var(--r-md)", color: "var(--danger)", fontSize: "var(--text-sm)" }}>
+        <div className="ws-card" style={{ background: "rgba(239,68,68,0.08)", color: "var(--danger)", fontSize: "var(--text-sm)" }}>
           {error}
         </div>
       )}
 
       {!loading && !error && payments && payments.length === 0 && (
-        <div style={{
-          background: "var(--clr-surface-card)",
-          borderRadius: "var(--r-lg)",
-          border: "1px solid var(--clr-divider)",
-          padding: "var(--sp-40)",
-          textAlign: "center",
-        }}>
-          <div style={{ fontSize: "var(--text-md)", fontWeight: "var(--fw-medium)", color: "var(--clr-primary)" }}>
-            No payments found
-          </div>
+        <div className="ws-card" style={{ padding: "var(--sp-40)", textAlign: "center" }}>
+          <div className="pg-title">No payments found</div>
         </div>
       )}
 
       {!loading && !error && payments && payments.length > 0 && (
-        <div style={{
-          background: "var(--clr-surface-card)",
-          borderRadius: "var(--r-lg)",
-          border: "1px solid var(--clr-divider)",
-          overflow: "hidden",
-        }}>
+        <div className="ws-card" style={{ padding: 0, overflow: "hidden" }}>
           <div style={{
             display: "grid",
             gridTemplateColumns: "120px 1fr 130px 130px 110px 90px",
@@ -166,6 +153,6 @@ export function LedgerPaymentsTable() {
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 }

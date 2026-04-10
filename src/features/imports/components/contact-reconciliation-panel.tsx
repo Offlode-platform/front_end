@@ -146,7 +146,7 @@ export function ContactReconciliationPanel({ embedded = false, onAllResolved }: 
 
   if (loading) {
     return (
-      <div style={{ padding: "var(--sp-24)", textAlign: "center", color: "var(--clr-muted)", fontSize: "var(--text-sm)" }}>
+      <div className="ws-card" style={{ textAlign: "center", color: "var(--clr-muted)", fontSize: "var(--text-sm)" }}>
         Loading unlinked contacts...
       </div>
     );
@@ -154,7 +154,7 @@ export function ContactReconciliationPanel({ embedded = false, onAllResolved }: 
 
   if (error) {
     return (
-      <div style={{ padding: "var(--sp-12) var(--sp-16)", background: "rgba(239,68,68,0.08)", borderRadius: "var(--r-md)", color: "var(--danger)", fontSize: "var(--text-sm)" }}>
+      <div className="ws-card" style={{ background: "rgba(239,68,68,0.08)", color: "var(--danger)", fontSize: "var(--text-sm)" }}>
         {error}
       </div>
     );
@@ -162,13 +162,7 @@ export function ContactReconciliationPanel({ embedded = false, onAllResolved }: 
 
   if (!data || data.items.length === 0) {
     return (
-      <div style={{
-        background: "var(--clr-surface-card)",
-        borderRadius: "var(--r-lg)",
-        border: "1px solid var(--clr-divider)",
-        padding: "var(--sp-40)",
-        textAlign: "center",
-      }}>
+      <div className="ws-card" style={{ padding: "var(--sp-40)", textAlign: "center" }}>
         <div style={{
           width: 48,
           height: 48,
@@ -183,7 +177,7 @@ export function ContactReconciliationPanel({ embedded = false, onAllResolved }: 
             <polyline points="20 6 9 17 4 12" />
           </svg>
         </div>
-        <div style={{ fontSize: "var(--text-md)", fontWeight: "var(--fw-medium)", color: "var(--clr-primary)", marginBottom: "var(--sp-4)" }}>
+        <div className="pg-title" style={{ marginBottom: "var(--sp-4)" }}>
           Nothing to reconcile
         </div>
         <div style={{ fontSize: "var(--text-sm)", color: "var(--clr-muted)" }}>
@@ -196,13 +190,11 @@ export function ContactReconciliationPanel({ embedded = false, onAllResolved }: 
   const remaining = data.items.filter((c) => !contactStates[c.id]?.resolved).length;
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "var(--sp-16)" }}>
-      {/* Summary banner */}
-      <div style={{
+    <>
+      {/* Summary banner — uses warning color for the "needs attention" semantic */}
+      <div className="ws-card" style={{
         background: "rgba(224,148,34,0.08)",
-        borderRadius: "var(--r-lg)",
-        border: "1px solid rgba(224,148,34,0.25)",
-        padding: "var(--sp-14) var(--sp-16)",
+        borderColor: "rgba(224,148,34,0.25)",
       }}>
         <div style={{ fontSize: "var(--text-sm)", fontWeight: "var(--fw-semibold)", color: "var(--clr-primary)", marginBottom: 2 }}>
           {remaining} {remaining === 1 ? "contact" : "contacts"} need a client link
@@ -213,34 +205,33 @@ export function ContactReconciliationPanel({ embedded = false, onAllResolved }: 
       </div>
 
       {/* Contact list */}
-      <div style={{ display: "flex", flexDirection: "column", gap: "var(--sp-10)" }}>
-        {data.items.map((contact) => {
-          const state = contactStates[contact.id] ?? emptyState(contact);
-          return (
-            <ContactCard
-              key={contact.id}
-              contact={contact}
-              state={state}
-              onLoadSuggestions={() => loadSuggestions(contact)}
-              onLink={(clientId) => linkToClient(contact, clientId)}
-              onCreate={() => createClient(contact)}
-              onPatch={(updates) => patch(contact.id, updates)}
-            />
-          );
-        })}
-      </div>
+      {data.items.map((contact) => {
+        const state = contactStates[contact.id] ?? emptyState(contact);
+        return (
+          <ContactCard
+            key={contact.id}
+            contact={contact}
+            state={state}
+            onLoadSuggestions={() => loadSuggestions(contact)}
+            onLink={(clientId) => linkToClient(contact, clientId)}
+            onCreate={() => createClient(contact)}
+            onPatch={(updates) => patch(contact.id, updates)}
+          />
+        );
+      })}
 
       {!embedded && (
-        <button
-          type="button"
-          onClick={load}
-          className="btn btn-ghost btn-sm"
-          style={{ alignSelf: "center", fontSize: "var(--text-xs)" }}
-        >
-          Refresh
-        </button>
+        <div style={{ display: "flex", justifyContent: "center" }}>
+          <button
+            type="button"
+            onClick={load}
+            className="btn btn-ghost btn-sm"
+          >
+            Refresh
+          </button>
+        </div>
       )}
-    </div>
+    </>
   );
 }
 
@@ -262,13 +253,13 @@ function ContactCard({
   const isResolved = state.resolved !== null;
 
   return (
-    <div style={{
-      background: "var(--clr-surface-card)",
-      borderRadius: "var(--r-lg)",
-      border: `1px solid ${isResolved ? "rgba(34,160,107,0.3)" : "var(--clr-divider)"}`,
-      padding: "var(--sp-16)",
-      opacity: isResolved ? 0.7 : 1,
-    }}>
+    <div
+      className="ws-card"
+      style={{
+        borderColor: isResolved ? "rgba(34,160,107,0.3)" : undefined,
+        opacity: isResolved ? 0.7 : 1,
+      }}
+    >
       {/* Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "var(--sp-12)" }}>
         <div style={{ flex: 1, minWidth: 0 }}>

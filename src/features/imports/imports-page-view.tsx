@@ -235,19 +235,21 @@ export function ImportsPageView() {
               <ImportConfirmStep session={session} preview={preview} onComplete={handleConfirmComplete} />
             )}
             {step === "reconcile" && session && (
-              <div className="ws-card">
-                <div className="ws-card-title">Reconcile imported contacts</div>
-                <p style={{ fontSize: "var(--text-sm)", color: "var(--clr-muted)", marginTop: 0, marginBottom: "var(--sp-16)", lineHeight: "var(--lh-body)" }}>
-                  Imported invoices only enter the chase workflow once their contact is linked to a client.
-                  Resolve any unmatched contacts below — or skip and come back later from the import history.
-                </p>
+              <>
+                <div className="ws-card">
+                  <div className="ws-card-title">Reconcile imported contacts</div>
+                  <p style={{ fontSize: "var(--text-sm)", color: "var(--clr-muted)", margin: 0, lineHeight: "var(--lh-body)" }}>
+                    Imported invoices only enter the chase workflow once their contact is linked to a client.
+                    Resolve any unmatched contacts below — or skip and come back later from the import history.
+                  </p>
+                </div>
                 <ContactReconciliationPanel embedded onAllResolved={handleReconcileDone} />
-                <div style={{ display: "flex", gap: "var(--sp-8)", justifyContent: "flex-end", marginTop: "var(--sp-16)" }}>
+                <div style={{ display: "flex", gap: "var(--sp-8)", justifyContent: "flex-end" }}>
                   <button type="button" className="btn btn-ghost btn-sm" onClick={handleReconcileDone}>
                     Done
                   </button>
                 </div>
-              </div>
+              </>
             )}
             {step === "done" && session && (
               <div className="ws-card" style={{ padding: "var(--sp-40)", textAlign: "center" }}>

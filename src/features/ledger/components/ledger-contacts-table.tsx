@@ -49,96 +49,93 @@ export function LedgerContactsTable() {
 
   if (showReconcile) {
     return (
-      <div style={{ display: "flex", flexDirection: "column", gap: "var(--sp-16)" }}>
-        <button
-          type="button"
-          className="btn btn-ghost btn-sm"
-          onClick={() => setShowReconcile(false)}
-          style={{ alignSelf: "flex-start", fontSize: "var(--text-xs)" }}
-        >
-          ← Back to contacts
-        </button>
+      <>
+        <div className="ws-card" style={{ marginBottom: "var(--sp-16)" }}>
+          <button
+            type="button"
+            className="btn btn-ghost btn-sm"
+            onClick={() => setShowReconcile(false)}
+          >
+            ← Back to contacts
+          </button>
+        </div>
         <ContactReconciliationPanel onAllResolved={() => setShowReconcile(false)} />
-      </div>
+      </>
     );
   }
 
   return (
-    <div>
+    <>
       {/* Filter bar */}
-      <div style={{ display: "flex", gap: "var(--sp-8)", marginBottom: "var(--sp-12)", flexWrap: "wrap", alignItems: "center" }}>
-        <input
-          type="text"
-          placeholder="Search by name or email..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          style={{
-            flex: 1,
-            minWidth: 220,
-            padding: "var(--sp-8) var(--sp-12)",
-            border: "1px solid var(--clr-divider-strong)",
-            borderRadius: "var(--r-md)",
-            fontSize: "var(--text-sm)",
-            background: "var(--canvas-bg)",
-            color: "var(--clr-primary)",
-            fontFamily: "inherit",
-            outline: "none",
-          }}
-        />
-        <div className="ws-issue-filters">
+      <div className="ws-card" style={{ marginBottom: "var(--sp-16)" }}>
+        <div className="ws-card-title">Filters</div>
+        <div style={{ display: "flex", gap: "var(--sp-8)", flexWrap: "wrap", alignItems: "center" }}>
+          <input
+            type="text"
+            placeholder="Search by name or email..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            style={{
+              flex: 1,
+              minWidth: 220,
+              padding: "var(--sp-8) var(--sp-12)",
+              border: "1px solid var(--clr-divider-strong)",
+              borderRadius: "var(--r-md)",
+              fontSize: "var(--text-sm)",
+              background: "var(--canvas-bg)",
+              color: "var(--clr-primary)",
+              fontFamily: "inherit",
+              outline: "none",
+            }}
+          />
+          <div className="ws-issue-filters">
+            <button
+              type="button"
+              className={`ws-issue-filter${linkedFilter === "all" ? " active" : ""}`}
+              onClick={() => setLinkedFilter("all")}
+            >
+              All
+            </button>
+            <button
+              type="button"
+              className={`ws-issue-filter${linkedFilter === "linked" ? " active" : ""}`}
+              onClick={() => setLinkedFilter("linked")}
+            >
+              Linked
+            </button>
+            <button
+              type="button"
+              className={`ws-issue-filter${linkedFilter === "unlinked" ? " active" : ""}`}
+              onClick={() => setLinkedFilter("unlinked")}
+            >
+              Unlinked
+            </button>
+          </div>
           <button
             type="button"
-            className={`ws-issue-filter${linkedFilter === "all" ? " active" : ""}`}
-            onClick={() => setLinkedFilter("all")}
+            className="btn btn-primary btn-sm"
+            onClick={() => setShowReconcile(true)}
           >
-            All
-          </button>
-          <button
-            type="button"
-            className={`ws-issue-filter${linkedFilter === "linked" ? " active" : ""}`}
-            onClick={() => setLinkedFilter("linked")}
-          >
-            Linked
-          </button>
-          <button
-            type="button"
-            className={`ws-issue-filter${linkedFilter === "unlinked" ? " active" : ""}`}
-            onClick={() => setLinkedFilter("unlinked")}
-          >
-            Unlinked
+            Reconcile
           </button>
         </div>
-        <button
-          type="button"
-          className="btn btn-primary btn-sm"
-          onClick={() => setShowReconcile(true)}
-          style={{ fontSize: "var(--text-xs)" }}
-        >
-          Reconcile
-        </button>
       </div>
 
       {loading && (
-        <div style={{ padding: "var(--sp-24)", textAlign: "center", color: "var(--clr-muted)", fontSize: "var(--text-sm)" }}>
+        <div className="ws-card" style={{ textAlign: "center", color: "var(--clr-muted)", fontSize: "var(--text-sm)" }}>
           Loading contacts...
         </div>
       )}
 
       {error && (
-        <div style={{ padding: "var(--sp-12) var(--sp-16)", background: "rgba(239,68,68,0.08)", borderRadius: "var(--r-md)", color: "var(--danger)", fontSize: "var(--text-sm)" }}>
+        <div className="ws-card" style={{ background: "rgba(239,68,68,0.08)", color: "var(--danger)", fontSize: "var(--text-sm)" }}>
           {error}
         </div>
       )}
 
       {!loading && !error && contacts && contacts.length === 0 && (
-        <div style={{
-          background: "var(--clr-surface-card)",
-          borderRadius: "var(--r-lg)",
-          border: "1px solid var(--clr-divider)",
-          padding: "var(--sp-40)",
-          textAlign: "center",
-        }}>
-          <div style={{ fontSize: "var(--text-md)", fontWeight: "var(--fw-medium)", color: "var(--clr-primary)", marginBottom: "var(--sp-4)" }}>
+        <div className="ws-card" style={{ padding: "var(--sp-40)", textAlign: "center" }}>
+          <div className="pg-title" style={{ marginBottom: "var(--sp-4)" }}>
             No contacts found
           </div>
           <div style={{ fontSize: "var(--text-sm)", color: "var(--clr-muted)" }}>
@@ -148,12 +145,7 @@ export function LedgerContactsTable() {
       )}
 
       {!loading && !error && contacts && contacts.length > 0 && (
-        <div style={{
-          background: "var(--clr-surface-card)",
-          borderRadius: "var(--r-lg)",
-          border: "1px solid var(--clr-divider)",
-          overflow: "hidden",
-        }}>
+        <div className="ws-card" style={{ padding: 0, overflow: "hidden" }}>
           <div style={{
             display: "grid",
             gridTemplateColumns: "1fr 1fr 120px 100px 100px",
@@ -216,6 +208,6 @@ export function LedgerContactsTable() {
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 }
