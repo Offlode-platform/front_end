@@ -1,16 +1,30 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { importsApi } from "@/lib/api/imports-api";
-import type { FieldDetectionResponse, ImportSessionResponse, ColumnMappingRequest } from "@/types/imports";
+import type {
+  FieldDetectionResponse,
+  ImportSessionResponse,
+  ColumnMappingRequest,
+  ImportDataType,
+} from "@/types/imports";
 
 type Props = {
   detection: FieldDetectionResponse;
+  dataType: ImportDataType;
   onComplete: (result: ImportSessionResponse) => void;
+  onBack?: () => void;
 };
 
-const KNOWN_FIELDS = [
-  { value: "", label: "-- Skip --" },
+type FieldOption = { value: string; label: string };
+
+// Universal "skip" choice — always first in every list.
+const SKIP: FieldOption = { value: "", label: "-- Skip --" };
+
+// Per-data-type field catalogs. Each list only exposes the fields that make
+// sense for the selected import type, so a user importing contacts never
+// sees invoice-only options like "Invoice Number" or "Due Date".
+const INVOICE_FIELDS: FieldOption[] = [
   { value: "invoice_number", label: "Invoice Number" },
   { value: "date", label: "Date" },
   { value: "due_date", label: "Due Date" },
@@ -23,6 +37,11 @@ const KNOWN_FIELDS = [
   { value: "status", label: "Status" },
   { value: "reference", label: "Reference" },
   { value: "description", label: "Description" },
+  { value: "account_code", label: "Account Code" },
+];
+
+const CONTACT_FIELDS: FieldOption[] = [
+  { value: "contact_name", label: "Contact/Client Name" },
   { value: "email", label: "Email" },
   { value: "phone", label: "Phone" },
   { value: "company", label: "Company" },
@@ -30,15 +49,70 @@ const KNOWN_FIELDS = [
   { value: "city", label: "City" },
   { value: "postal_code", label: "Postal Code" },
   { value: "country", label: "Country" },
+  { value: "reference", label: "Reference / Tax Number" },
+];
+
+const PAYMENT_FIELDS: FieldOption[] = [
+  { value: "invoice_number", label: "Invoice Number" },
+  { value: "contact_name", label: "Contact/Client Name" },
   { value: "payment_date", label: "Payment Date" },
   { value: "payment_method", label: "Payment Method" },
+  { value: "amount", label: "Amount" },
+  { value: "currency_code", label: "Currency" },
+  { value: "reference", label: "Reference" },
   { value: "account_code", label: "Account Code" },
 ];
 
-export function ImportMappingStep({ detection, onComplete }: Props) {
-  const [mapping, setMapping] = useState<Record<string, string>>(
-    { ...detection.suggested_mapping },
+// Mixed == everything (de-duped by value, since the same field can show up
+// in multiple type catalogs — e.g. contact_name, reference).
+function uniqueFields(lists: FieldOption[][]): FieldOption[] {
+  const seen = new Set<string>();
+  const out: FieldOption[] = [];
+  for (const list of lists) {
+    for (const f of list) {
+      if (!seen.has(f.value)) {
+        seen.add(f.value);
+        out.push(f);
+      }
+    }
+  }
+  return out;
+}
+
+function fieldsForDataType(dataType: ImportDataType): FieldOption[] {
+  switch (dataType) {
+    case "invoices":
+      return [SKIP, ...INVOICE_FIELDS];
+    case "contacts":
+      return [SKIP, ...CONTACT_FIELDS];
+    case "payments":
+      return [SKIP, ...PAYMENT_FIELDS];
+    case "mixed":
+      return [SKIP, ...uniqueFields([INVOICE_FIELDS, CONTACT_FIELDS, PAYMENT_FIELDS])];
+    default:
+      return [SKIP];
+  }
+}
+
+export function ImportMappingStep({ detection, dataType, onComplete, onBack }: Props) {
+  // Per-type catalog. Memoised so the select options don't rebuild on every render.
+  const availableFields = useMemo(() => fieldsForDataType(dataType), [dataType]);
+  const validValues = useMemo(
+    () => new Set(availableFields.map((f) => f.value)),
+    [availableFields],
   );
+
+  // Initial mapping: the backend's suggested mapping MAY include fields that
+  // aren't in this data type's catalog (e.g. "invoice_number" suggested on a
+  // contacts import). Drop any such suggestions so the <select> doesn't end
+  // up with an out-of-range value that renders as a blank option.
+  const [mapping, setMapping] = useState<Record<string, string>>(() => {
+    const cleaned: Record<string, string> = {};
+    for (const [col, field] of Object.entries(detection.suggested_mapping ?? {})) {
+      cleaned[col] = validValues.has(field) ? field : "";
+    }
+    return cleaned;
+  });
   const [dateFormat, setDateFormat] = useState("%d/%m/%Y");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -150,7 +224,7 @@ export function ImportMappingStep({ detection, onComplete }: Props) {
                   width: "100%",
                 }}
               >
-                {KNOWN_FIELDS.map((f) => (
+                {availableFields.map((f) => (
                   <option key={f.value} value={f.value}>{f.label}</option>
                 ))}
               </select>
@@ -242,8 +316,19 @@ export function ImportMappingStep({ detection, onComplete }: Props) {
         </div>
       )}
 
-      {/* Confirm button */}
-      <div style={{ display: "flex", justifyContent: "flex-end" }}>
+      {/* Footer actions — Back (optional) + Confirm */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "var(--sp-8)" }}>
+        {onBack ? (
+          <button
+            type="button"
+            className="btn btn-ghost btn-sm"
+            onClick={onBack}
+            disabled={saving}
+            style={{ fontSize: "var(--text-sm)" }}
+          >
+            ← Back
+          </button>
+        ) : <span />}
         <button
           type="button"
           className="btn btn-primary btn-sm"

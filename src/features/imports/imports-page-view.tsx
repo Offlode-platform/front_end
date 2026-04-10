@@ -8,7 +8,12 @@ import { ImportConfirmStep } from "./components/import-confirm-step";
 import { ImportHistoryPanel } from "./components/import-history-panel";
 import { ContactReconciliationPanel } from "./components/contact-reconciliation-panel";
 import { XeroSyncPanel } from "./components/xero-sync-panel";
-import type { FieldDetectionResponse, ImportSessionResponse, ImportPreviewResponse } from "@/types/imports";
+import type {
+  FieldDetectionResponse,
+  ImportSessionResponse,
+  ImportPreviewResponse,
+  ImportDataType,
+} from "@/types/imports";
 
 type ImportStep = "upload" | "mapping" | "preview" | "confirm" | "reconcile" | "done";
 type ImportSource = "csv" | "xero";
@@ -17,6 +22,10 @@ export function ImportsPageView() {
   const [source, setSource] = useState<ImportSource>("csv");
   const [step, setStep] = useState<ImportStep>("upload");
   const [showHistory, setShowHistory] = useState(false);
+  // The data type the user picked in the upload step is lifted here so that
+  // downstream steps (mapping, preview, confirm) can see it — and so it
+  // survives back-nav round-trips.
+  const [dataType, setDataType] = useState<ImportDataType>("invoices");
   const [detection, setDetection] = useState<FieldDetectionResponse | null>(null);
   const [session, setSession] = useState<ImportSessionResponse | null>(null);
   const [preview, setPreview] = useState<ImportPreviewResponse | null>(null);
@@ -38,8 +47,9 @@ export function ImportsPageView() {
     setStep("reconcile");
   }
 
-  function handleUploadComplete(result: FieldDetectionResponse) {
+  function handleUploadComplete(result: FieldDetectionResponse, dt: ImportDataType) {
     setDetection(result);
+    setDataType(dt);
     setStep("mapping");
   }
 
@@ -69,9 +79,20 @@ export function ImportsPageView() {
   function handleReset() {
     setStep("upload");
     setSource("csv");
+    setDataType("invoices");
     setDetection(null);
     setSession(null);
     setPreview(null);
+  }
+
+  // Step-wise back navigation. Each target step already has the state it
+  // needs preserved (detection / session / preview) so we just move the
+  // pointer backwards. The forward-step handlers will overwrite any stale
+  // results on the next pass.
+  function handleBack() {
+    if (step === "mapping") setStep("upload");
+    else if (step === "preview") setStep("mapping");
+    else if (step === "confirm") setStep("preview");
   }
 
   const steps: { key: ImportStep; label: string }[] = [
@@ -218,19 +239,37 @@ export function ImportsPageView() {
 
             {/* Step content */}
             {step === "upload" && source === "csv" && (
-              <ImportUploadStep onComplete={handleUploadComplete} />
+              <ImportUploadStep
+                dataType={dataType}
+                onDataTypeChange={setDataType}
+                onComplete={handleUploadComplete}
+              />
             )}
             {step === "upload" && source === "xero" && (
               <XeroSyncPanel onComplete={handleXeroSyncComplete} />
             )}
             {step === "mapping" && detection && (
-              <ImportMappingStep detection={detection} onComplete={handleMappingComplete} />
+              <ImportMappingStep
+                detection={detection}
+                dataType={dataType}
+                onComplete={handleMappingComplete}
+                onBack={handleBack}
+              />
             )}
             {step === "preview" && session && (
-              <ImportPreviewStep session={session} onPreviewReady={handlePreviewReady} />
+              <ImportPreviewStep
+                session={session}
+                onPreviewReady={handlePreviewReady}
+                onBack={handleBack}
+              />
             )}
             {step === "confirm" && session && preview && (
-              <ImportConfirmStep session={session} preview={preview} onComplete={handleConfirmComplete} />
+              <ImportConfirmStep
+                session={session}
+                preview={preview}
+                onComplete={handleConfirmComplete}
+                onBack={handleBack}
+              />
             )}
             {step === "reconcile" && session && (
               <>

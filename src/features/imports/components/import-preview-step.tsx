@@ -7,9 +7,10 @@ import type { ImportSessionResponse, ImportPreviewResponse } from "@/types/impor
 type Props = {
   session: ImportSessionResponse;
   onPreviewReady: (result: ImportPreviewResponse) => void;
+  onBack?: () => void;
 };
 
-export function ImportPreviewStep({ session, onPreviewReady }: Props) {
+export function ImportPreviewStep({ session, onPreviewReady, onBack }: Props) {
   const [preview, setPreview] = useState<ImportPreviewResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -213,7 +214,17 @@ export function ImportPreviewStep({ session, onPreviewReady }: Props) {
       )}
 
       {/* Action buttons */}
-      <div style={{ display: "flex", justifyContent: "flex-end" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "var(--sp-8)" }}>
+        {onBack ? (
+          <button
+            type="button"
+            className="btn btn-ghost btn-sm"
+            onClick={onBack}
+            style={{ fontSize: "var(--text-sm)" }}
+          >
+            ← Back
+          </button>
+        ) : <span />}
         <button
           type="button"
           className="btn btn-primary btn-sm"
