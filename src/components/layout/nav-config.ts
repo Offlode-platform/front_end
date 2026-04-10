@@ -30,7 +30,7 @@ export const PRIMARY_NAV_ITEMS: NavItem[] = [
   { href: routes.ledger, label: "Ledger", icon: BookOpen, implemented: true },
   { href: routes.schedule, label: "Schedule", icon: Calendar, implemented: false },
   { href: routes.reports, label: "Reports", icon: FileText, implemented: false },
-  // { href: routes.auditLog, label: "Audit Log", icon: ScrollText, implemented: true },
+   { href: routes.auditLog, label: "Audit Log", icon: ScrollText, implemented: true },
 ];
 
 export function getNavItemByPath(pathname: string): NavItem | null {
