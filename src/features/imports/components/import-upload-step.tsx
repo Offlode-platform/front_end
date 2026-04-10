@@ -5,14 +5,17 @@ import { importsApi } from "@/lib/api/imports-api";
 import type { FieldDetectionResponse, ImportDataType } from "@/types/imports";
 
 type Props = {
-  onComplete: (result: FieldDetectionResponse) => void;
+  // Controlled by the parent so the dataType the user picked survives
+  // round-trips through the wizard (back/forward navigation).
+  dataType: ImportDataType;
+  onDataTypeChange: (dt: ImportDataType) => void;
+  onComplete: (result: FieldDetectionResponse, dataType: ImportDataType) => void;
 };
 
-export function ImportUploadStep({ onComplete }: Props) {
+export function ImportUploadStep({ dataType, onDataTypeChange, onComplete }: Props) {
   const [dragging, setDragging] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [dataType, setDataType] = useState<ImportDataType>("invoices");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFile = useCallback(async (file: File) => {
@@ -28,7 +31,7 @@ export function ImportUploadStep({ onComplete }: Props) {
     setError(null);
     try {
       const result = await importsApi.upload(file, dataType);
-      onComplete(result);
+      onComplete(result, dataType);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Upload failed. Please try again.";
       setError(message);
@@ -55,12 +58,19 @@ export function ImportUploadStep({ onComplete }: Props) {
       <div className="ws-card">
         <div className="ws-card-title">What are you importing?</div>
         <div className="ws-issue-filters">
-          {(["invoices", "contacts", "payments", "mixed"] as const).map((dt) => (
+          {/*
+            "mixed" is intentionally excluded — the backend's upload endpoint
+            (api/v1/imports.py) explicitly rejects anything other than
+            invoices/contacts/payments. The schema literal still accepts it
+            but no downstream code handles it. Re-enable here only when the
+            backend actually supports a mixed-row CSV format.
+          */}
+          {(["invoices", "contacts", "payments"] as const).map((dt) => (
             <button
               key={dt}
               type="button"
               className={`ws-issue-filter${dataType === dt ? " active" : ""}`}
-              onClick={() => setDataType(dt)}
+              onClick={() => onDataTypeChange(dt)}
             >
               {dt.charAt(0).toUpperCase() + dt.slice(1)}
             </button>

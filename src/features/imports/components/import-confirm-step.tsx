@@ -8,9 +8,10 @@ type Props = {
   session: ImportSessionResponse;
   preview: ImportPreviewResponse;
   onComplete: (result: ImportSessionResponse) => void;
+  onBack?: () => void;
 };
 
-export function ImportConfirmStep({ session, preview, onComplete }: Props) {
+export function ImportConfirmStep({ session, preview, onComplete, onBack }: Props) {
   const [confirming, setConfirming] = useState(false);
   const [polling, setPolling] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -120,8 +121,19 @@ export function ImportConfirmStep({ session, preview, onComplete }: Props) {
         </div>
       )}
 
-      {/* Confirm button */}
-      <div style={{ display: "flex", justifyContent: "flex-end", gap: "var(--sp-8)" }}>
+      {/* Footer actions — Back (optional) + Confirm */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "var(--sp-8)" }}>
+        {onBack ? (
+          <button
+            type="button"
+            className="btn btn-ghost btn-sm"
+            onClick={onBack}
+            disabled={confirming}
+            style={{ fontSize: "var(--text-sm)" }}
+          >
+            ← Back
+          </button>
+        ) : <span />}
         <button
           type="button"
           className="btn btn-primary btn-sm"

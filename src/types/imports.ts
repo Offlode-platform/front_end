@@ -1,5 +1,9 @@
 export type ImportPlatform = "csv" | "xero" | "quickbooks" | "sage";
-export type ImportDataType = "invoices" | "contacts" | "payments" | "mixed";
+// "mixed" was historically allowed in the schema literal but the backend
+// upload endpoint (sentinel_backend/app/api/v1/imports.py) explicitly rejects
+// anything other than invoices/contacts/payments. Removed from this union so
+// the UI can't even produce a value the API will refuse.
+export type ImportDataType = "invoices" | "contacts" | "payments";
 export type ValidationSeverity = "error" | "warning";
 export type PreviewRowStatus = "valid" | "warning" | "error";
 
