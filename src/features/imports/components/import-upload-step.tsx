@@ -50,17 +50,10 @@ export function ImportUploadStep({ onComplete }: Props) {
   }
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "var(--sp-20)" }}>
+    <>
       {/* Data type selector */}
-      <div style={{
-        background: "var(--clr-surface-card)",
-        borderRadius: "var(--r-lg)",
-        border: "1px solid var(--clr-divider)",
-        padding: "var(--sp-16)",
-      }}>
-        <div style={{ fontSize: "var(--text-xs)", fontWeight: "var(--fw-semibold)", textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--clr-muted)", marginBottom: "var(--sp-12)" }}>
-          What are you importing?
-        </div>
+      <div className="ws-card">
+        <div className="ws-card-title">What are you importing?</div>
         <div className="ws-issue-filters">
           {(["invoices", "contacts", "payments", "mixed"] as const).map((dt) => (
             <button
@@ -75,15 +68,15 @@ export function ImportUploadStep({ onComplete }: Props) {
         </div>
       </div>
 
-      {/* Drop zone */}
+      {/* Drop zone — uses ws-card for consistent borders/shadow but with a dashed border on top */}
       <div
+        className="ws-card"
         onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
         onDragLeave={() => setDragging(false)}
         onDrop={handleDrop}
         onClick={() => fileInputRef.current?.click()}
         style={{
-          background: dragging ? "rgba(53,126,146,0.06)" : "var(--clr-surface-card)",
-          borderRadius: "var(--r-lg)",
+          background: dragging ? "rgba(53,126,146,0.06)" : undefined,
           border: `2px dashed ${dragging ? "var(--brand)" : "var(--clr-divider-strong)"}`,
           padding: "var(--sp-48) var(--sp-24)",
           textAlign: "center",
@@ -147,10 +140,8 @@ export function ImportUploadStep({ onComplete }: Props) {
 
       {/* Error */}
       {error && (
-        <div style={{
-          padding: "var(--sp-12) var(--sp-16)",
+        <div className="ws-card" style={{
           background: "rgba(239,68,68,0.08)",
-          borderRadius: "var(--r-md)",
           color: "var(--danger)",
           fontSize: "var(--text-sm)",
         }}>
@@ -159,6 +150,6 @@ export function ImportUploadStep({ onComplete }: Props) {
       )}
 
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-    </div>
+    </>
   );
 }

@@ -1,4 +1,5 @@
 import {
+  BookOpen,
   Briefcase,
   Calendar,
   FileText,
@@ -26,6 +27,7 @@ export const PRIMARY_NAV_ITEMS: NavItem[] = [
   { href: routes.organizations, label: "Organizations", icon: Building2, implemented: true },
   { href: routes.team, label: "Team", icon: Users, implemented: true },
   { href: routes.imports, label: "Import", icon: Upload, implemented: true },
+  { href: routes.ledger, label: "Ledger", icon: BookOpen, implemented: true },
   { href: routes.schedule, label: "Schedule", icon: Calendar, implemented: false },
   { href: routes.reports, label: "Reports", icon: FileText, implemented: false },
   // { href: routes.auditLog, label: "Audit Log", icon: ScrollText, implemented: true },

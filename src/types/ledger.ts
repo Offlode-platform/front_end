@@ -22,6 +22,9 @@ export type UniversalInvoice = {
   reference: string | null;
   line_items: Record<string, unknown>[] | null;
   source_platform: string | null;
+  document_received: boolean;
+  chase_status: string | null;
+  last_chased_at: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -105,4 +108,70 @@ export type PaymentListQuery = {
   contact_name?: string;
   limit?: number;
   offset?: number;
+};
+
+// ============================================================================
+// Reconciliation
+// ============================================================================
+//
+// After a CSV/Xero import, contacts that don't auto-link to an existing Client
+// land in the unlinked-contacts queue. The reconciliation panel walks the user
+// through linking each one (or creating a new Client from it).
+
+export type ClientSuggestion = {
+  client_id: string;
+  name: string;
+  email: string | null;
+  phone: string | null;
+  score: number;
+};
+
+export type ContactSuggestionsResponse = {
+  contact_id: string;
+  contact_name: string;
+  contact_email: string | null;
+  suggestions: ClientSuggestion[];
+};
+
+export type UnlinkedContactsResponse = {
+  items: UniversalContact[];
+  total: number;
+  invoices_pending_link: number;
+};
+
+export type LinkContactRequest = {
+  client_id: string;
+};
+
+export type CreateClientFromContactRequest = {
+  name?: string;
+  email?: string;
+  phone?: string;
+  chase_enabled?: boolean;
+  chase_frequency_days?: number;
+  escalation_days?: number;
+};
+
+export type ReconciliationResult = {
+  contact_id: string;
+  client_id: string;
+  contact_name: string;
+  client_name: string;
+  invoices_materialized: number;
+};
+
+export type BulkLinkItem = {
+  contact_id: string;
+  client_id: string;
+};
+
+export type BulkLinkRequest = {
+  links: BulkLinkItem[];
+};
+
+export type BulkReconciliationResult = {
+  linked_count: number;
+  skipped_count: number;
+  total_invoices_materialized: number;
+  results: ReconciliationResult[];
 };

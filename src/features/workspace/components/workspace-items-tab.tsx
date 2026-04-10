@@ -4,12 +4,14 @@ import { useEffect, useState } from "react";
 import { transactionsApi } from "@/lib/api/transactions-api";
 import { dashboardApi } from "@/lib/api/dashboard-api";
 import { chasesApi } from "@/lib/api/chases-api";
+import { ledgerApi } from "@/lib/api/ledger-api";
 import type { ListedClient } from "@/types/clients";
 import type { Transaction, TransactionListResponse } from "@/types/transactions";
 import type {
   ClientDashboardDetailsResponse,
   ClientDashboardMissingTransaction,
 } from "@/types/dashboard";
+import type { UniversalInvoice } from "@/types/ledger";
 
 type Props = {
   client: ListedClient;
@@ -20,7 +22,7 @@ type MissingData = {
   grouped: [string, { date: string; amount: number | string; description: string }[]][];
 };
 
-type ViewMode = "missing" | "all";
+type ViewMode = "missing" | "all" | "imported";
 
 function normalizeDashboardData(d: ClientDashboardDetailsResponse): MissingData {
   const grouped = Object.entries(d.missing_documents.grouped_by_supplier).map(
@@ -52,6 +54,7 @@ function docStatusDot(txn: Transaction): { color: string; label: string } {
 export function WorkspaceItemsTab({ client }: Props) {
   const [missingData, setMissingData] = useState<MissingData | null>(null);
   const [allTransactions, setAllTransactions] = useState<Transaction[] | null>(null);
+  const [importedInvoices, setImportedInvoices] = useState<UniversalInvoice[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [expandedSupplier, setExpandedSupplier] = useState<string | null>(null);
@@ -85,14 +88,23 @@ export function WorkspaceItemsTab({ client }: Props) {
       () => { /* silent */ },
     );
 
+    // Load imported invoices for this client (filter by contact name).
+    // This pulls UniversalInvoice rows that came from CSV/Xero so users can see
+    // the full picture of imported financial data alongside Transaction rows.
+    ledgerApi.listInvoices({ contact_name: client.name, limit: 200 }).then(
+      (result) => { if (!cancelled) setImportedInvoices(result.items); },
+      () => { /* silent */ },
+    );
+
     return () => {
       cancelled = true;
       setLoading(true);
       setError(null);
       setMissingData(null);
       setAllTransactions(null);
+      setImportedInvoices(null);
     };
-  }, [client.id]);
+  }, [client.id, client.name]);
 
   async function handleSendChase() {
     setSending(true);
@@ -136,6 +148,11 @@ export function WorkspaceItemsTab({ client }: Props) {
             {allTransactions && (
               <button type="button" className={`ws-issue-filter${view === "all" ? " active" : ""}`} onClick={() => setView("all")}>
                 All ({allTransactions.length})
+              </button>
+            )}
+            {importedInvoices && importedInvoices.length > 0 && (
+              <button type="button" className={`ws-issue-filter${view === "imported" ? " active" : ""}`} onClick={() => setView("imported")}>
+                Imported ({importedInvoices.length})
               </button>
             )}
           </div>
@@ -193,6 +210,54 @@ export function WorkspaceItemsTab({ client }: Props) {
                     )}
                   </div>
                 ))}
+              </div>
+            )}
+          </>
+        )}
+
+        {/* Imported invoices view (from CSV / Xero universal ledger) */}
+        {view === "imported" && (
+          <>
+            {!importedInvoices || importedInvoices.length === 0 ? (
+              <div style={{ padding: "var(--sp-32)", textAlign: "center" }}>
+                <div style={{ fontSize: "var(--text-md)", fontWeight: "var(--fw-medium)", color: "var(--clr-primary)", marginBottom: "var(--sp-4)" }}>No imported invoices</div>
+                <div style={{ fontSize: "var(--text-sm)", color: "var(--clr-muted)" }}>Imported invoices for this client will appear here.</div>
+              </div>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: "var(--sp-4)" }}>
+                {importedInvoices.map((inv) => {
+                  const linked = inv.transaction_id !== null;
+                  const dotColor = inv.document_received
+                    ? "var(--success)"
+                    : linked
+                      ? "var(--warning)"
+                      : "var(--danger)";
+                  const statusLabel = inv.document_received
+                    ? "Document received"
+                    : linked
+                      ? "In chase queue"
+                      : "Pending link";
+                  return (
+                    <div key={inv.id} style={{ display: "flex", alignItems: "center", gap: "var(--sp-10)", padding: "var(--sp-10) var(--sp-12)", background: "var(--clr-surface-card)", borderRadius: "var(--r-md)", border: "1px solid var(--clr-divider)", fontSize: "var(--text-sm)" }}>
+                      <div style={{ width: 8, height: 8, borderRadius: "50%", flexShrink: 0, background: dotColor }} title={statusLabel} />
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ color: "var(--clr-primary)", fontWeight: "var(--fw-medium)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                          {inv.invoice_number || inv.reference || inv.description || "Invoice"}
+                        </div>
+                        <div style={{ fontSize: "var(--text-xs)", color: "var(--clr-muted)", marginTop: 1 }}>
+                          {new Date(inv.date).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
+                          <span style={{ marginLeft: "var(--sp-8)", color: dotColor }}>{statusLabel}</span>
+                          {inv.source_platform && (
+                            <span style={{ marginLeft: "var(--sp-8)", textTransform: "capitalize" }}>· {inv.source_platform}</span>
+                          )}
+                        </div>
+                      </div>
+                      <div style={{ fontWeight: "var(--fw-medium)", color: "var(--clr-primary)", flexShrink: 0 }}>
+                        {new Intl.NumberFormat("en-GB", { style: "currency", currency: inv.currency_code || "GBP" }).format(Number(inv.total))}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             )}
           </>
