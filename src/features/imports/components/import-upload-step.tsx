@@ -58,7 +58,14 @@ export function ImportUploadStep({ dataType, onDataTypeChange, onComplete }: Pro
       <div className="ws-card">
         <div className="ws-card-title">What are you importing?</div>
         <div className="ws-issue-filters">
-          {(["invoices", "contacts", "payments", "mixed"] as const).map((dt) => (
+          {/*
+            "mixed" is intentionally excluded — the backend's upload endpoint
+            (api/v1/imports.py) explicitly rejects anything other than
+            invoices/contacts/payments. The schema literal still accepts it
+            but no downstream code handles it. Re-enable here only when the
+            backend actually supports a mixed-row CSV format.
+          */}
+          {(["invoices", "contacts", "payments"] as const).map((dt) => (
             <button
               key={dt}
               type="button"

@@ -40,16 +40,24 @@ const INVOICE_FIELDS: FieldOption[] = [
   { value: "account_code", label: "Account Code" },
 ];
 
+// IMPORTANT: these `value`s must match the field keys the backend's
+// `_validate_contact_row` (csv_importer.py) reads via `reverse_map.get(...)`.
+// A mismatch silently produces "Contact name is required" errors on every row
+// because the validator can't find the column the user mapped.
 const CONTACT_FIELDS: FieldOption[] = [
-  { value: "contact_name", label: "Contact/Client Name" },
+  { value: "name", label: "Contact / Full Name" },
+  { value: "first_name", label: "First Name" },
+  { value: "last_name", label: "Last Name" },
   { value: "email", label: "Email" },
   { value: "phone", label: "Phone" },
-  { value: "company", label: "Company" },
+  { value: "tax_number", label: "Tax / VAT Number" },
+  { value: "contact_type", label: "Contact Type (customer / supplier)" },
   { value: "address_line_1", label: "Address Line 1" },
+  { value: "address_line_2", label: "Address Line 2" },
   { value: "city", label: "City" },
   { value: "postal_code", label: "Postal Code" },
   { value: "country", label: "Country" },
-  { value: "reference", label: "Reference / Tax Number" },
+  { value: "currency_code", label: "Currency" },
 ];
 
 const PAYMENT_FIELDS: FieldOption[] = [
@@ -63,22 +71,6 @@ const PAYMENT_FIELDS: FieldOption[] = [
   { value: "account_code", label: "Account Code" },
 ];
 
-// Mixed == everything (de-duped by value, since the same field can show up
-// in multiple type catalogs — e.g. contact_name, reference).
-function uniqueFields(lists: FieldOption[][]): FieldOption[] {
-  const seen = new Set<string>();
-  const out: FieldOption[] = [];
-  for (const list of lists) {
-    for (const f of list) {
-      if (!seen.has(f.value)) {
-        seen.add(f.value);
-        out.push(f);
-      }
-    }
-  }
-  return out;
-}
-
 function fieldsForDataType(dataType: ImportDataType): FieldOption[] {
   switch (dataType) {
     case "invoices":
@@ -87,8 +79,6 @@ function fieldsForDataType(dataType: ImportDataType): FieldOption[] {
       return [SKIP, ...CONTACT_FIELDS];
     case "payments":
       return [SKIP, ...PAYMENT_FIELDS];
-    case "mixed":
-      return [SKIP, ...uniqueFields([INVOICE_FIELDS, CONTACT_FIELDS, PAYMENT_FIELDS])];
     default:
       return [SKIP];
   }
@@ -118,6 +108,27 @@ export function ImportMappingStep({ detection, dataType, onComplete, onBack }: P
   const [error, setError] = useState<string | null>(null);
   const [saveTemplate, setSaveTemplate] = useState(false);
   const [templateName, setTemplateName] = useState("");
+
+  // Detect duplicate target fields. If the user maps two CSV columns to the
+  // same backend field (e.g. both "First Name" and "Last Name" → "name"),
+  // the backend's reverse_map collapses one of them and silently drops data.
+  // Block submission until the conflict is resolved — except for first_name
+  // and last_name which we DON'T treat as duplicates of each other (they're
+  // different fields), and we let the backend combine them into `name`.
+  const duplicates = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const field of Object.values(mapping)) {
+      if (!field) continue;
+      counts.set(field, (counts.get(field) ?? 0) + 1);
+    }
+    const dupSet = new Set<string>();
+    for (const [field, count] of counts) {
+      if (count > 1) dupSet.add(field);
+    }
+    return dupSet;
+  }, [mapping]);
+
+  const hasDuplicates = duplicates.size > 0;
 
   function updateMapping(csvCol: string, field: string) {
     setMapping((prev) => ({ ...prev, [csvCol]: field }));
@@ -216,10 +227,17 @@ export function ImportMappingStep({ detection, dataType, onComplete, onBack }: P
                 onChange={(e) => updateMapping(col, e.target.value)}
                 style={{
                   padding: "var(--sp-4) var(--sp-8)",
-                  border: "1px solid var(--clr-divider-strong)",
+                  border: `1px solid ${
+                    mapping[col] && duplicates.has(mapping[col])
+                      ? "var(--danger)"
+                      : "var(--clr-divider-strong)"
+                  }`,
                   borderRadius: "var(--r-sm)",
                   fontSize: "var(--text-sm)",
-                  background: "var(--canvas-bg)",
+                  background:
+                    mapping[col] && duplicates.has(mapping[col])
+                      ? "rgba(239,68,68,0.04)"
+                      : "var(--canvas-bg)",
                   color: "var(--clr-primary)",
                   width: "100%",
                 }}
@@ -310,6 +328,44 @@ export function ImportMappingStep({ detection, dataType, onComplete, onBack }: P
         )}
       </div>
 
+      {hasDuplicates && (
+        <div
+          style={{
+            padding: "var(--sp-12) var(--sp-16)",
+            background: "rgba(239,68,68,0.08)",
+            borderRadius: "var(--r-md)",
+            color: "var(--danger)",
+            fontSize: "var(--text-sm)",
+            border: "1px solid rgba(239,68,68,0.2)",
+            display: "flex",
+            alignItems: "flex-start",
+            gap: "var(--sp-8)",
+          }}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: 2 }}>
+            <circle cx="12" cy="12" r="10" />
+            <line x1="12" y1="8" x2="12" y2="12" />
+            <line x1="12" y1="16" x2="12.01" y2="16" />
+          </svg>
+          <div>
+            <div style={{ fontWeight: "var(--fw-semibold)", marginBottom: 2 }}>
+              Multiple columns mapped to the same field
+            </div>
+            <div style={{ color: "var(--clr-secondary)" }}>
+              {Array.from(duplicates).map((f) => (
+                <span key={f} style={{ fontFamily: "ui-monospace, monospace" }}>
+                  {f}
+                </span>
+              ))}{" "}
+              — each backend field can only receive one CSV column. Pick one,
+              or use the dedicated <strong>First Name</strong> /{" "}
+              <strong>Last Name</strong> options if you want them combined into
+              the contact&apos;s full name.
+            </div>
+          </div>
+        </div>
+      )}
+
       {error && (
         <div style={{ padding: "var(--sp-12) var(--sp-16)", background: "rgba(239,68,68,0.08)", borderRadius: "var(--r-md)", color: "var(--danger)", fontSize: "var(--text-sm)" }}>
           {error}
@@ -333,7 +389,8 @@ export function ImportMappingStep({ detection, dataType, onComplete, onBack }: P
           type="button"
           className="btn btn-primary btn-sm"
           onClick={handleConfirm}
-          disabled={saving}
+          disabled={saving || hasDuplicates}
+          title={hasDuplicates ? "Resolve duplicate field mappings first" : undefined}
           style={{ fontSize: "var(--text-sm)", padding: "var(--sp-8) var(--sp-20)" }}
         >
           {saving ? "Saving..." : "Confirm Mapping & Validate"}
