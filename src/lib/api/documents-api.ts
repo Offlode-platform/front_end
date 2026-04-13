@@ -4,6 +4,8 @@ import type {
   Document,
   DocumentListResponse,
   S3PresignedUrlResponse,
+  ReviewQueueResponse,
+  MatchActionResponse,
 } from "@/types/documents";
 import type { TransactionListResponse } from "@/types/transactions";
 
@@ -113,6 +115,42 @@ export const documentsApi = {
   delete(documentId: string) {
     return authenticatedApi.delete(
       `${apiPaths.documents.base}/${encodeURIComponent(documentId)}`,
+    );
+  },
+
+  // Phase 2: Review queue methods
+
+  reviewQueue(params?: { skip?: number; limit?: number; client_id?: string }) {
+    return readData<ReviewQueueResponse>(
+      authenticatedApi.get(
+        withQuery(apiPaths.documents.reviewQueue, params),
+      ),
+    );
+  },
+
+  confirmMatch(documentId: string, transactionId: string) {
+    return readData<MatchActionResponse>(
+      authenticatedApi.post(
+        apiPaths.documents.confirmMatch(documentId),
+        { transaction_id: transactionId },
+      ),
+    );
+  },
+
+  rejectMatch(documentId: string) {
+    return readData<MatchActionResponse>(
+      authenticatedApi.post(
+        apiPaths.documents.rejectMatch(documentId),
+      ),
+    );
+  },
+
+  manualMatch(documentId: string, transactionId: string) {
+    return readData<MatchActionResponse>(
+      authenticatedApi.post(
+        apiPaths.documents.manualMatch(documentId),
+        { transaction_id: transactionId },
+      ),
     );
   },
 };
