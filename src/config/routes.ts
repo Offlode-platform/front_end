@@ -10,6 +10,7 @@ export const routes = {
   auditLog: "/audit-log",
   imports: "/imports",
   ledger: "/ledger",
+  documentReview: "/documents/review",
   login: "/login",
   signup: "/signup",
   twoFaBootstrapSetup: "/login/2fa-setup",

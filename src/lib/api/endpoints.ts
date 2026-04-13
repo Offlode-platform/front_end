@@ -46,6 +46,13 @@ export const apiPaths = {
   },
   documents: {
     base: "/api/v1/documents",
+    reviewQueue: "/api/v1/documents/review-queue",
+    confirmMatch: (id: string) =>
+      `/api/v1/documents/${encodeURIComponent(id)}/confirm-match`,
+    rejectMatch: (id: string) =>
+      `/api/v1/documents/${encodeURIComponent(id)}/reject-match`,
+    manualMatch: (id: string) =>
+      `/api/v1/documents/${encodeURIComponent(id)}/manual-match`,
   },
   clientAssignments: {
     base: "/api/v1/client-assignments",

@@ -5,6 +5,7 @@ import { transactionsApi } from "@/lib/api/transactions-api";
 import { dashboardApi } from "@/lib/api/dashboard-api";
 import { chasesApi } from "@/lib/api/chases-api";
 import { ledgerApi } from "@/lib/api/ledger-api";
+import { documentsApi } from "@/lib/api/documents-api";
 import type { ListedClient } from "@/types/clients";
 import type { Transaction, TransactionListResponse } from "@/types/transactions";
 import type {
@@ -12,6 +13,7 @@ import type {
   ClientDashboardMissingTransaction,
 } from "@/types/dashboard";
 import type { UniversalInvoice } from "@/types/ledger";
+import type { Document } from "@/types/documents";
 
 type Props = {
   client: ListedClient;
@@ -22,7 +24,7 @@ type MissingData = {
   grouped: [string, { date: string; amount: number | string; description: string }[]][];
 };
 
-type ViewMode = "missing" | "all" | "imported";
+type ViewMode = "missing" | "all" | "imported" | "documents";
 
 function normalizeDashboardData(d: ClientDashboardDetailsResponse): MissingData {
   const grouped = Object.entries(d.missing_documents.grouped_by_supplier).map(
@@ -55,6 +57,7 @@ export function WorkspaceItemsTab({ client }: Props) {
   const [missingData, setMissingData] = useState<MissingData | null>(null);
   const [allTransactions, setAllTransactions] = useState<Transaction[] | null>(null);
   const [importedInvoices, setImportedInvoices] = useState<UniversalInvoice[] | null>(null);
+  const [clientDocs, setClientDocs] = useState<Document[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [expandedSupplier, setExpandedSupplier] = useState<string | null>(null);
@@ -96,6 +99,12 @@ export function WorkspaceItemsTab({ client }: Props) {
       () => { /* silent */ },
     );
 
+    // Load documents for this client (shows OCR/scan/quarantine status)
+    documentsApi.list(client.id, { limit: 200 }).then(
+      (result) => { if (!cancelled) setClientDocs(result.documents); },
+      () => { /* silent */ },
+    );
+
     return () => {
       cancelled = true;
       setLoading(true);
@@ -103,6 +112,7 @@ export function WorkspaceItemsTab({ client }: Props) {
       setMissingData(null);
       setAllTransactions(null);
       setImportedInvoices(null);
+      setClientDocs(null);
     };
   }, [client.id, client.name]);
 
@@ -153,6 +163,11 @@ export function WorkspaceItemsTab({ client }: Props) {
             {importedInvoices && importedInvoices.length > 0 && (
               <button type="button" className={`ws-issue-filter${view === "imported" ? " active" : ""}`} onClick={() => setView("imported")}>
                 Imported ({importedInvoices.length})
+              </button>
+            )}
+            {clientDocs && clientDocs.length > 0 && (
+              <button type="button" className={`ws-issue-filter${view === "documents" ? " active" : ""}`} onClick={() => setView("documents")}>
+                Docs ({clientDocs.length})
               </button>
             )}
           </div>
@@ -295,7 +310,75 @@ export function WorkspaceItemsTab({ client }: Props) {
             )}
           </>
         )}
+
+        {/* Documents view (Phase 2: shows OCR, virus scan, quarantine status) */}
+        {view === "documents" && (
+          <>
+            {!clientDocs || clientDocs.length === 0 ? (
+              <div style={{ padding: "var(--sp-32)", textAlign: "center" }}>
+                <div style={{ fontSize: "var(--text-md)", fontWeight: "var(--fw-medium)", color: "var(--clr-primary)", marginBottom: "var(--sp-4)" }}>No documents</div>
+                <div style={{ fontSize: "var(--text-sm)", color: "var(--clr-muted)" }}>No documents uploaded for this client yet.</div>
+              </div>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: "var(--sp-4)" }}>
+                {clientDocs.map((doc) => {
+                  const docState = docStateBadge(doc);
+                  return (
+                    <div key={doc.id} style={{ display: "flex", alignItems: "center", gap: "var(--sp-10)", padding: "var(--sp-10) var(--sp-12)", background: "var(--clr-surface-card)", borderRadius: "var(--r-md)", border: "1px solid var(--clr-divider)", fontSize: "var(--text-sm)" }}>
+                      <div style={{ width: 8, height: 8, borderRadius: "50%", flexShrink: 0, background: docState.color }} title={docState.label} />
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "var(--sp-6)" }}>
+                          <span style={{ color: "var(--clr-primary)", fontWeight: "var(--fw-medium)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                            {doc.original_filename || doc.filename}
+                          </span>
+                          {doc.virus_scan_status === "infected" && (
+                            <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--fw-semibold)", color: "#fff", background: "var(--danger)", padding: "1px 6px", borderRadius: "var(--r-sm)" }}>
+                              QUARANTINED
+                            </span>
+                          )}
+                          {doc.flagged && doc.virus_scan_status !== "infected" && (
+                            <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--fw-semibold)", color: "var(--warning)", background: "rgba(245,158,11,0.12)", padding: "1px 6px", borderRadius: "var(--r-sm)" }}>
+                              FLAGGED
+                            </span>
+                          )}
+                        </div>
+                        <div style={{ fontSize: "var(--text-xs)", color: "var(--clr-muted)", marginTop: 1, display: "flex", gap: "var(--sp-8)", flexWrap: "wrap" }}>
+                          <span>{new Date(doc.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}</span>
+                          <span style={{ color: docState.color }}>{docState.label}</span>
+                          {doc.ocr_status === "completed" && doc.ocr_confidence && (
+                            <span>OCR {Number(doc.ocr_confidence).toFixed(0)}%</span>
+                          )}
+                          {doc.extracted_supplier && (
+                            <span>{doc.extracted_supplier}</span>
+                          )}
+                          {doc.forwarded_to_xero && (
+                            <span style={{ color: "var(--success)" }}>Sent to Xero</span>
+                          )}
+                        </div>
+                      </div>
+                      {doc.extracted_amount && (
+                        <div style={{ fontWeight: "var(--fw-medium)", color: "var(--clr-primary)", flexShrink: 0 }}>
+                          {new Intl.NumberFormat("en-GB", { style: "currency", currency: "GBP" }).format(Number(doc.extracted_amount))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </>
+        )}
       </div>
     </div>
   );
+}
+
+function docStateBadge(doc: Document): { color: string; label: string } {
+  if (doc.virus_scan_status === "infected") return { color: "var(--danger)", label: "Quarantined" };
+  if (doc.virus_scan_status === "pending") return { color: "var(--clr-muted)", label: "Scanning" };
+  if (doc.ocr_status === "pending" || doc.ocr_status === "processing") return { color: "var(--info)", label: "Processing OCR" };
+  if (doc.ocr_status === "failed") return { color: "var(--warning)", label: "OCR failed" };
+  if (doc.forwarded_to_xero) return { color: "var(--success)", label: "Complete" };
+  if (doc.is_processed) return { color: "var(--success)", label: "Processed" };
+  return { color: "var(--warning)", label: "Pending" };
 }
