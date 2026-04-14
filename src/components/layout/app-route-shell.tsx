@@ -12,15 +12,19 @@ type AppRouteShellProps = {
 export function AppRouteShell({ children }: AppRouteShellProps) {
   const pathname = usePathname();
 
-  const isAuthPage = useMemo(() => {
+  const isStandalonePage = useMemo(() => {
     return (
       pathname === routes.login ||
       pathname === routes.signup ||
-      pathname === routes.twoFaBootstrapSetup
+      pathname === routes.twoFaBootstrapSetup ||
+      pathname === routes.portal ||
+      pathname?.startsWith(`${routes.portal}/`)
     );
   }, [pathname]);
 
-  if (isAuthPage) {
+  // Standalone pages (auth + client portal) render without the accountant
+  // dashboard shell — no sidebar, no topbar, just the page content.
+  if (isStandalonePage) {
     return <>{children}</>;
   }
 

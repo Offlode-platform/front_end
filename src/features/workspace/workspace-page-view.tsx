@@ -4,43 +4,13 @@ import { useEffect, useMemo, useState } from "react";
 import { clientsApi } from "@/lib/api/clients-api";
 import type { ListedClient } from "@/types/clients";
 import { WorkspaceClientList } from "./components/workspace-client-list";
-import { WorkspaceContextPanel } from "./components/workspace-context-panel";
-import { WorkspaceMiddlePane } from "./components/workspace-middle-pane";
-import type { RefSurface } from "./components/workspace-ref-surface";
-import type { WorkspaceDemoClient, WorkspaceZone } from "./types";
-
-/** Convert a real API client to the WorkspaceDemoClient shape used by middle-pane components. */
-function adaptClient(c: ListedClient): WorkspaceDemoClient {
-  return {
-    id: c.id,
-    name: c.name,
-    contact: c.name,
-    email: c.email,
-    phone: c.phone,
-    legalEntity: "",
-    intent: c.chase_enabled ? "Active chasing" : "Chasing paused",
-    intentDetail: c.email,
-    vip: c.chase_frequency_days <= 7,
-    status: c.chase_enabled ? "active" : "inactive",
-    assignedManager: c.assigned_user_name
-      ? { name: c.assigned_user_name, initials: c.assigned_user_name.split(" ").map((w) => w[0]).join("").toUpperCase().slice(0, 2) }
-      : undefined,
-    outstanding: "—",
-    thisYear: "—",
-    lifetime: "—",
-    keyDates: {
-      yearEnd: "—",
-      vatQuarterEnd: c.vat_period_end_date || "—",
-      nextInvoiceDue: "—",
-      nextMeeting: null,
-      lastContact: "—",
-    },
-    prefs: [],
-    urgentItem: c.chase_enabled
-      ? undefined
-      : { agent: "collect", desc: "Chasing disabled", severity: "handled" },
-  };
-}
+import { WorkspaceFocusHeader } from "./components/workspace-focus-header";
+import type { WorkspaceTab } from "./components/workspace-focus-header";
+import { WorkspaceOverviewTab } from "./components/workspace-overview-tab";
+import { WorkspaceContactTab } from "./components/workspace-contact-tab";
+import { WorkspaceItemsTab } from "./components/workspace-items-tab";
+import { WorkspaceActivityTab } from "./components/workspace-activity-tab";
+import { WorkspaceSettingsTab } from "./components/workspace-settings-tab";
 
 export function WorkspacePageView() {
   const [clients, setClients] = useState<ListedClient[]>([]);
@@ -51,8 +21,7 @@ export function WorkspacePageView() {
   );
   const [showVipOnly, setShowVipOnly] = useState(false);
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
-  const [focusedZone, setFocusedZone] = useState<WorkspaceZone | null>(null);
-  const [refSurface, setRefSurface] = useState<RefSurface | null>(null);
+  const [activeTab, setActiveTab] = useState<WorkspaceTab>("items");
 
   useEffect(() => {
     let cancelled = false;
@@ -74,65 +43,111 @@ export function WorkspacePageView() {
         }
       },
     );
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const demoClients = useMemo(
-    () => clients.map(adaptClient),
-    [clients],
+  const selectedClient = useMemo(
+    () => clients.find((c) => c.id === selectedClientId) ?? null,
+    [clients, selectedClientId],
   );
 
-  const selectedDemoClient = useMemo(
-    () => demoClients.find((c) => String(c.id) === selectedClientId) ?? null,
-    [demoClients, selectedClientId],
+  const selectedIndex = useMemo(
+    () => (selectedClient ? clients.findIndex((c) => c.id === selectedClient.id) : -1),
+    [clients, selectedClient],
   );
+
+  const hasPrev = selectedIndex > 0;
+  const hasNext = selectedIndex >= 0 && selectedIndex < clients.length - 1;
+
+  function handleClientUpdated(updated: ListedClient) {
+    setClients((prev) =>
+      prev.map((c) => (c.id === updated.id ? { ...c, ...updated } : c)),
+    );
+  }
 
   return (
     <div className="page active workspace-page-lock" id="page-workspace">
-      <div
-        className={`ws ${focusedZone || refSurface ? "focused" : ""}`}
-        id="ws"
-      >
+      <div className="ws" id="ws" style={{ display: "flex", flex: 1, minHeight: 0 }}>
         <WorkspaceClientList
           clients={clients}
           isLoading={isLoading}
           error={error}
           activeFilter={activeFilter}
           showVipOnly={showVipOnly}
-          onFilterChange={(next) => {
-            setActiveFilter(next);
-            setFocusedZone(null);
-            setRefSurface(null);
-          }}
+          onFilterChange={(next) => setActiveFilter(next)}
           onToggleVip={() => setShowVipOnly((prev) => !prev)}
           selectedClientId={selectedClientId}
-          onSelectClient={(clientId) => {
-            setSelectedClientId(clientId);
-            setFocusedZone(null);
-            setRefSurface(null);
-          }}
+          onSelectClient={(clientId) => setSelectedClientId(clientId)}
         />
 
-        <WorkspaceMiddlePane
-          client={selectedDemoClient}
-          focusedZone={focusedZone}
-          refSurface={refSurface}
-          onOpenZone={(zone) => {
-            setRefSurface(null);
-            setFocusedZone(zone);
-          }}
-          onExitFocus={() => setFocusedZone(null)}
-          onOpenRef={(surface) => {
-            setFocusedZone(null);
-            setRefSurface(surface);
-          }}
-          onCloseRef={() => setRefSurface(null)}
-        />
+        <div
+          className="ws-middle"
+          style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}
+        >
+          {!selectedClient ? (
+            <div
+              style={{
+                display: "flex",
+                flex: 1,
+                alignItems: "center",
+                justifyContent: "center",
+                padding: "var(--sp-32)",
+                color: "var(--clr-muted)",
+                fontSize: "var(--text-sm)",
+              }}
+            >
+              {isLoading
+                ? "Loading clients..."
+                : clients.length === 0
+                  ? "No clients yet. Create one from the Clients page."
+                  : "Select a client to get started."}
+            </div>
+          ) : (
+            <>
+              <WorkspaceFocusHeader
+                client={selectedClient}
+                activeTab={activeTab}
+                onTabChange={setActiveTab}
+                onBack={() => setSelectedClientId(null)}
+                onPrev={() => {
+                  if (hasPrev) setSelectedClientId(clients[selectedIndex - 1].id);
+                }}
+                onNext={() => {
+                  if (hasNext) setSelectedClientId(clients[selectedIndex + 1].id);
+                }}
+                hasPrev={hasPrev}
+                hasNext={hasNext}
+              />
 
-        <WorkspaceContextPanel
-          client={clients.find((c) => c.id === selectedClientId) ?? null}
-          isVisible={Boolean(focusedZone || refSurface)}
-        />
+              <div style={{ flex: 1, overflow: "auto", minHeight: 0 }}>
+                {activeTab === "overview" && (
+                  <WorkspaceOverviewTab client={selectedClient} />
+                )}
+                {activeTab === "contact" && (
+                  <WorkspaceContactTab
+                    client={selectedClient}
+                    onUpdated={handleClientUpdated}
+                  />
+                )}
+                {activeTab === "items" && (
+                  <WorkspaceItemsTab client={selectedClient} />
+                )}
+                {activeTab === "activity" && (
+                  <WorkspaceActivityTab client={selectedClient} />
+                )}
+                {activeTab === "settings" && (
+                  <WorkspaceSettingsTab
+                    client={selectedClient}
+                    onUpdated={handleClientUpdated}
+                  />
+                )}
+              </div>
+            </>
+          )}
+        </div>
       </div>
     </div>
   );

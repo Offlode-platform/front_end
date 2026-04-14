@@ -94,6 +94,7 @@ export const apiPaths = {
   },
   portal: {
     base: "/api/v1/portal",
+    resolve: "/api/v1/portal/resolve",
   },
   xero: {
     connect: "/api/v1/auth/xero/connect",

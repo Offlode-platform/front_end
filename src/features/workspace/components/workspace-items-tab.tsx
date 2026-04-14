@@ -24,7 +24,7 @@ type MissingData = {
   grouped: [string, { date: string; amount: number | string; description: string }[]][];
 };
 
-type ViewMode = "missing" | "all" | "imported" | "documents";
+type ViewMode = "missing" | "all" | "imported" | "documents" | "queried";
 
 function normalizeDashboardData(d: ClientDashboardDetailsResponse): MissingData {
   const grouped = Object.entries(d.missing_documents.grouped_by_supplier).map(
@@ -64,6 +64,16 @@ export function WorkspaceItemsTab({ client }: Props) {
   const [view, setView] = useState<ViewMode>("missing");
   const [sending, setSending] = useState(false);
   const [sendMsg, setSendMsg] = useState<string | null>(null);
+  const [resolvingId, setResolvingId] = useState<string | null>(null);
+
+  // Transactions the client has responded to — these are hidden from the
+  // default missing view (per backend chase filters) so we surface them in
+  // a dedicated Queried tab with the client's message and a Resolve action.
+  const queriedTransactions = (allTransactions || []).filter(
+    (tx) =>
+      tx.client_query_status === "cannot_provide" ||
+      tx.client_query_status === "queried",
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -115,6 +125,23 @@ export function WorkspaceItemsTab({ client }: Props) {
       setClientDocs(null);
     };
   }, [client.id, client.name]);
+
+  async function handleResolveQuery(txId: string) {
+    setResolvingId(txId);
+    try {
+      // Clearing client_query_status puts the transaction back into the
+      // active chase queue. If the firm received the doc offline they can
+      // also mark it uploaded; for now "Resolve" just unblocks chasing.
+      await transactionsApi.update(txId, { client_query_status: "" });
+      // Refresh the all-transactions list
+      const list = await transactionsApi.list(client.id);
+      setAllTransactions(list);
+    } catch {
+      /* fall through — user can retry */
+    } finally {
+      setResolvingId(null);
+    }
+  }
 
   async function handleSendChase() {
     setSending(true);
@@ -168,6 +195,16 @@ export function WorkspaceItemsTab({ client }: Props) {
             {clientDocs && clientDocs.length > 0 && (
               <button type="button" className={`ws-issue-filter${view === "documents" ? " active" : ""}`} onClick={() => setView("documents")}>
                 Docs ({clientDocs.length})
+              </button>
+            )}
+            {queriedTransactions.length > 0 && (
+              <button
+                type="button"
+                className={`ws-issue-filter${view === "queried" ? " active" : ""}`}
+                onClick={() => setView("queried")}
+                style={{ color: "var(--warning)" }}
+              >
+                Queried ({queriedTransactions.length})
               </button>
             )}
           </div>
@@ -361,6 +398,82 @@ export function WorkspaceItemsTab({ client }: Props) {
                           {new Intl.NumberFormat("en-GB", { style: "currency", currency: "GBP" }).format(Number(doc.extracted_amount))}
                         </div>
                       )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </>
+        )}
+
+        {/* Queried view — transactions where the client pushed back */}
+        {view === "queried" && (
+          <>
+            {queriedTransactions.length === 0 ? (
+              <div style={{ padding: "var(--sp-32)", textAlign: "center" }}>
+                <div style={{ fontSize: "var(--text-md)", fontWeight: "var(--fw-medium)", color: "var(--clr-primary)", marginBottom: "var(--sp-4)" }}>No client queries</div>
+                <div style={{ fontSize: "var(--text-sm)", color: "var(--clr-muted)" }}>The client hasn&apos;t flagged anything as &quot;can&apos;t provide&quot; yet.</div>
+              </div>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: "var(--sp-8)" }}>
+                {queriedTransactions.map((txn) => {
+                  const isCantProvide = txn.client_query_status === "cannot_provide";
+                  const color = isCantProvide ? "var(--danger)" : "var(--warning)";
+                  const label = isCantProvide ? "Can't provide" : "Queried";
+                  const resolving = resolvingId === txn.id;
+                  return (
+                    <div
+                      key={txn.id}
+                      style={{
+                        background: "var(--clr-surface-card)",
+                        borderRadius: "var(--r-md)",
+                        border: `1px solid ${color}`,
+                        borderLeft: `4px solid ${color}`,
+                        padding: "var(--sp-12)",
+                        fontSize: "var(--text-sm)",
+                      }}
+                    >
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "var(--sp-12)", marginBottom: "var(--sp-8)" }}>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "var(--sp-8)" }}>
+                            <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--fw-semibold)", color: "#fff", background: color, padding: "2px 8px", borderRadius: "var(--r-sm)", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+                              {label}
+                            </span>
+                            <span style={{ color: "var(--clr-primary)", fontWeight: "var(--fw-medium)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                              {txn.supplier_name || txn.description || "Transaction"}
+                            </span>
+                          </div>
+                          <div style={{ fontSize: "var(--text-xs)", color: "var(--clr-muted)", marginTop: 2 }}>
+                            {new Date(txn.date).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
+                            {txn.client_query_updated_at && (
+                              <span style={{ marginLeft: "var(--sp-8)" }}>
+                                · Client responded {new Date(txn.client_query_updated_at).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <div style={{ fontWeight: "var(--fw-medium)", color: "var(--clr-primary)", flexShrink: 0 }}>
+                          {txn.amount}
+                        </div>
+                      </div>
+
+                      {txn.client_query_message && (
+                        <div style={{ padding: "var(--sp-8) var(--sp-10)", background: "var(--clr-surface)", borderRadius: "var(--r-sm)", color: "var(--clr-secondary)", fontSize: "var(--text-sm)", marginBottom: "var(--sp-8)" }}>
+                          &ldquo;{txn.client_query_message}&rdquo;
+                        </div>
+                      )}
+
+                      <div style={{ display: "flex", justifyContent: "flex-end" }}>
+                        <button
+                          type="button"
+                          className="btn btn-ghost btn-sm"
+                          onClick={() => handleResolveQuery(txn.id)}
+                          disabled={resolving}
+                          style={{ fontSize: "var(--text-xs)" }}
+                        >
+                          {resolving ? "Resolving..." : "Mark Resolved"}
+                        </button>
+                      </div>
                     </div>
                   );
                 })}
