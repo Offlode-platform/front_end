@@ -5,12 +5,16 @@ import type {
   Bootstrap2faSetupRequest,
   Bootstrap2faSetupResponse,
   Bootstrap2faVerifyRequest,
+  ChangePasswordRequest,
+  CurrentUser,
+  Disable2faRequest,
   LoginRequest,
   MagicLinkRequest,
   Setup2faResponse,
   SignupRequest,
   SignupResponse,
   TokenResponse,
+  UpdateMeRequest,
   Verify2faRequest,
 } from "@/types/auth";
 
@@ -69,6 +73,27 @@ export const authApi = {
   requestMagicLink(body: MagicLinkRequest) {
     return readData(
       publicApi.post<string>(apiPaths.auth.magicLink, body)
+    );
+  },
+
+  // Current user endpoints
+  me() {
+    return readData(authenticatedApi.get<CurrentUser>(apiPaths.auth.me));
+  },
+
+  updateMe(body: UpdateMeRequest) {
+    return readData(authenticatedApi.patch<CurrentUser>(apiPaths.auth.updateMe, body));
+  },
+
+  changePassword(body: ChangePasswordRequest) {
+    return readData(
+      authenticatedApi.post<{ status: string }>(apiPaths.auth.changePassword, body),
+    );
+  },
+
+  disable2fa(body: Disable2faRequest) {
+    return readData(
+      authenticatedApi.post<{ status: string }>(apiPaths.auth.twoFaDisable, body),
     );
   },
 };

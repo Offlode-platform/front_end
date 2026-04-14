@@ -10,11 +10,13 @@ import type {
   Bootstrap2faSetupRequest,
   Bootstrap2faSetupResponse,
   Bootstrap2faVerifyRequest,
+  CurrentUser,
   LoginRequest,
   MagicLinkRequest,
   Setup2faResponse,
   SignupResponse,
   TokenResponse,
+  UpdateMeRequest,
   Verify2faRequest,
 } from "@/types/auth";
 
@@ -35,6 +37,10 @@ type AuthState = PersistedAuth & {
   logout: () => Promise<void>;
   twoFaSetupStatus: "idle" | "loading" | "error";
   twoFaSetupError: string | null;
+  currentUser: CurrentUser | null;
+  currentUserStatus: "idle" | "loading" | "error";
+  loadCurrentUser: () => Promise<CurrentUser | null>;
+  updateCurrentUser: (payload: UpdateMeRequest) => Promise<CurrentUser>;
   bootstrap2faSetup: (
     payload: Bootstrap2faSetupRequest
   ) => Promise<Bootstrap2faSetupResponse>;
@@ -87,6 +93,8 @@ export const useAuthStore = create<AuthState>()(
       twoFaSetupExpiresAt: null,
       twoFaSetupStatus: "idle",
       twoFaSetupError: null,
+      currentUser: null,
+      currentUserStatus: "idle",
 
       setSession: (tokens) => set(tokenResponseToState(tokens)),
 
@@ -101,7 +109,34 @@ export const useAuthStore = create<AuthState>()(
           twoFaSetupExpiresAt: null,
           twoFaSetupStatus: "idle",
           twoFaSetupError: null,
+          currentUser: null,
+          currentUserStatus: "idle",
         }),
+
+      loadCurrentUser: async () => {
+        const token = get().accessToken;
+        if (!token) return null;
+        set({ currentUserStatus: "loading" });
+        try {
+          const user = await authApi.me();
+          set({ currentUser: user, currentUserStatus: "idle" });
+          return user;
+        } catch {
+          set({ currentUserStatus: "error" });
+          return null;
+        }
+      },
+
+      updateCurrentUser: async (payload) => {
+        const user = await authApi.updateMe(payload);
+        // Merge with any existing org info since PATCH /me only returns a subset
+        const existing = get().currentUser;
+        const merged: CurrentUser = existing
+          ? { ...existing, ...user }
+          : (user as CurrentUser);
+        set({ currentUser: merged });
+        return merged;
+      },
 
       clearTwoFaBootstrap: () =>
         set({
@@ -126,6 +161,9 @@ export const useAuthStore = create<AuthState>()(
       login: async (payload) => {
         const tokens = await authApi.login(payload);
         set(tokenResponseToState(tokens));
+        // Eagerly load the current user so topbar / settings have data
+        // without waiting for the next render to re-request it.
+        void get().loadCurrentUser();
         return tokens;
       },
 
@@ -165,6 +203,7 @@ export const useAuthStore = create<AuthState>()(
         const tokens = await authApi.bootstrap2faVerify(payload);
         set(tokenResponseToState(tokens));
         get().clearTwoFaBootstrap();
+        void get().loadCurrentUser();
         return tokens;
       },
 

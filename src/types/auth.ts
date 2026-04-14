@@ -60,6 +60,34 @@ export type MagicLinkRequest = {
   email: string;
 };
 
+export type CurrentUser = {
+  id: string;
+  email: string;
+  name: string;
+  role: string;
+  email_verified: boolean;
+  two_factor_enabled: boolean;
+  last_login_at: string | null;
+  created_at: string | null;
+  notification_preferences: Record<string, unknown>;
+  organization_id: string;
+  organization_name: string | null;
+};
+
+export type UpdateMeRequest = {
+  name?: string;
+  notification_preferences?: Record<string, unknown>;
+};
+
+export type ChangePasswordRequest = {
+  current_password: string;
+  new_password: string;
+};
+
+export type Disable2faRequest = {
+  password: string;
+};
+
 export type FastAPIValidationDetail = {
   loc: (string | number)[];
   msg: string;
