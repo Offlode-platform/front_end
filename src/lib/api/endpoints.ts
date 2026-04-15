@@ -6,10 +6,14 @@ export const apiPaths = {
     login: "/api/v1/auth/login",
     signup: "/api/v1/auth/signup",
     logout: "/api/v1/auth/logout",
+    me: "/api/v1/auth/me",
+    updateMe: "/api/v1/auth/me",
+    changePassword: "/api/v1/auth/change-password",
     twoFaBootstrapSetup: "/api/v1/auth/2fa/bootstrap/setup",
     twoFaBootstrapVerify: "/api/v1/auth/2fa/bootstrap/verify",
     twoFaSetup: "/api/v1/auth/2fa/setup",
     twoFaVerify: "/api/v1/auth/2fa/verify",
+    twoFaDisable: "/api/v1/auth/2fa/disable",
     magicLink: "/api/v1/auth/magic-link",
   },
   dashboard: {
@@ -94,6 +98,7 @@ export const apiPaths = {
   },
   portal: {
     base: "/api/v1/portal",
+    resolve: "/api/v1/portal/resolve",
   },
   xero: {
     connect: "/api/v1/auth/xero/connect",

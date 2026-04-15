@@ -11,6 +11,8 @@ export const routes = {
   imports: "/imports",
   ledger: "/ledger",
   documentReview: "/documents/review",
+  portal: "/portal",
+  settings: "/settings",
   login: "/login",
   signup: "/signup",
   twoFaBootstrapSetup: "/login/2fa-setup",

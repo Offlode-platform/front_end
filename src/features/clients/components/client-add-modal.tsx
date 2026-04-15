@@ -109,13 +109,21 @@ export function ClientAddModal({
     }
 
     const today = new Date();
+    // Normalize optional fields: send null instead of empty string so backend
+    // Pydantic EmailStr / Optional validators don't reject blank inputs.
+    const xeroInbox = form.xero_files_inbox_email?.trim() || null;
+    const xeroContactId = form.xero_contact_id?.trim() || null;
+    const phoneVal = form.phone?.trim() || null;
+    const vatEnd = form.vat_period_end_date?.trim() || today.toISOString().slice(0, 10);
+    const chasePausedUntil = form.chase_paused_until?.trim() || today.toISOString();
+
     const payload: Parameters<typeof clientsApi.create>[0] = {
       name: legalName,
-      email,
-      phone: form.phone?.trim() ?? "",
+      email: email || null,
+      phone: phoneVal,
       organization_id: selectedOrganizationId,
-      xero_contact_id: form.xero_contact_id?.trim() ?? "",
-      xero_files_inbox_email: form.xero_files_inbox_email?.trim() ?? "",
+      xero_contact_id: xeroContactId,
+      xero_files_inbox_email: xeroInbox,
       chase_enabled: form.chase_enabled === "false" ? false : true,
       chase_frequency_days: form.chase_frequency_days
         ? Number(form.chase_frequency_days)
@@ -124,10 +132,8 @@ export function ClientAddModal({
         ? Number(form.escalation_days)
         : 14,
       vat_tracking_enabled: form.vat_tracking_enabled === "true",
-      vat_period_end_date:
-        form.vat_period_end_date?.trim() ?? today.toISOString().slice(0, 10),
-      chase_paused_until:
-        form.chase_paused_until?.trim() ?? today.toISOString(),
+      vat_period_end_date: vatEnd,
+      chase_paused_until: chasePausedUntil,
     };
     console.log("[ClientAddModal] Creating client with payload", payload);
     try {

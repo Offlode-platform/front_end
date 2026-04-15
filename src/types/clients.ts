@@ -20,17 +20,17 @@ export type Client = {
 
 export type CreateClientRequest = {
   name: string;
-  email: string;
-  phone: string;
+  email?: string | null;
+  phone?: string | null;
   organization_id: string;
-  xero_contact_id: string;
-  xero_files_inbox_email: string;
+  xero_contact_id?: string | null;
+  xero_files_inbox_email?: string | null;
   chase_enabled: boolean;
   chase_frequency_days: number;
   escalation_days: number;
   vat_tracking_enabled: boolean;
-  vat_period_end_date: string;
-  chase_paused_until: string;
+  vat_period_end_date?: string | null;
+  chase_paused_until?: string | null;
 };
 
 export type CreateClientResponse = Client;

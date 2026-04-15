@@ -3,9 +3,11 @@
 import { useEffect, useState } from "react";
 import { chasesApi } from "@/lib/api/chases-api";
 import { dashboardApi } from "@/lib/api/dashboard-api";
+import { transactionsApi } from "@/lib/api/transactions-api";
 import type { ListedClient } from "@/types/clients";
 import type { ChaseHistoryResponse } from "@/types/chases";
 import type { ClientDashboardChaseEntry } from "@/types/dashboard";
+import type { Transaction } from "@/types/transactions";
 
 type Props = {
   client: ListedClient;
@@ -91,6 +93,7 @@ export function WorkspaceActivityTab({ client }: Props) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<ChaseFilter>("all");
+  const [clientResponses, setClientResponses] = useState<Transaction[]>([]);
 
   useEffect(() => {
     let cancelled = false;
@@ -126,12 +129,36 @@ export function WorkspaceActivityTab({ client }: Props) {
       },
     );
 
+    // Also load transactions with client_query_status so responses show
+    // up in the activity timeline alongside outgoing chases.
+    transactionsApi.list(client.id, { limit: 200 }).then(
+      (txs) => {
+        if (cancelled) return;
+        const responses = txs.filter(
+          (t) =>
+            t.client_query_status === "cannot_provide" ||
+            t.client_query_status === "queried",
+        );
+        // Most recent response first
+        responses.sort((a, b) => {
+          const ad = a.client_query_updated_at || a.updated_at || "";
+          const bd = b.client_query_updated_at || b.updated_at || "";
+          return bd.localeCompare(ad);
+        });
+        setClientResponses(responses);
+      },
+      () => {
+        /* silent — chase history still renders */
+      },
+    );
+
     return () => {
       cancelled = true;
       setLoading(true);
       setError(null);
       setItems([]);
       setStats(null);
+      setClientResponses([]);
     };
   }, [client.id]);
 
@@ -151,29 +178,98 @@ export function WorkspaceActivityTab({ client }: Props) {
     );
   }
 
-  if (items.length === 0) {
+  const filtered = items.filter((c) => {
+    if (filter === "all") return true;
+    return c.chase_type === filter;
+  });
+
+  // Show empty state only when there's NOTHING to display
+  if (items.length === 0 && clientResponses.length === 0) {
     return (
       <div className="ws-panel active">
         <div style={{ padding: "var(--sp-32)", textAlign: "center" }}>
           <div style={{ fontSize: "var(--text-md)", fontWeight: "var(--fw-medium)", color: "var(--clr-primary)", marginBottom: "var(--sp-4)" }}>
-            No chase history
+            No activity yet
           </div>
           <div style={{ fontSize: "var(--text-sm)", color: "var(--clr-muted)" }}>
-            No chases have been sent to this client yet.
+            No chases have been sent and the client hasn&apos;t responded to anything.
           </div>
         </div>
       </div>
     );
   }
 
-  const filtered = items.filter((c) => {
-    if (filter === "all") return true;
-    return c.chase_type === filter;
-  });
-
   return (
     <div className="ws-panel active">
       <div style={{ padding: "var(--sp-16)" }}>
+        {/* Client responses — things the CLIENT did that need attention */}
+        {clientResponses.length > 0 && (
+          <div style={{ marginBottom: "var(--sp-20)" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "var(--sp-8)", marginBottom: "var(--sp-10)" }}>
+              <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--fw-semibold)", color: "var(--clr-muted)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                Client Responses
+              </span>
+              <span style={{ fontSize: "var(--text-xs)", color: "#fff", background: "var(--warning)", padding: "1px 7px", borderRadius: "var(--r-sm)", fontWeight: "var(--fw-semibold)" }}>
+                {clientResponses.length}
+              </span>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: "var(--sp-6)" }}>
+              {clientResponses.map((tx) => {
+                const isCant = tx.client_query_status === "cannot_provide";
+                const color = isCant ? "var(--danger)" : "var(--warning)";
+                const label = isCant ? "Can't provide" : "Queried";
+                return (
+                  <div
+                    key={tx.id}
+                    style={{
+                      display: "flex",
+                      gap: "var(--sp-10)",
+                      padding: "var(--sp-10) var(--sp-12)",
+                      background: "var(--clr-surface-card)",
+                      borderRadius: "var(--r-md)",
+                      borderLeft: `3px solid ${color}`,
+                      border: `1px solid var(--clr-divider)`,
+                      borderLeftWidth: 3,
+                      borderLeftColor: color,
+                      fontSize: "var(--text-sm)",
+                    }}
+                  >
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "var(--sp-6)", marginBottom: 2 }}>
+                        <span style={{ fontSize: "var(--text-xs)", color, fontWeight: "var(--fw-semibold)" }}>
+                          {label}
+                        </span>
+                        <span style={{ color: "var(--clr-primary)", fontWeight: "var(--fw-medium)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                          {tx.supplier_name || tx.description || "Transaction"}
+                        </span>
+                      </div>
+                      {tx.client_query_message && (
+                        <div style={{ fontSize: "var(--text-xs)", color: "var(--clr-secondary)", marginTop: 2, fontStyle: "italic" }}>
+                          &ldquo;{tx.client_query_message}&rdquo;
+                        </div>
+                      )}
+                      <div style={{ fontSize: "var(--text-xs)", color: "var(--clr-muted)", marginTop: 2 }}>
+                        {tx.client_query_updated_at
+                          ? new Date(tx.client_query_updated_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })
+                          : ""}
+                      </div>
+                    </div>
+                    <div style={{ fontWeight: "var(--fw-medium)", color: "var(--clr-primary)", flexShrink: 0, alignSelf: "center" }}>
+                      {tx.amount}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {items.length === 0 && clientResponses.length > 0 && (
+          <div style={{ padding: "var(--sp-12)", textAlign: "center", fontSize: "var(--text-sm)", color: "var(--clr-muted)" }}>
+            No chases sent yet.
+          </div>
+        )}
+
         {/* Summary bar */}
         {stats && (
           <div style={{ display: "flex", gap: "var(--sp-16)", marginBottom: "var(--sp-16)", fontSize: "var(--text-sm)", color: "var(--clr-muted)" }}>
