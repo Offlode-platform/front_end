@@ -24,9 +24,11 @@ type PrefKey =
   | "email_import_completed"
   | "email_weekly_digest";
 
-// Fixed accent colors per notification category — these render as tinted
-// overlays / gradients on top of the card surface, so the rgba() variants
-// work on both light and dark themes without per-theme overrides.
+// Unified on the brand accent (#357e92) — matches the single-accent scheme
+// used by dashboard / team / help pages. The icon is the semantic signal
+// (ShieldAlert for quarantine), so the toggle colour stays brand across the
+// whole list. Hex kept so `${color}26` opacity suffixes still parse.
+const BRAND = "#357e92";
 const PREFS: {
   key: PrefKey;
   label: string;
@@ -39,7 +41,7 @@ const PREFS: {
     label: "Chase activity",
     description: "When a chase is sent, delivered, bounced, or clicked.",
     icon: Bell,
-    color: "#8b5cf6",
+    color: BRAND,
   },
   {
     key: "email_client_questions",
@@ -47,28 +49,28 @@ const PREFS: {
     description:
       "When a client asks a question or marks a document as \"can't provide\".",
     icon: MessageSquare,
-    color: "#a855f7",
+    color: BRAND,
   },
   {
     key: "email_document_quarantine",
     label: "Document quarantine",
     description: "When an uploaded document is flagged by virus scanning.",
     icon: ShieldAlert,
-    color: "#ef4444",
+    color: BRAND,
   },
   {
     key: "email_import_completed",
     label: "Import completed",
     description: "When a CSV import or Xero sync finishes processing.",
     icon: FileSpreadsheet,
-    color: "#0ea5e9",
+    color: BRAND,
   },
   {
     key: "email_weekly_digest",
     label: "Weekly digest",
     description: "Summary of the week's activity every Monday morning.",
     icon: CalendarDays,
-    color: "#22a06b",
+    color: BRAND,
   },
 ];
 
@@ -148,8 +150,8 @@ export function NotificationsSection({ user }: { user: CurrentUser }) {
           padding: "12px 16px",
           borderRadius: 10,
           background:
-            "linear-gradient(135deg, rgba(139,92,246,0.08), rgba(168,85,247,0.05))",
-          border: "1px solid rgba(139,92,246,0.22)",
+            "linear-gradient(135deg, rgba(53,126,146,0.08), rgba(98,190,208,0.05))",
+          border: "1px solid rgba(53,126,146,0.22)",
           marginBottom: 20,
         }}
       >
@@ -182,9 +184,9 @@ export function NotificationsSection({ user }: { user: CurrentUser }) {
               ...ghostBtnStyle,
               padding: "6px 12px",
               fontSize: 12,
-              color: "#a855f7",
-              borderColor: "rgba(139,92,246,0.35)",
-              background: "rgba(139,92,246,0.08)",
+              color: "var(--brand)",
+              borderColor: "rgba(53,126,146,0.35)",
+              background: "rgba(53,126,146,0.08)",
             }}
           >
             Enable all

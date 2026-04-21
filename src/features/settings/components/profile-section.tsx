@@ -44,8 +44,8 @@ export function ProfileSection({ user }: { user: CurrentUser }) {
           padding: 20,
           borderRadius: 16,
           background:
-            "linear-gradient(135deg, rgba(139,92,246,0.08) 0%, rgba(168,85,247,0.05) 100%)",
-          border: "1px solid rgba(139,92,246,0.2)",
+            "linear-gradient(135deg, rgba(53,126,146,0.08) 0%, rgba(98,190,208,0.05) 100%)",
+          border: "1px solid rgba(53,126,146,0.2)",
           marginBottom: 24,
           display: "flex",
           alignItems: "center",
@@ -283,10 +283,10 @@ export function IconInput({
           // Subtle inset surface so the input visually recedes inside the
           // outer card on both themes.
           background: "var(--clr-surface-subtle)",
-          border: `1px solid ${focused ? "var(--purple)" : "var(--clr-divider-strong)"}`,
+          border: `1px solid ${focused ? "var(--brand)" : "var(--clr-divider-strong)"}`,
           borderRadius: 10,
           transition: "border-color 0.15s, box-shadow 0.15s",
-          boxShadow: focused ? "0 0 0 3px rgba(139,92,246,0.15)" : "none",
+          boxShadow: focused ? "0 0 0 3px rgba(53,126,146,0.15)" : "none",
           opacity: disabled ? 0.7 : 1,
         }}
       >
@@ -297,7 +297,7 @@ export function IconInput({
               alignItems: "center",
               justifyContent: "center",
               paddingLeft: 12,
-              color: focused ? "var(--purple)" : "var(--clr-muted)",
+              color: focused ? "var(--brand)" : "var(--clr-muted)",
               transition: "color 0.15s",
             }}
           >
@@ -458,12 +458,12 @@ export function primaryBtnStyle(disabled?: boolean): React.CSSProperties {
     border: disabled ? "1px solid var(--clr-divider-strong)" : "none",
     background: disabled
       ? "var(--clr-surface-subtle)"
-      : "linear-gradient(135deg, #8b5cf6, #a855f7)",
+      : "var(--brand)",
     color: disabled ? "var(--clr-muted)" : "#fff",
     fontSize: 13,
     fontWeight: 600,
     cursor: disabled ? "not-allowed" : "pointer",
-    boxShadow: disabled ? "none" : "0 2px 8px rgba(139,92,246,0.35)",
+    boxShadow: disabled ? "none" : "0 2px 8px rgba(53,126,146,0.35)",
     transition: "transform 0.1s, box-shadow 0.15s",
   };
 }
@@ -484,7 +484,7 @@ export const dangerBtnStyle: React.CSSProperties = {
   padding: "10px 20px",
   borderRadius: 10,
   border: "none",
-  background: "linear-gradient(135deg, #ef4444, #dc2626)",
+  background: "var(--danger)",
   color: "#fff",
   fontSize: 13,
   fontWeight: 600,
@@ -509,7 +509,7 @@ function Avatar({ name }: { name: string }) {
         width: 64,
         height: 64,
         borderRadius: "50%",
-        background: "linear-gradient(135deg, #8b5cf6, #a855f7)",
+        background: "linear-gradient(135deg, var(--brand), var(--brand-electric))",
         color: "#fff",
         display: "flex",
         alignItems: "center",
@@ -518,7 +518,7 @@ function Avatar({ name }: { name: string }) {
         fontWeight: 700,
         letterSpacing: 0.5,
         flexShrink: 0,
-        boxShadow: "0 4px 14px rgba(139,92,246,0.45)",
+        boxShadow: "0 4px 14px rgba(53,126,146,0.45)",
       }}
     >
       {initials}
@@ -528,9 +528,11 @@ function Avatar({ name }: { name: string }) {
 
 function RoleBadge({ role }: { role: string }) {
   // Semi-transparent color pairs (rgba bg + var() fg) work on both themes.
+  // Matches team-utils.ts conventions: owner = brand teal, admin = purple,
+  // manager = neutral.
   const style = {
-    owner: { bg: "rgba(168,85,247,0.18)", fg: "#a855f7", border: "rgba(168,85,247,0.35)" },
-    admin: { bg: "rgba(59,130,246,0.18)", fg: "var(--info)", border: "rgba(59,130,246,0.35)" },
+    owner: { bg: "rgba(53,126,146,0.18)", fg: "var(--brand)", border: "rgba(53,126,146,0.35)" },
+    admin: { bg: "rgba(139,92,246,0.18)", fg: "var(--purple)", border: "rgba(139,92,246,0.35)" },
     manager: { bg: "rgba(107,114,128,0.2)", fg: "var(--clr-muted)", border: "rgba(107,114,128,0.35)" },
   }[role] || { bg: "rgba(107,114,128,0.2)", fg: "var(--clr-muted)", border: "rgba(107,114,128,0.35)" };
 
@@ -564,7 +566,7 @@ function Pill({
     success: { bg: "rgba(34,160,107,0.15)", fg: "var(--success)", border: "rgba(34,160,107,0.3)" },
     warning: { bg: "rgba(224,148,34,0.15)", fg: "var(--warning)", border: "rgba(224,148,34,0.3)" },
     danger: { bg: "rgba(239,68,68,0.15)", fg: "var(--danger)", border: "rgba(239,68,68,0.3)" },
-    accent: { bg: "rgba(139,92,246,0.15)", fg: "#a855f7", border: "rgba(139,92,246,0.3)" },
+    accent: { bg: "rgba(139,92,246,0.15)", fg: "var(--purple)", border: "rgba(139,92,246,0.3)" },
   }[variant];
   return (
     <span

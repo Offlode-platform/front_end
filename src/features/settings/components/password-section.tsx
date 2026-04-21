@@ -64,7 +64,7 @@ function PasswordInput({
   const borderColor = error
     ? "var(--danger)"
     : focused
-      ? "var(--purple)"
+      ? "var(--brand)"
       : "var(--clr-divider)";
 
   return (
@@ -90,14 +90,14 @@ function PasswordInput({
           borderRadius: 10,
           transition: "border-color 0.15s, box-shadow 0.15s",
           boxShadow: focused
-            ? `0 0 0 3px ${error ? "rgba(239,68,68,0.15)" : "rgba(139,92,246,0.15)"}`
+            ? `0 0 0 3px ${error ? "rgba(239,68,68,0.15)" : "rgba(53,126,146,0.15)"}`
             : "none",
         }}
       >
         <div
           style={{
             paddingLeft: 12,
-            color: focused ? "var(--purple)" : "var(--clr-muted)",
+            color: focused ? "var(--brand)" : "var(--clr-muted)",
             display: "flex",
             alignItems: "center",
           }}
@@ -233,8 +233,8 @@ export function PasswordSection() {
           padding: "12px 14px",
           borderRadius: 10,
           background:
-            "linear-gradient(135deg, rgba(139,92,246,0.08), rgba(168,85,247,0.05))",
-          border: "1px solid rgba(139,92,246,0.25)",
+            "linear-gradient(135deg, rgba(53,126,146,0.08), rgba(98,190,208,0.05))",
+          border: "1px solid rgba(53,126,146,0.25)",
           marginBottom: 24,
         }}
       >
@@ -243,8 +243,8 @@ export function PasswordSection() {
             width: 34,
             height: 34,
             borderRadius: 8,
-            background: "rgba(139,92,246,0.18)",
-            color: "#a855f7",
+            background: "rgba(53,126,146,0.18)",
+            color: "var(--brand)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",

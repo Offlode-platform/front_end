@@ -326,8 +326,8 @@ export function TwoFactorSection({ user }: { user: CurrentUser }) {
                     width: 26,
                     height: 26,
                     borderRadius: 7,
-                    background: "rgba(139,92,246,0.18)",
-                    color: "#a855f7",
+                    background: "rgba(53,126,146,0.18)",
+                    color: "var(--brand)",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
@@ -631,11 +631,11 @@ function StepPill({
         padding: "6px 12px",
         borderRadius: 999,
         background: active
-          ? "linear-gradient(135deg, rgba(139,92,246,0.2), rgba(168,85,247,0.12))"
+          ? "linear-gradient(135deg, rgba(53,126,146,0.2), rgba(98,190,208,0.12))"
           : "var(--clr-surface-card)",
-        border: `1px solid ${active ? "rgba(139,92,246,0.45)" : "var(--clr-divider-strong)"}`,
+        border: `1px solid ${active ? "rgba(53,126,146,0.45)" : "var(--clr-divider-strong)"}`,
         fontSize: 12,
-        color: active ? "#a855f7" : "var(--clr-muted)",
+        color: active ? "var(--brand)" : "var(--clr-muted)",
         fontWeight: active ? 600 : 500,
       }}
     >
@@ -645,7 +645,7 @@ function StepPill({
           height: 20,
           borderRadius: "50%",
           background: active
-            ? "linear-gradient(135deg, #8b5cf6, #a855f7)"
+            ? "linear-gradient(135deg, var(--brand), var(--brand-electric))"
             : "var(--clr-surface-subtle)",
           color: active ? "#fff" : "var(--clr-muted)",
           display: "inline-flex",
@@ -653,7 +653,7 @@ function StepPill({
           justifyContent: "center",
           fontSize: 10,
           fontWeight: 700,
-          boxShadow: active ? "0 2px 6px rgba(139,92,246,0.45)" : "none",
+          boxShadow: active ? "0 2px 6px rgba(53,126,146,0.45)" : "none",
         }}
       >
         {num}
