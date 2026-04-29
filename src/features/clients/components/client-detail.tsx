@@ -16,19 +16,20 @@ function getInitials(name: string): string {
 }
 
 function getHealthScore(client: ListedClient): number {
-  let score = 75;
+  // Start at 100, subtract for real problems
+  let score = 100;
 
   if (!client.is_active) {
-    score -= 25;
+    score -= 40; // inactive client is a major flag
   }
 
   if (!client.chase_enabled) {
-    score -= 15;
+    score -= 20; // chasing off means documents won't be chased
   }
 
-  if (!client.vat_period_completed_at) {
-    score -= 10;
-  }
+  // Each missing document costs up to 5 points (capped at 40)
+  const missingPenalty = Math.min(client.missing_docs_count * 5, 40);
+  score -= missingPenalty;
 
   if (score < 10) score = 10;
   if (score > 100) score = 100;
@@ -43,7 +44,7 @@ function formatContactLine(client: ListedClient): string {
 }
 
 function isVipClient(client: ListedClient): boolean {
-  return client.chase_frequency_days <= 7;
+  return client.is_vip === true;
 }
 
 function formatDateTime(value: string | null | undefined): string {
@@ -161,7 +162,14 @@ export function ClientDetail({
   }
 
   async function handleSaveDetails() {
-    await onUpdateClient(client.id, detailsDraft);
+    // Convert empty strings to null for date/datetime fields so the backend
+    // doesn't receive "" which Pydantic cannot parse as a date.
+    const payload: UpdateClientRequest = {
+      ...detailsDraft,
+      vat_period_end_date: detailsDraft.vat_period_end_date || undefined,
+      chase_paused_until: detailsDraft.chase_paused_until || undefined,
+    };
+    await onUpdateClient(client.id, payload);
     setIsEditingDetails(false);
   }
 

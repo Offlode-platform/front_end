@@ -25,7 +25,7 @@ const TABS: { key: WorkspaceTab; label: string }[] = [
 ];
 
 function isVip(client: ListedClient): boolean {
-  return client.chase_frequency_days <= 7;
+  return client.is_vip === true;
 }
 
 function shortEmail(email: string | null | undefined): string {
