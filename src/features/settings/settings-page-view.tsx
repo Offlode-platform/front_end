@@ -10,6 +10,10 @@ import { NotificationsSection } from "./components/notifications-section";
 
 type Tab = "profile" | "password" | "two-factor" | "notifications";
 
+// All tabs share the brand accent (#357e92) to match the unified teal scheme
+// used across the rest of the app (dashboard, team, help). Hex kept so the
+// sidebar-item styles can append rgba-style opacity suffixes (`${color}40`).
+const TAB_ACCENT = "#357e92";
 const TABS: {
   key: Tab;
   label: string;
@@ -22,28 +26,28 @@ const TABS: {
     label: "Profile",
     description: "Name & organization",
     icon: User,
-    color: "#6366f1",
+    color: TAB_ACCENT,
   },
   {
     key: "password",
     label: "Password",
     description: "Change sign-in password",
     icon: Lock,
-    color: "#a855f7",
+    color: TAB_ACCENT,
   },
   {
     key: "two-factor",
     label: "Two-Factor Auth",
     description: "Extra sign-in security",
     icon: Shield,
-    color: "#22c55e",
+    color: TAB_ACCENT,
   },
   {
     key: "notifications",
     label: "Notifications",
     description: "Email preferences",
     icon: Bell,
-    color: "#f59e0b",
+    color: TAB_ACCENT,
   },
 ];
 
@@ -93,7 +97,7 @@ export function SettingsPageView() {
           padding: "24px 28px 40px",
           minHeight: 0,
           background:
-            "radial-gradient(1200px 500px at 50% -100px, rgba(139,92,246,0.06), transparent 70%)",
+            "radial-gradient(1200px 500px at 50% -100px, rgba(53,126,146,0.06), transparent 70%)",
         }}
       >
         <div
@@ -272,7 +276,7 @@ function LoadingState() {
           width: 36,
           height: 36,
           border: "3px solid var(--clr-divider)",
-          borderTopColor: "var(--purple)",
+          borderTopColor: "var(--brand)",
           borderRadius: "50%",
           margin: "0 auto 16px",
           animation: "settings-spin 0.7s linear infinite",
