@@ -179,7 +179,7 @@ export function ClientsPageView() {
       setClients((prev) =>
         prev
           ? prev.map((c) => (c.id === clientId ? { ...c, ...updated } : c))
-          : [updated],
+          : prev,
       );
       pushToast("success", "Client details updated.");
     } catch {
