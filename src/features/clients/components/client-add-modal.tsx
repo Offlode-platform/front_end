@@ -139,7 +139,7 @@ export function ClientAddModal({
     try {
       const created = await clientsApi.create(payload);
       console.log("[ClientAddModal] Client created successfully", created);
-      onCreated(created);
+      onCreated({ ...created, missing_docs_count: 0 });
     } catch (err) {
       console.error("[ClientAddModal] Failed to create client", err);
       alert("Failed to create client. Check the console for details.");
