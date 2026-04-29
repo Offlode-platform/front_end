@@ -16,6 +16,7 @@ export function WorkspaceSettingsTab({ client, onUpdated }: Props) {
   const [frequencyDays, setFrequencyDays] = useState(client.chase_frequency_days);
   const [escalationDays, setEscalationDays] = useState(client.escalation_days);
   const [vatEnabled, setVatEnabled] = useState(client.vat_tracking_enabled);
+  const [isVip, setIsVip] = useState(client.is_vip ?? false);
   const [dirty, setDirty] = useState(false);
   const [pauseMsg, setPauseMsg] = useState<string | null>(null);
 
@@ -31,6 +32,7 @@ export function WorkspaceSettingsTab({ client, onUpdated }: Props) {
       if (frequencyDays !== client.chase_frequency_days) updates.chase_frequency_days = frequencyDays;
       if (escalationDays !== client.escalation_days) updates.escalation_days = escalationDays;
       if (vatEnabled !== client.vat_tracking_enabled) updates.vat_tracking_enabled = vatEnabled;
+      if (isVip !== (client.is_vip ?? false)) updates.is_vip = isVip;
 
       if (Object.keys(updates).length > 0) {
         const updated = await clientsApi.update(client.id, updates);
@@ -65,6 +67,7 @@ export function WorkspaceSettingsTab({ client, onUpdated }: Props) {
     setFrequencyDays(client.chase_frequency_days);
     setEscalationDays(client.escalation_days);
     setVatEnabled(client.vat_tracking_enabled);
+    setIsVip(client.is_vip ?? false);
     setDirty(false);
   }
 
@@ -209,6 +212,27 @@ export function WorkspaceSettingsTab({ client, onUpdated }: Props) {
               VAT period end: {new Date(client.vat_period_end_date).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
             </div>
           )}
+        </div>
+
+        {/* VIP Status */}
+        <div className="ws-section">
+          <div className="ws-section-title">VIP Status</div>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "var(--sp-8)" }}>
+            <div>
+              <span style={{ fontSize: "var(--text-sm)", color: "var(--clr-secondary)" }}>Mark as VIP client</span>
+              <div style={{ fontSize: "var(--text-xs)", color: "var(--clr-muted)", marginTop: 2 }}>
+                VIP clients are starred in the workspace list and shown in the VIP filter.
+              </div>
+            </div>
+            <label className="ws-toggle">
+              <input
+                type="checkbox"
+                checked={isVip}
+                onChange={(e) => { setIsVip(e.target.checked); markDirty(); }}
+              />
+              <span className="ws-toggle-slider" />
+            </label>
+          </div>
         </div>
 
         {/* Save bar */}

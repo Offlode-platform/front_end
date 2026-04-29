@@ -16,11 +16,14 @@ type WorkspaceClientListProps = {
 };
 
 function isVip(c: ListedClient): boolean {
-  return c.chase_frequency_days <= 7;
+  return c.is_vip === true;
 }
 
+// A client "needs input" when it has outstanding missing documents that haven't
+// been resolved. Clients with chase disabled have been deliberately paused by
+// the accountant — they belong in "Handled", not "Needs Input".
 function clientNeedsInput(c: ListedClient): boolean {
-  return !c.chase_enabled;
+  return c.chase_enabled && c.missing_docs_count > 0;
 }
 
 function truncateDesc(text: string, max = 50): string {
@@ -184,16 +187,33 @@ function ClientListRow({ client, selected, onSelect }: ClientListRowProps) {
     >
       <span className={`ws-item-bar ${barColor}`} />
       <div className="ws-item-info">
-        <div className="ws-item-name">
+        <div className="ws-item-name" style={{ display: "flex", alignItems: "center", gap: 4 }}>
           {client.name}
           {vip ? (
             <svg
               viewBox="0 0 24 24"
-              style={{ width: 10, height: 10, fill: "var(--vip)", stroke: "var(--vip)", strokeWidth: 1, marginLeft: 4, verticalAlign: "middle" }}
-              aria-hidden="true"
+              style={{ width: 10, height: 10, fill: "var(--vip)", stroke: "var(--vip)", strokeWidth: 1, flexShrink: 0 }}
+              aria-label="VIP"
             >
               <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
             </svg>
+          ) : null}
+          {needsInput && client.missing_docs_count > 0 ? (
+            <span style={{
+              marginLeft: "auto",
+              background: "var(--warning, #f59e0b)",
+              color: "#fff",
+              borderRadius: "var(--r-full)",
+              fontSize: 10,
+              fontWeight: 600,
+              padding: "0 5px",
+              lineHeight: "16px",
+              minWidth: 16,
+              textAlign: "center",
+              flexShrink: 0,
+            }}>
+              {client.missing_docs_count}
+            </span>
           ) : null}
         </div>
         <div className="ws-item-meta">{desc}</div>
