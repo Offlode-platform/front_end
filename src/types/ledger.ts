@@ -175,3 +175,20 @@ export type BulkReconciliationResult = {
   total_invoices_materialized: number;
   results: ReconciliationResult[];
 };
+
+// ============================================================================
+// Payment → Invoice reconciliation
+// ============================================================================
+
+export type LinkPaymentToInvoiceRequest = {
+  invoice_id: string;
+};
+
+export type PaymentLinkResult = {
+  payment_id: string;
+  invoice_id: string;
+  invoice_number: string | null;
+  invoice_status: string;
+  amount_paid: string;
+  amount_due: string;
+};

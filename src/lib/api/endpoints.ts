@@ -79,6 +79,8 @@ export const apiPaths = {
     contactCreateClient: (id: string) =>
       `/api/v1/ledger/contacts/${encodeURIComponent(id)}/create-client`,
     contactBulkLink: "/api/v1/ledger/contacts/bulk-link",
+    paymentLinkInvoice: (id: string) =>
+      `/api/v1/ledger/payments/${encodeURIComponent(id)}/link-invoice`,
   },
   integrations: {
     xeroStatus: "/api/v1/integrations/xero/status",
