@@ -23,12 +23,12 @@ type Toast = {
 
 function getClientSeverity(client: ListedClient): Severity {
   if (!client.is_active) return "review";
-  if (!client.chase_enabled) return "action";
+  if (client.chase_enabled && client.missing_docs_count > 0) return "action";
   return "handled";
 }
 
 function isVipClient(client: ListedClient): boolean {
-  return client.chase_frequency_days <= 7;
+  return client.is_vip === true;
 }
 
 export function ClientsPageView() {

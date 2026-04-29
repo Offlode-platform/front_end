@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { ledgerApi } from "@/lib/api/ledger-api";
 import type { UniversalPayment } from "@/types/ledger";
+import { LedgerPaymentLinkModal } from "./ledger-payment-link-modal";
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
@@ -20,6 +21,8 @@ export function LedgerPaymentsTable() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
+  const [linkingPayment, setLinkingPayment] = useState<UniversalPayment | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -28,6 +31,7 @@ export function LedgerPaymentsTable() {
     ledgerApi.listPayments({
       limit: 100,
       contact_name: search.trim() || undefined,
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }).then(
       (result) => {
         if (!cancelled) {
@@ -46,10 +50,23 @@ export function LedgerPaymentsTable() {
     return () => {
       cancelled = true;
     };
-  }, [search]);
+  // refreshKey forces a reload after a successful link
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search, refreshKey]);
 
   return (
     <>
+      {linkingPayment && (
+        <LedgerPaymentLinkModal
+          payment={linkingPayment}
+          onClose={() => setLinkingPayment(null)}
+          onLinked={() => {
+            setLinkingPayment(null);
+            setRefreshKey((k) => k + 1);
+          }}
+        />
+      )}
+
       <div className="ws-card" style={{ marginBottom: "var(--sp-16)" }}>
         <div className="ws-card-title">Filters</div>
         <input
@@ -93,7 +110,7 @@ export function LedgerPaymentsTable() {
         <div className="ws-card" style={{ padding: 0, overflow: "hidden" }}>
           <div style={{
             display: "grid",
-            gridTemplateColumns: "120px 1fr 130px 130px 110px 90px",
+            gridTemplateColumns: "110px 1fr 110px 130px 110px 80px 110px",
             gap: "var(--sp-8)",
             padding: "var(--sp-10) var(--sp-16)",
             borderBottom: "1px solid var(--clr-divider)",
@@ -109,13 +126,14 @@ export function LedgerPaymentsTable() {
             <span>Reference</span>
             <span style={{ textAlign: "right" }}>Amount</span>
             <span>Source</span>
+            <span>Invoice</span>
           </div>
           {payments.map((p) => (
             <div
               key={p.id}
               style={{
                 display: "grid",
-                gridTemplateColumns: "120px 1fr 130px 130px 110px 90px",
+                gridTemplateColumns: "110px 1fr 110px 130px 110px 80px 110px",
                 gap: "var(--sp-8)",
                 padding: "var(--sp-10) var(--sp-16)",
                 borderBottom: "1px solid var(--clr-divider)",
@@ -140,6 +158,37 @@ export function LedgerPaymentsTable() {
               </span>
               <span style={{ color: "var(--clr-muted)", fontSize: "var(--text-xs)", textTransform: "capitalize" }}>
                 {p.source_platform || "—"}
+              </span>
+              <span>
+                {p.invoice_id ? (
+                  <span style={{
+                    fontSize: "var(--text-xs)",
+                    color: "var(--success, #16a34a)",
+                    background: "rgba(34,197,94,0.1)",
+                    borderRadius: "var(--r-full)",
+                    padding: "2px 8px",
+                  }}>
+                    Linked
+                  </span>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setLinkingPayment(p)}
+                    style={{
+                      fontSize: "var(--text-xs)",
+                      padding: "3px 10px",
+                      border: "1px solid var(--clr-divider-strong)",
+                      borderRadius: "var(--r-md)",
+                      background: "var(--canvas-bg)",
+                      color: "var(--clr-primary)",
+                      cursor: "pointer",
+                      fontFamily: "inherit",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    Link Invoice
+                  </button>
+                )}
               </span>
             </div>
           ))}

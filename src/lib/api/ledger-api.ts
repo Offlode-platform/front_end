@@ -17,6 +17,8 @@ import type {
   ReconciliationResult,
   BulkLinkRequest,
   BulkReconciliationResult,
+  LinkPaymentToInvoiceRequest,
+  PaymentLinkResult,
 } from "@/types/ledger";
 
 type QueryValue = string | number | boolean | undefined | null;
@@ -127,6 +129,12 @@ export const ledgerApi = {
   bulkLinkContacts(body: BulkLinkRequest) {
     return readData<BulkReconciliationResult>(
       authenticatedApi.post(apiPaths.ledger.contactBulkLink, body),
+    );
+  },
+
+  linkPaymentToInvoice(paymentId: string, body: LinkPaymentToInvoiceRequest) {
+    return readData<PaymentLinkResult>(
+      authenticatedApi.post(apiPaths.ledger.paymentLinkInvoice(paymentId), body),
     );
   },
 };

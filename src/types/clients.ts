@@ -13,6 +13,7 @@ export type Client = {
   vat_period_end_date: string;
   vat_period_completed_at: string;
   chase_paused_until: string;
+  is_vip: boolean;
   created_at: string;
   updated_at: string;
   is_active: boolean;
@@ -46,6 +47,7 @@ export type ListedClient = Client & {
   assigned_user_id?: string;
   assigned_user_name?: string;
   assigned_at?: string;
+  missing_docs_count: number;
 };
 
 export type ListClientsResponse = ListedClient[];
@@ -63,6 +65,7 @@ export type UpdateClientRequest = {
   vat_tracking_enabled?: boolean;
   vat_period_end_date?: string;
   chase_paused_until?: string;
+  is_vip?: boolean;
 };
 
 export type UpdateClientResponse = Client;

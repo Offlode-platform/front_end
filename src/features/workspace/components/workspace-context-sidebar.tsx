@@ -7,7 +7,7 @@ type Props = {
 };
 
 function isVip(client: ListedClient): boolean {
-  return client.chase_frequency_days <= 7;
+  return client.is_vip === true;
 }
 
 function CtxValue({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) {
