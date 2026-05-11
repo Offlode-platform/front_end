@@ -9,11 +9,29 @@ import type { ChaseHistoryResponse } from "@/types/chases";
 import type { ClientDashboardChaseEntry } from "@/types/dashboard";
 import type { Transaction } from "@/types/transactions";
 
+function humaniseFailure(reason: string | null): string {
+  if (!reason) return "Unknown error";
+  if (reason.includes("133010") || reason.toLowerCase().includes("not registered"))
+    return "Recipient not on WhatsApp";
+  if (reason.includes("21211") || reason.toLowerCase().includes("invalid 'to'"))
+    return "Invalid phone number";
+  if (reason.includes("21614") || reason.toLowerCase().includes("not a mobile"))
+    return "Not a mobile number";
+  if (reason.toLowerCase().includes("no email")) return "Client has no email address";
+  if (reason.toLowerCase().includes("no phone")) return "Client has no phone number";
+  if (reason.toLowerCase().includes("postmark")) return "Email delivery failed";
+  // Strip raw JSON blobs from Meta/Twilio responses before showing to user
+  const jsonStart = reason.indexOf("{");
+  if (jsonStart > 0) return reason.slice(0, jsonStart).trim().replace(/:$/, "");
+  if (jsonStart === 0) return "Delivery error — check logs";
+  return reason.length > 80 ? `${reason.slice(0, 80)}…` : reason;
+}
+
 type Props = {
   client: ListedClient;
 };
 
-type ChaseFilter = "all" | "email" | "sms";
+type ChaseFilter = "all" | "email" | "sms" | "whatsapp";
 
 // Normalized chase item that works with both API sources
 type ChaseItem = {
@@ -288,14 +306,14 @@ export function WorkspaceActivityTab({ client }: Props) {
 
         {/* Filters */}
         <div className="ws-issue-filters" style={{ marginBottom: "var(--sp-12)" }}>
-          {(["all", "email", "sms"] as const).map((f) => (
+          {(["all", "email", "sms", "whatsapp"] as const).map((f) => (
             <button
               key={f}
               type="button"
               className={`ws-issue-filter${filter === f ? " active" : ""}`}
               onClick={() => setFilter(f)}
             >
-              {f === "all" ? "All" : f === "email" ? "Email" : "SMS"}
+              {f === "all" ? "All" : f === "email" ? "Email" : f === "sms" ? "SMS" : "WhatsApp"}
             </button>
           ))}
         </div>
@@ -328,8 +346,8 @@ export function WorkspaceActivityTab({ client }: Props) {
               }} />
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <span style={{ fontSize: "var(--text-sm)", fontWeight: "var(--fw-medium)", color: "var(--clr-primary)", textTransform: "capitalize" }}>
-                    {chase.chase_type} chase
+                  <span style={{ fontSize: "var(--text-sm)", fontWeight: "var(--fw-medium)", color: "var(--clr-primary)" }}>
+                    {chase.chase_type === "whatsapp" ? "WhatsApp" : chase.chase_type === "sms" ? "SMS" : chase.chase_type.charAt(0).toUpperCase() + chase.chase_type.slice(1)} chase
                     {chase.is_escalation && (
                       <span style={{ color: "var(--danger)", fontSize: "var(--text-xs)", marginLeft: 6 }}>
                         Escalation
@@ -348,7 +366,11 @@ export function WorkspaceActivityTab({ client }: Props) {
                   )}
                 </div>
                 <div style={{ fontSize: "var(--text-xs)", color: "var(--clr-muted)", marginTop: 2 }}>
-                  {chase.is_successful ? "Delivered" : chase.is_pending ? "Pending" : `Failed${chase.failure_reason ? `: ${chase.failure_reason}` : ""}`}
+                  {chase.is_successful
+                    ? "Delivered"
+                    : chase.is_pending
+                      ? "Pending — processing"
+                      : `Failed: ${humaniseFailure(chase.failure_reason)}`}
                   {chase.magic_link_clicked && (
                     <span style={{ color: "var(--brand)" }}> · Link clicked</span>
                   )}
