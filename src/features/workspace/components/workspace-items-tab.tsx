@@ -53,6 +53,37 @@ function docStatusDot(txn: Transaction): { color: string; label: string } {
   return { color: "var(--danger)", label: "Missing" };
 }
 
+const CHANNEL_LABEL: Record<"email" | "sms" | "whatsapp", string> = {
+  email: "Email",
+  sms: "SMS",
+  whatsapp: "WhatsApp",
+};
+
+function IconEmail() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="2" y="4" width="20" height="16" rx="2" />
+      <polyline points="2,4 12,13 22,4" />
+    </svg>
+  );
+}
+
+function IconSms() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+    </svg>
+  );
+}
+
+function IconWhatsApp() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 32 32" fill="currentColor" aria-hidden="true">
+      <path d="M16 2C8.28 2 2 8.28 2 16c0 2.44.66 4.73 1.8 6.71L2 30l7.47-1.76A13.92 13.92 0 0 0 16 30c7.72 0 14-6.28 14-14S23.72 2 16 2zm0 25.5c-2.13 0-4.13-.57-5.86-1.57l-.42-.25-4.44 1.05 1.1-4.32-.28-.45A11.46 11.46 0 0 1 4.5 16C4.5 9.6 9.6 4.5 16 4.5S27.5 9.6 27.5 16 22.4 27.5 16 27.5zm6.3-8.6c-.35-.17-2.05-1.01-2.37-1.13-.32-.12-.55-.17-.78.17-.23.35-.89 1.13-1.09 1.36-.2.23-.4.26-.75.09-.35-.17-1.47-.54-2.8-1.72-1.03-.92-1.73-2.06-1.93-2.41-.2-.35-.02-.54.15-.71.15-.15.35-.4.52-.6.17-.2.23-.35.35-.58.12-.23.06-.43-.03-.6-.09-.17-.78-1.87-1.07-2.56-.28-.67-.57-.58-.78-.59h-.67c-.23 0-.6.09-.91.43-.31.35-1.2 1.17-1.2 2.86s1.23 3.32 1.4 3.55c.17.23 2.42 3.69 5.86 5.17.82.35 1.46.56 1.96.72.82.26 1.57.22 2.16.13.66-.1 2.05-.84 2.34-1.65.29-.81.29-1.5.2-1.65-.08-.15-.31-.23-.66-.4z"/>
+    </svg>
+  );
+}
+
 export function WorkspaceItemsTab({ client }: Props) {
   const [missingData, setMissingData] = useState<MissingData | null>(null);
   const [allTransactions, setAllTransactions] = useState<Transaction[] | null>(null);
@@ -62,8 +93,8 @@ export function WorkspaceItemsTab({ client }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [expandedSupplier, setExpandedSupplier] = useState<string | null>(null);
   const [view, setView] = useState<ViewMode>("missing");
-  const [sending, setSending] = useState(false);
-  const [sendMsg, setSendMsg] = useState<string | null>(null);
+  const [sendingType, setSendingType] = useState<"email" | "sms" | "whatsapp" | null>(null);
+  const [sendResult, setSendResult] = useState<{ channel: string; ok: boolean; msg: string } | null>(null);
   const [resolvingId, setResolvingId] = useState<string | null>(null);
 
   // Transactions the client has responded to — these are hidden from the
@@ -143,17 +174,17 @@ export function WorkspaceItemsTab({ client }: Props) {
     }
   }
 
-  async function handleSendChase() {
-    setSending(true);
-    setSendMsg(null);
+  async function handleSendChase(channel: "email" | "sms" | "whatsapp") {
+    setSendingType(channel);
+    setSendResult(null);
     try {
-      await chasesApi.send(client.id, { client_id: client.id, chase_type: "email" });
-      setSendMsg("Chase sent.");
+      await chasesApi.send(client.id, { client_id: client.id, chase_type: channel });
+      setSendResult({ channel, ok: true, msg: `${CHANNEL_LABEL[channel]} chase sent.` });
     } catch {
-      setSendMsg("Failed to send.");
+      setSendResult({ channel, ok: false, msg: `${CHANNEL_LABEL[channel]} failed.` });
     } finally {
-      setSending(false);
-      setTimeout(() => setSendMsg(null), 3000);
+      setSendingType(null);
+      setTimeout(() => setSendResult(null), 3500);
     }
   }
 
@@ -209,13 +240,53 @@ export function WorkspaceItemsTab({ client }: Props) {
             )}
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: "var(--sp-8)" }}>
-            {sendMsg && (
-              <span style={{ fontSize: "var(--text-xs)", color: sendMsg.includes("sent") ? "var(--success)" : "var(--danger)" }}>{sendMsg}</span>
+            {sendResult && (
+              <span style={{ fontSize: "var(--text-xs)", color: sendResult.ok ? "var(--success)" : "var(--danger)", whiteSpace: "nowrap" }}>
+                {sendResult.msg}
+              </span>
             )}
             {missingData && missingData.total > 0 && (
-              <button type="button" className="btn btn-ghost btn-sm" onClick={handleSendChase} disabled={sending} style={{ fontSize: "var(--text-xs)" }}>
-                {sending ? "Sending..." : "Send Chase"}
-              </button>
+              <div style={{ display: "flex", alignItems: "center", gap: "var(--sp-4)", background: "var(--clr-surface-card)", border: "1px solid var(--clr-divider)", borderRadius: "var(--r-md)", padding: "2px 4px" }}>
+                {(["email", "sms", "whatsapp"] as const).map((channel) => {
+                  const isSending = sendingType === channel;
+                  const icons = { email: <IconEmail />, sms: <IconSms />, whatsapp: <IconWhatsApp /> };
+                  const colors = { email: "#4f46e5", sms: "#0891b2", whatsapp: "#16a34a" };
+                  return (
+                    <button
+                      key={channel}
+                      type="button"
+                      onClick={() => handleSendChase(channel)}
+                      disabled={sendingType !== null}
+                      title={`Send ${CHANNEL_LABEL[channel]} chase`}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "var(--sp-4)",
+                        padding: "4px 8px",
+                        fontSize: "var(--text-xs)",
+                        fontWeight: "var(--fw-medium)",
+                        color: sendingType !== null && !isSending ? "var(--clr-muted)" : colors[channel],
+                        background: isSending ? `${colors[channel]}15` : "transparent",
+                        border: "none",
+                        borderRadius: "var(--r-sm)",
+                        cursor: sendingType !== null ? "not-allowed" : "pointer",
+                        transition: "background 0.15s, color 0.15s",
+                        opacity: sendingType !== null && !isSending ? 0.5 : 1,
+                      }}
+                    >
+                      {isSending ? (
+                        <span style={{ width: 13, height: 13, display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true" style={{ animation: "spin 0.7s linear infinite" }}>
+                            <circle cx="12" cy="12" r="10" strokeOpacity="0.25" />
+                            <path d="M12 2a10 10 0 0 1 10 10" strokeLinecap="round" />
+                          </svg>
+                        </span>
+                      ) : icons[channel]}
+                      {CHANNEL_LABEL[channel]}
+                    </button>
+                  );
+                })}
+              </div>
             )}
           </div>
         </div>
