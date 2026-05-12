@@ -3,16 +3,25 @@
 import { useCallback, useRef, useState } from "react";
 import { importsApi } from "@/lib/api/imports-api";
 import type { FieldDetectionResponse, ImportDataType } from "@/types/imports";
+import type { CsvPlatform } from "../imports-page-view";
+
+const PLATFORM_LABELS: Record<CsvPlatform, string> = {
+  xero: "Xero",
+  quickbooks: "QuickBooks",
+  sage: "Sage",
+  generic: "Custom / Generic",
+};
 
 type Props = {
   // Controlled by the parent so the dataType the user picked survives
   // round-trips through the wizard (back/forward navigation).
   dataType: ImportDataType;
+  csvPlatform: CsvPlatform;
   onDataTypeChange: (dt: ImportDataType) => void;
   onComplete: (result: FieldDetectionResponse, dataType: ImportDataType) => void;
 };
 
-export function ImportUploadStep({ dataType, onDataTypeChange, onComplete }: Props) {
+export function ImportUploadStep({ dataType, csvPlatform, onDataTypeChange, onComplete }: Props) {
   const [dragging, setDragging] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -57,14 +66,7 @@ export function ImportUploadStep({ dataType, onDataTypeChange, onComplete }: Pro
       {/* Data type selector */}
       <div className="ws-card">
         <div className="ws-card-title">What are you importing?</div>
-        <div className="ws-issue-filters">
-          {/*
-            "mixed" is intentionally excluded — the backend's upload endpoint
-            (api/v1/imports.py) explicitly rejects anything other than
-            invoices/contacts/payments. The schema literal still accepts it
-            but no downstream code handles it. Re-enable here only when the
-            backend actually supports a mixed-row CSV format.
-          */}
+        <div className="ws-issue-filters" style={{ marginBottom: 0, borderBottom: "none", paddingBottom: 0 }}>
           {(["invoices", "contacts", "payments"] as const).map((dt) => (
             <button
               key={dt}
@@ -78,7 +80,7 @@ export function ImportUploadStep({ dataType, onDataTypeChange, onComplete }: Pro
         </div>
       </div>
 
-      {/* Drop zone — uses ws-card for consistent borders/shadow but with a dashed border on top */}
+      {/* Drop zone */}
       <div
         className="ws-card"
         onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
@@ -86,35 +88,32 @@ export function ImportUploadStep({ dataType, onDataTypeChange, onComplete }: Pro
         onDrop={handleDrop}
         onClick={() => fileInputRef.current?.click()}
         style={{
-          background: dragging ? "rgba(53,126,146,0.06)" : undefined,
-          border: `2px dashed ${dragging ? "var(--brand)" : "var(--clr-divider-strong)"}`,
+          borderStyle: "dashed",
+          borderWidth: 2,
+          borderColor: dragging ? "var(--brand)" : "var(--clr-divider-strong)",
+          background: dragging ? "rgba(53,126,146,0.04)" : undefined,
           padding: "var(--sp-48) var(--sp-24)",
           textAlign: "center",
           cursor: uploading ? "wait" : "pointer",
-          transition: "all 0.2s",
+          transition: "border-color var(--dur-sm) var(--ease), background var(--dur-sm) var(--ease)",
+          boxShadow: "none",
         }}
       >
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept=".csv"
-          onChange={handleFileSelect}
-          style={{ display: "none" }}
-        />
+        <input ref={fileInputRef} type="file" accept=".csv" onChange={handleFileSelect} style={{ display: "none" }} />
 
         {uploading ? (
           <>
             <div style={{
-              width: 48,
-              height: 48,
+              width: 40,
+              height: 40,
               borderRadius: "50%",
-              border: "3px solid var(--clr-divider)",
+              border: "3px solid var(--clr-divider-strong)",
               borderTopColor: "var(--brand)",
               animation: "spin 0.8s linear infinite",
               margin: "0 auto var(--sp-16)",
             }} />
-            <div style={{ fontSize: "var(--text-md)", fontWeight: "var(--fw-medium)", color: "var(--clr-primary)" }}>
-              Uploading and analyzing...
+            <div style={{ fontSize: "var(--text-base)", fontWeight: "var(--fw-medium)", color: "var(--clr-primary)" }}>
+              Uploading and analysing…
             </div>
             <div style={{ fontSize: "var(--text-sm)", color: "var(--clr-muted)", marginTop: "var(--sp-4)" }}>
               Detecting columns and source platform
@@ -123,38 +122,38 @@ export function ImportUploadStep({ dataType, onDataTypeChange, onComplete }: Pro
         ) : (
           <>
             <div style={{
-              width: 56,
-              height: 56,
+              width: 48,
+              height: 48,
               borderRadius: "50%",
               background: "var(--clr-surface-subtle)",
+              border: "1px solid var(--clr-divider-strong)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               margin: "0 auto var(--sp-16)",
             }}>
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--clr-muted)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--clr-muted)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
                 <polyline points="17 8 12 3 7 8" />
                 <line x1="12" y1="3" x2="12" y2="15" />
               </svg>
             </div>
-            <div style={{ fontSize: "var(--text-md)", fontWeight: "var(--fw-medium)", color: "var(--clr-primary)" }}>
+            <div style={{ fontSize: "var(--text-base)", fontWeight: "var(--fw-medium)", color: "var(--clr-primary)", marginBottom: "var(--sp-4)" }}>
               {dragging ? "Drop your CSV file here" : "Drag and drop your CSV file here"}
             </div>
-            <div style={{ fontSize: "var(--text-sm)", color: "var(--clr-muted)", marginTop: "var(--sp-4)" }}>
-              or click to browse. Supports Xero, QuickBooks, Sage, and custom formats.
+            <div style={{ fontSize: "var(--text-sm)", color: "var(--clr-muted)" }}>
+              or click to browse
+              {csvPlatform !== "generic"
+                ? <> — <span style={{ color: "var(--success)" }}>{PLATFORM_LABELS[csvPlatform]} columns will be auto-mapped</span></>
+                : " — columns will be mapped manually in the next step"
+              }
             </div>
           </>
         )}
       </div>
 
-      {/* Error */}
       {error && (
-        <div className="ws-card" style={{
-          background: "rgba(239,68,68,0.08)",
-          color: "var(--danger)",
-          fontSize: "var(--text-sm)",
-        }}>
+        <div className="ws-card" style={{ background: "rgba(239,68,68,0.06)", borderColor: "rgba(239,68,68,0.15)", color: "var(--danger)", fontSize: "var(--text-sm)", padding: "var(--sp-12) var(--sp-16)" }}>
           {error}
         </div>
       )}

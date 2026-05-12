@@ -84,6 +84,10 @@ export const apiPaths = {
   },
   integrations: {
     xeroStatus: "/api/v1/integrations/xero/status",
+    testStatus: "/api/v1/integrations/test/status",
+    testEmail: "/api/v1/integrations/test/email",
+    testSms: "/api/v1/integrations/test/sms",
+    testWhatsapp: "/api/v1/integrations/test/whatsapp",
   },
   auditLogs: {
     base: "/api/v1/audit-logs",

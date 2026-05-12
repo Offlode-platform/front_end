@@ -1,14 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { User, Lock, Shield, Bell, ChevronRight } from "lucide-react";
+import { User, Lock, Shield, Bell, Plug, ChevronRight } from "lucide-react";
 import { useAuthStore } from "@/stores/auth-store";
 import { ProfileSection } from "./components/profile-section";
 import { PasswordSection } from "./components/password-section";
 import { TwoFactorSection } from "./components/two-factor-section";
 import { NotificationsSection } from "./components/notifications-section";
+import { IntegrationsTestSection } from "./components/integrations-test-section";
 
-type Tab = "profile" | "password" | "two-factor" | "notifications";
+type Tab = "profile" | "password" | "two-factor" | "notifications" | "integrations";
 
 // All tabs share the brand accent (#357e92) to match the unified teal scheme
 // used across the rest of the app (dashboard, team, help). Hex kept so the
@@ -47,6 +48,13 @@ const TABS: {
     label: "Notifications",
     description: "Email preferences",
     icon: Bell,
+    color: TAB_ACCENT,
+  },
+  {
+    key: "integrations",
+    label: "Integrations",
+    description: "Test messaging services",
+    icon: Plug,
     color: TAB_ACCENT,
   },
 ];
@@ -239,6 +247,7 @@ export function SettingsPageView() {
                 {tab === "notifications" && (
                   <NotificationsSection user={currentUser} />
                 )}
+                {tab === "integrations" && <IntegrationsTestSection />}
               </>
             )}
           </div>

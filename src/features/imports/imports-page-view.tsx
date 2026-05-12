@@ -17,9 +17,11 @@ import type {
 
 type ImportStep = "upload" | "mapping" | "preview" | "confirm" | "reconcile" | "done";
 type ImportSource = "csv" | "xero";
+export type CsvPlatform = "xero" | "quickbooks" | "sage" | "generic";
 
 export function ImportsPageView() {
   const [source, setSource] = useState<ImportSource>("csv");
+  const [csvPlatform, setCsvPlatform] = useState<CsvPlatform>("xero");
   const [step, setStep] = useState<ImportStep>("upload");
   const [showHistory, setShowHistory] = useState(false);
   // The data type the user picked in the upload step is lifted here so that
@@ -79,6 +81,7 @@ export function ImportsPageView() {
   function handleReset() {
     setStep("upload");
     setSource("csv");
+    setCsvPlatform("xero");
     setDataType("invoices");
     setDetection(null);
     setSession(null);
@@ -149,43 +152,76 @@ export function ImportsPageView() {
           <>
             {/* Source selector — only on the first step of the wizard */}
             {step === "upload" && (
-              <div className="ws-card" style={{ marginBottom: "var(--sp-16)" }}>
-                <div className="ws-card-title">Import source</div>
-                <div className="ws-issue-filters">
-                  <button
-                    type="button"
-                    className={`ws-issue-filter${source === "csv" ? " active" : ""}`}
-                    onClick={() => setSource("csv")}
-                  >
-                    CSV upload
-                  </button>
-                  <button
-                    type="button"
-                    className={`ws-issue-filter${source === "xero" ? " active" : ""}`}
-                    onClick={() => setSource("xero")}
-                  >
-                    Xero sync
-                  </button>
-                  <button
-                    type="button"
-                    className="ws-issue-filter"
-                    disabled
-                    title="Coming soon"
-                    style={{ opacity: 0.5, cursor: "not-allowed" }}
-                  >
-                    QuickBooks
-                  </button>
-                  <button
-                    type="button"
-                    className="ws-issue-filter"
-                    disabled
-                    title="Coming soon"
-                    style={{ opacity: 0.5, cursor: "not-allowed" }}
-                  >
-                    Sage
-                  </button>
+              <>
+                <div className="ws-card" style={{ marginBottom: "var(--sp-16)" }}>
+                  <div className="ws-card-title">Import source</div>
+                  <div className="ws-issue-filters" style={{ marginBottom: 0, borderBottom: "none", paddingBottom: 0 }}>
+                    <button
+                      type="button"
+                      className={`ws-issue-filter${source === "csv" ? " active" : ""}`}
+                      onClick={() => setSource("csv")}
+                    >
+                      CSV upload
+                    </button>
+                    <button
+                      type="button"
+                      className={`ws-issue-filter${source === "xero" ? " active" : ""}`}
+                      onClick={() => setSource("xero")}
+                    >
+                      Xero sync
+                    </button>
+                  </div>
                 </div>
-              </div>
+
+                {/* CSV platform selector — separate card, only when CSV is selected */}
+                {source === "csv" && (
+                  <div className="ws-card" style={{ marginBottom: "var(--sp-16)" }}>
+                    <div className="ws-card-title">CSV format</div>
+                    <div className="ws-issue-filters" style={{ marginBottom: csvPlatform !== "generic" ? "var(--sp-12)" : 0, borderBottom: csvPlatform !== "generic" ? undefined : "none", paddingBottom: csvPlatform !== "generic" ? undefined : 0 }}>
+                      <button
+                        type="button"
+                        className={`ws-issue-filter${csvPlatform === "xero" ? " active" : ""}`}
+                        onClick={() => setCsvPlatform("xero")}
+                      >
+                        Xero
+                      </button>
+                      <button
+                        type="button"
+                        className="ws-issue-filter"
+                        disabled
+                        title="Coming soon"
+                        style={{ opacity: 0.4, cursor: "not-allowed" }}
+                      >
+                        QuickBooks
+                      </button>
+                      <button
+                        type="button"
+                        className="ws-issue-filter"
+                        disabled
+                        title="Coming soon"
+                        style={{ opacity: 0.4, cursor: "not-allowed" }}
+                      >
+                        Sage
+                      </button>
+                      <button
+                        type="button"
+                        className={`ws-issue-filter${csvPlatform === "generic" ? " active" : ""}`}
+                        onClick={() => setCsvPlatform("generic")}
+                      >
+                        Custom / Generic
+                      </button>
+                    </div>
+                    {csvPlatform !== "generic" && (
+                      <div style={{ fontSize: "var(--text-xs)", color: "var(--clr-muted)", lineHeight: "var(--lh-body)" }}>
+                        {csvPlatform === "xero" && dataType === "invoices" && "Export from Xero: Accounts → Sales → Export as CSV. All columns are auto-mapped."}
+                        {csvPlatform === "xero" && dataType === "contacts" && "Export from Xero: Contacts → All Contacts → Export as CSV. All columns are auto-mapped."}
+                        {csvPlatform === "xero" && dataType === "payments" && "Use a Xero Sales Invoices CSV — InvoiceAmountPaid and InvoiceAmountDue map to payment fields automatically."}
+                        <span style={{ marginLeft: "var(--sp-6)", color: "var(--success)", fontWeight: "var(--fw-medium)" }}>Columns auto-mapped.</span>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </>
             )}
 
             {/* Step indicator — only relevant to the CSV wizard */}
@@ -241,6 +277,7 @@ export function ImportsPageView() {
             {step === "upload" && source === "csv" && (
               <ImportUploadStep
                 dataType={dataType}
+                csvPlatform={csvPlatform}
                 onDataTypeChange={setDataType}
                 onComplete={handleUploadComplete}
               />
@@ -252,6 +289,7 @@ export function ImportsPageView() {
               <ImportMappingStep
                 detection={detection}
                 dataType={dataType}
+                csvPlatform={csvPlatform}
                 onComplete={handleMappingComplete}
                 onBack={handleBack}
               />
