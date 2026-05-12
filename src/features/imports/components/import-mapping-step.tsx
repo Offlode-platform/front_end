@@ -8,10 +8,12 @@ import type {
   ColumnMappingRequest,
   ImportDataType,
 } from "@/types/imports";
+import type { CsvPlatform } from "../imports-page-view";
 
 type Props = {
   detection: FieldDetectionResponse;
   dataType: ImportDataType;
+  csvPlatform?: CsvPlatform;
   onComplete: (result: ImportSessionResponse) => void;
   onBack?: () => void;
 };
@@ -76,6 +78,80 @@ const PAYMENT_FIELDS: FieldOption[] = [
   { value: "account_code", label: "Account Code" },
 ];
 
+// Xero CSV export column → backend field mappings, keyed by import data type.
+// Column names match the exact headers in Xero CSV exports.
+// Note: Xero's Contacts CSV marks the required ContactName column with a
+// leading asterisk (*ContactName) which must be matched literally.
+const XERO_INVOICE_MAP: Record<string, string> = {
+  ContactName: "contact_name",
+  EmailAddress: "contact_email",
+  InvoiceNumber: "invoice_number",
+  Reference: "reference",
+  InvoiceDate: "date",
+  DueDate: "due_date",
+  Total: "total",
+  TaxTotal: "tax_amount",
+  LineAmount: "amount",
+  AccountCode: "account_code",
+  Description: "description",
+  Currency: "currency_code",
+  Status: "status",
+};
+
+const XERO_CONTACT_MAP: Record<string, string> = {
+  "*ContactName": "name",
+  EmailAddress: "email",
+  FirstName: "first_name",
+  LastName: "last_name",
+  POAddressLine1: "address_line_1",
+  POAddressLine2: "address_line_2",
+  POCity: "city",
+  POPostalCode: "postal_code",
+  POCountry: "country",
+  PhoneNumber: "phone",
+  TaxNumber: "tax_number",
+};
+
+// Xero doesn't have a dedicated payments export; the Sales Invoices CSV
+// carries payment fields (InvoiceAmountPaid / InvoiceAmountDue) that map
+// cleanly to the payments import data type.
+const XERO_PAYMENT_MAP: Record<string, string> = {
+  ContactName: "contact_name",
+  EmailAddress: "contact_email",
+  InvoiceNumber: "invoice_number",
+  Reference: "reference",
+  InvoiceDate: "payment_date",
+  Total: "total",
+  InvoiceAmountPaid: "amount_paid",
+  InvoiceAmountDue: "amount_due",
+  Currency: "currency_code",
+  AccountCode: "account_code",
+};
+
+const XERO_MAPS: Record<ImportDataType, Record<string, string>> = {
+  invoices: XERO_INVOICE_MAP,
+  contacts: XERO_CONTACT_MAP,
+  payments: XERO_PAYMENT_MAP,
+};
+
+function getPlatformMapping(
+  platform: CsvPlatform,
+  dataType: ImportDataType,
+  detectedColumns: string[],
+  validValues: Set<string>,
+): Record<string, string> {
+  if (platform !== "xero") return {};
+  const xeroMap = XERO_MAPS[dataType] ?? {};
+  const result: Record<string, string> = {};
+  for (const col of detectedColumns) {
+    const field = xeroMap[col];
+    if (field && validValues.has(field)) {
+      result[col] = field;
+    }
+  }
+  return result;
+}
+
 function fieldsForDataType(dataType: ImportDataType): FieldOption[] {
   switch (dataType) {
     case "invoices":
@@ -89,7 +165,7 @@ function fieldsForDataType(dataType: ImportDataType): FieldOption[] {
   }
 }
 
-export function ImportMappingStep({ detection, dataType, onComplete, onBack }: Props) {
+export function ImportMappingStep({ detection, dataType, csvPlatform = "generic", onComplete, onBack }: Props) {
   // Per-type catalog. Memoised so the select options don't rebuild on every render.
   const availableFields = useMemo(() => fieldsForDataType(dataType), [dataType]);
   const validValues = useMemo(
@@ -97,16 +173,22 @@ export function ImportMappingStep({ detection, dataType, onComplete, onBack }: P
     [availableFields],
   );
 
-  // Initial mapping: the backend's suggested mapping MAY include fields that
-  // aren't in this data type's catalog (e.g. "invoice_number" suggested on a
-  // contacts import). Drop any such suggestions so the <select> doesn't end
-  // up with an out-of-range value that renders as a blank option.
+  // Initial mapping: start from the backend's suggestions, then overlay the
+  // platform-specific pre-defined mapping (e.g. Xero). Platform mappings take
+  // priority because they are exact — the backend uses fuzzy heuristics that
+  // can mis-fire on platform-specific column names.
   const [mapping, setMapping] = useState<Record<string, string>>(() => {
     const cleaned: Record<string, string> = {};
     for (const [col, field] of Object.entries(detection.suggested_mapping ?? {})) {
       cleaned[col] = validValues.has(field) ? field : "";
     }
-    return cleaned;
+    const platformOverrides = getPlatformMapping(
+      csvPlatform,
+      dataType,
+      detection.detected_columns,
+      validValues,
+    );
+    return { ...cleaned, ...platformOverrides };
   });
   const [dateFormat, setDateFormat] = useState("%d/%m/%Y");
   const [saving, setSaving] = useState(false);
@@ -174,8 +256,15 @@ export function ImportMappingStep({ detection, dataType, onComplete, onBack }: P
           justifyContent: "space-between",
           alignItems: "center",
         }}>
-          <div style={{ fontSize: "var(--text-xs)", fontWeight: "var(--fw-semibold)", textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--clr-muted)" }}>
-            Column Mapping
+          <div style={{ display: "flex", alignItems: "center", gap: "var(--sp-8)" }}>
+            <div style={{ fontSize: "var(--text-xs)", fontWeight: "var(--fw-semibold)", textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--clr-muted)" }}>
+              Column Mapping
+            </div>
+            {csvPlatform !== "generic" && (
+              <span style={{ fontSize: "var(--text-xs)", color: "var(--success)", background: "rgba(34,160,107,0.1)", padding: "1px 7px", borderRadius: "var(--r-full)", fontWeight: "var(--fw-medium)" }}>
+                {csvPlatform === "xero" ? "Xero" : csvPlatform === "quickbooks" ? "QuickBooks" : "Sage"} auto-mapped
+              </span>
+            )}
           </div>
           <div style={{ fontSize: "var(--text-xs)", color: "var(--clr-faint)" }}>
             {detection.detected_columns.length} columns detected
