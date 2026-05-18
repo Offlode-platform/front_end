@@ -235,9 +235,9 @@ export function ContactReconciliationPanel({ embedded = false, onAllResolved }: 
 
   async function createClient(contactId: string, name: string, email?: string, phone?: string) {
     if (!name.trim()) {
-      if (suggestModal?.contact.id === contactId) {
+      if (suggestModal?.contact?.id === contactId) {
         setSuggestModal({ ...suggestModal, formError: "Client name is required." });
-      } else if (createModal?.contact.id === contactId) {
+      } else if (createModal?.contact?.id === contactId) {
         setCreateModal({ ...createModal, error: "Client name is required." });
       }
       return;
@@ -688,7 +688,7 @@ export function ContactReconciliationPanel({ embedded = false, onAllResolved }: 
           <input
             type="checkbox"
             checked={selectAllChecked}
-            indeterminate={selectAllIndeterminate}
+            indeterminate={selectAllIndeterminate ? "true" : undefined}
             onChange={toggleSelectAll}
             style={{ cursor: "pointer", width: 16, height: 16 }}
           />
