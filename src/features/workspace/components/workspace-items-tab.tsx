@@ -294,7 +294,7 @@ export function WorkspaceItemsTab({ client }: Props) {
                             {txn.id && (
                               <div style={{ display: "flex", alignItems: "center", gap: 2, flexShrink: 0, marginLeft: "var(--sp-8)" }}>
                                 {(["email", "sms", "whatsapp"] as const).map((channel) => {
-                                  const isSending = itemSending?.txId === txn.id && itemSending.channel === channel;
+                                  const isSending = itemSending?.txId === txn.id && itemSending?.channel === channel;
                                   const resultColor = itemSendResult?.txId === txn.id && itemSendResult.channel === channel
                                     ? (itemSendResult.ok ? { email: "var(--info)", sms: "var(--brand)", whatsapp: "var(--success)" }[channel] : "var(--danger)")
                                     : undefined;
