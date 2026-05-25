@@ -79,6 +79,10 @@ export const apiPaths = {
     contactCreateClient: (id: string) =>
       `/api/v1/ledger/contacts/${encodeURIComponent(id)}/create-client`,
     contactBulkLink: "/api/v1/ledger/contacts/bulk-link",
+    contactAutoLink: "/api/v1/ledger/contacts/auto-link",
+    contactBulkDelete: "/api/v1/ledger/contacts/bulk-delete",
+    contactDelete: (id: string) =>
+      `/api/v1/ledger/contacts/${encodeURIComponent(id)}`,
     paymentLinkInvoice: (id: string) =>
       `/api/v1/ledger/payments/${encodeURIComponent(id)}/link-invoice`,
   },

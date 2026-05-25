@@ -30,6 +30,7 @@ export type ImportPreviewResponse = {
   warning_rows: number;
   preview_rows: ImportPreviewRow[];
   errors_summary: ImportValidationError[];
+  excluded_rows: number[];
 };
 
 export type FieldDetectionResponse = {
@@ -58,6 +59,7 @@ export type ImportSessionResponse = {
   column_mapping: Record<string, string> | null;
   mapping_confidence: Record<string, number> | null;
   validation_errors: Record<string, unknown>[] | null;
+  excluded_rows: number[] | null;
   created_at: string;
   updated_at: string;
   completed_at: string | null;

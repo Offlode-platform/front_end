@@ -1,5 +1,5 @@
 import { authenticatedApi } from "./authenticated-client";
-import { apiPaths } from "./endpoints";
+import { apiPaths, apiUrl } from "./endpoints";
 import type {
   Document,
   DocumentListResponse,
@@ -116,6 +116,21 @@ export const documentsApi = {
     return authenticatedApi.delete(
       `${apiPaths.documents.base}/${encodeURIComponent(documentId)}`,
     );
+  },
+
+  fileUrl(documentId: string): string {
+    return apiUrl(`${apiPaths.documents.base}/${encodeURIComponent(documentId)}/file`);
+  },
+
+  async fetchBlob(documentId: string): Promise<{ blob: Blob; filename?: string }> {
+    const res = await authenticatedApi.get(
+      `${apiPaths.documents.base}/${encodeURIComponent(documentId)}/file`,
+      { responseType: "blob" },
+    );
+    const cd = res.headers["content-disposition"] as string | undefined;
+    const match = cd?.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+    const filename = match?.[1]?.replace(/['"]/g, "") || undefined;
+    return { blob: res.data as Blob, filename };
   },
 
   // Phase 2: Review queue methods

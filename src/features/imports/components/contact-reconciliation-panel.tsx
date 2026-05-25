@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import { ledgerApi } from "@/lib/api/ledger-api";
 import type {
   ClientSuggestion,
@@ -36,6 +36,7 @@ function emptyState(): ContactState {
 }
 
 export function ContactReconciliationPanel({ embedded = false, onAllResolved }: Props) {
+  const selectAllCheckboxRef = useRef<HTMLInputElement>(null);
   const [allContacts, setAllContacts] = useState<UniversalContact[]>([]);
   const [invoicesPending, setInvoicesPending] = useState(0);
   const [contactStates, setContactStates] = useState<Record<string, ContactState>>({});
@@ -96,10 +97,6 @@ export function ContactReconciliationPanel({ embedded = false, onAllResolved }: 
       for (const c of result.items) initial[c.id] = emptyState();
       setContactStates(initial);
 
-      if (result.items.length > 0) {
-        setAutoLinkBanner("running");
-        await runAutoLinkPass(result.items);
-      }
     } catch {
       setError("Unable to load unlinked contacts.");
     } finally {
@@ -107,62 +104,31 @@ export function ContactReconciliationPanel({ embedded = false, onAllResolved }: 
     }
   }
 
-  async function runAutoLinkPass(contacts: UniversalContact[]) {
-    const results = await Promise.allSettled(
-      contacts.map((c) => ledgerApi.getContactSuggestions(c.id, 1))
-    );
+  async function runAutoLinkPass() {
+    const result = await ledgerApi.autoLinkContacts();
 
-    const autoLinks: Array<{
-      contactId: string;
-      clientId: string;
-      score: number;
-    }> = [];
-
-    results.forEach((r, i) => {
-      if (
-        r.status === "fulfilled" &&
-        r.value.suggestions[0]?.score >= 0.9
-      ) {
-        autoLinks.push({
-          contactId: contacts[i].id,
-          clientId: r.value.suggestions[0].client_id,
-          score: r.value.suggestions[0].score,
-        });
-      }
-    });
-
-    if (autoLinks.length === 0) {
+    if (result.linked_count === 0) {
       setAutoLinkBanner("done");
       setAutoLinkedCount(0);
       return;
     }
 
-    const linkResults = await Promise.allSettled(
-      autoLinks.map((al) =>
-        ledgerApi.linkContact(al.contactId, { client_id: al.clientId })
-      )
-    );
-
     setContactStates((prev) => {
       const next = { ...prev };
-      linkResults.forEach((r, i) => {
-        if (r.status === "fulfilled") {
-          next[autoLinks[i].contactId] = {
-            ...next[autoLinks[i].contactId],
-            resolved: {
-              clientName: r.value.client_name,
-              invoicesMaterialized: r.value.invoices_materialized,
-            },
-            linkedThisSession: true,
-          };
-        }
-      });
+      for (const r of result.results) {
+        next[r.contact_id] = {
+          ...(next[r.contact_id] ?? emptyState()),
+          resolved: {
+            clientName: r.client_name,
+            invoicesMaterialized: r.invoices_materialized,
+          },
+          linkedThisSession: true,
+        };
+      }
       return next;
     });
 
-    setAutoLinkedCount(
-      linkResults.filter((r) => r.status === "fulfilled").length
-    );
+    setAutoLinkedCount(result.linked_count);
     setAutoLinkBanner("done");
   }
 
@@ -317,16 +283,26 @@ export function ContactReconciliationPanel({ embedded = false, onAllResolved }: 
     checkAllResolved();
   }
 
-  function handleDeleteConfirmed(contactIds: string[]) {
-    const idsSet = new Set(contactIds);
-    setAllContacts((prev) => prev.filter((c) => !idsSet.has(c.id)));
-    setSelectedIds((prev) => {
-      const next = new Set(prev);
-      contactIds.forEach((id) => next.delete(id));
-      return next;
-    });
-    setDeleteModal(null);
-    checkAllResolved();
+  async function handleDeleteConfirmed(contactIds: string[]) {
+    try {
+      await ledgerApi.bulkDeleteContacts(contactIds);
+
+      const idsSet = new Set(contactIds);
+      setAllContacts((prev) => prev.filter((c) => !idsSet.has(c.id)));
+      setSelectedIds((prev) => {
+        const next = new Set(prev);
+        contactIds.forEach((id) => next.delete(id));
+        return next;
+      });
+      setDeleteModal(null);
+      checkAllResolved();
+    } catch (error) {
+      console.error("Failed to delete contacts:", error);
+      setDeleteModal((prev) =>
+        prev ? { ...prev, open: false } : null
+      );
+      setError("Failed to permanently delete contacts. Please try again.");
+    }
   }
 
   function checkAllResolved() {
@@ -384,6 +360,12 @@ export function ContactReconciliationPanel({ embedded = false, onAllResolved }: 
     pageContacts.length > 0 &&
     pageContacts.some((c) => selectedIds.has(c.id)) &&
     !selectAllChecked;
+
+  useEffect(() => {
+    if (selectAllCheckboxRef.current) {
+      selectAllCheckboxRef.current.indeterminate = selectAllIndeterminate;
+    }
+  }, [selectAllIndeterminate]);
 
   function toggleSelectAll() {
     if (selectAllChecked) {
@@ -454,7 +436,7 @@ export function ContactReconciliationPanel({ embedded = false, onAllResolved }: 
 
   if (allContacts.length === 0) {
     return (
-      <div className="ws-card" style={{ padding: "var(--sp-40)", textAlign: "center" }}>
+      <div className="ws-card" style={{ padding: "var(--sp-48)", textAlign: "center" }}>
         <div
           style={{
             width: 48,
@@ -595,7 +577,7 @@ export function ContactReconciliationPanel({ embedded = false, onAllResolved }: 
               strokeWidth="2"
               style={{
                 position: "absolute",
-                left: "var(--sp-10)",
+                left: "var(--sp-8)",
                 top: "50%",
                 transform: "translateY(-50%)",
                 color: "var(--clr-muted)",
@@ -644,17 +626,38 @@ export function ContactReconciliationPanel({ embedded = false, onAllResolved }: 
           </div>
         </div>
 
-        {/* Refresh Button */}
-        {!embedded && (
-          <button
-            type="button"
-            onClick={load}
-            className="btn btn-ghost btn-sm"
-            style={{ fontSize: "var(--text-xs)", flexShrink: 0 }}
-          >
-            ↻ Refresh
-          </button>
-        )}
+        {/* Auto-Link + Refresh Buttons */}
+        <div style={{ display: "flex", gap: "var(--sp-8)", flexShrink: 0 }}>
+          {autoLinkBanner !== "running" && (
+            <button
+              type="button"
+              onClick={async () => {
+                setAutoLinkBanner("running");
+                await runAutoLinkPass();
+              }}
+              className="btn btn-ghost btn-sm"
+              style={{ fontSize: "var(--text-xs)" }}
+              title="Find and apply high-confidence matches automatically"
+            >
+              Auto-Link
+            </button>
+          )}
+          {autoLinkBanner === "running" && (
+            <span style={{ fontSize: "var(--text-xs)", color: "var(--clr-muted)", padding: "var(--sp-4) var(--sp-8)" }}>
+              Auto-linking...
+            </span>
+          )}
+          {!embedded && (
+            <button
+              type="button"
+              onClick={load}
+              className="btn btn-ghost btn-sm"
+              style={{ fontSize: "var(--text-xs)" }}
+            >
+              ↻ Refresh
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Table */}
@@ -663,7 +666,7 @@ export function ContactReconciliationPanel({ embedded = false, onAllResolved }: 
         style={{
           padding: 0,
           overflow: "hidden",
-          marginBottom: selectedIds.size > 0 ? "var(--sp-80)" : "var(--sp-16)",
+          marginBottom: selectedIds.size > 0 ? "var(--sp-64)" : "var(--sp-16)",
         }}
       >
         {/* Table Header */}
@@ -672,7 +675,7 @@ export function ContactReconciliationPanel({ embedded = false, onAllResolved }: 
             display: "grid",
             gridTemplateColumns: "32px 1fr 180px 90px 100px 140px 100px",
             gap: "var(--sp-8)",
-            padding: "var(--sp-10) var(--sp-16)",
+            padding: "var(--sp-8) var(--sp-20)",
             borderBottom: "1px solid var(--clr-divider)",
             fontSize: "var(--text-xs)",
             fontWeight: "var(--fw-semibold)",
@@ -686,11 +689,11 @@ export function ContactReconciliationPanel({ embedded = false, onAllResolved }: 
           }}
         >
           <input
+            ref={selectAllCheckboxRef}
             type="checkbox"
             checked={selectAllChecked}
-            indeterminate={selectAllIndeterminate ? "true" : undefined}
             onChange={toggleSelectAll}
-            style={{ cursor: "pointer", width: 16, height: 16 }}
+            style={{ cursor: "pointer", width: 16, height: 16, accentColor: "var(--brand)" }}
           />
           <span>Name</span>
           <span>Email</span>
@@ -714,7 +717,7 @@ export function ContactReconciliationPanel({ embedded = false, onAllResolved }: 
                   display: "grid",
                   gridTemplateColumns: "32px 1fr 180px 90px 100px 140px 100px",
                   gap: "var(--sp-8)",
-                  padding: "var(--sp-10) var(--sp-16)",
+                  padding: "var(--sp-12) var(--sp-20)",
                   borderBottom: "1px solid var(--clr-divider)",
                   fontSize: "var(--text-sm)",
                   alignItems: "center",
@@ -729,7 +732,7 @@ export function ContactReconciliationPanel({ embedded = false, onAllResolved }: 
                   type="checkbox"
                   checked={selectedIds.has(contact.id)}
                   onChange={() => toggleSelectContact(contact.id)}
-                  style={{ cursor: "pointer", width: 16, height: 16 }}
+                  style={{ cursor: "pointer", width: 16, height: 16, accentColor: "var(--brand)" }}
                 />
 
                 {/* Name */}
@@ -769,7 +772,7 @@ export function ContactReconciliationPanel({ embedded = false, onAllResolved }: 
                         fontWeight: "var(--fw-medium)",
                         color: "var(--success)",
                         background: "rgba(34,160,107,0.1)",
-                        padding: "var(--sp-4) var(--sp-10)",
+                        padding: "2px 8px",
                         borderRadius: "var(--r-full)",
                         display: "inline-block",
                       }}
@@ -788,7 +791,7 @@ export function ContactReconciliationPanel({ embedded = false, onAllResolved }: 
                         fontWeight: "var(--fw-medium)",
                         color: "var(--warning)",
                         background: "rgba(224,148,34,0.1)",
-                        padding: "var(--sp-4) var(--sp-10)",
+                        padding: "2px 8px",
                         borderRadius: "var(--r-full)",
                         display: "inline-block",
                       }}
@@ -800,6 +803,26 @@ export function ContactReconciliationPanel({ embedded = false, onAllResolved }: 
 
                 {/* Actions */}
                 <div style={{ display: "flex", gap: "var(--sp-6)" }}>
+                  <button
+                    type="button"
+                    className="btn btn-icon btn-sm btn-ghost"
+                    onClick={() => openDeleteModal([contact.id])}
+                    disabled={state.busy}
+                    title="Remove from list"
+                    style={{ color: "var(--danger)" }}
+                  >
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    >
+                      <polyline points="3 6 5 6 21 6" />
+                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                    </svg>
+                  </button>
                   {!isResolved && (
                     <button
                       type="button"
@@ -821,26 +844,6 @@ export function ContactReconciliationPanel({ embedded = false, onAllResolved }: 
                       </svg>
                     </button>
                   )}
-                  <button
-                    type="button"
-                    className="btn btn-icon btn-sm btn-ghost"
-                    onClick={() => openDeleteModal([contact.id])}
-                    disabled={state.busy}
-                    title="Remove from list"
-                    style={{ color: "var(--danger)" }}
-                  >
-                    <svg
-                      width="16"
-                      height="16"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                    >
-                      <polyline points="3 6 5 6 21 6" />
-                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                    </svg>
-                  </button>
                 </div>
               </div>
             );
@@ -958,23 +961,42 @@ export function ContactReconciliationPanel({ embedded = false, onAllResolved }: 
                 ✕
               </button>
             </div>
-            <div className="modal-body" style={{ fontSize: "var(--text-sm)", color: "var(--clr-secondary)", lineHeight: "var(--lh-body)" }}>
+            <div className="modal-body" style={{ fontSize: "var(--text-sm)", color: "var(--clr-secondary)", lineHeight: "1.5" }}>
+              <div style={{
+                display: "flex",
+                gap: "var(--sp-8)",
+                alignItems: "flex-start",
+                background: "rgba(239,68,68,0.08)",
+                border: "1px solid rgba(239,68,68,0.2)",
+                borderRadius: "var(--r-md)",
+                padding: "var(--sp-12)",
+                marginBottom: "var(--sp-16)",
+              }}>
+                <span style={{ fontSize: 16, flexShrink: 0, lineHeight: 1.4 }}>⚠️</span>
+                <div>
+                  <div style={{ color: "var(--danger)", fontWeight: "var(--fw-semibold)", fontSize: "var(--text-xs)", marginBottom: 4, letterSpacing: "var(--ls-badge)", textTransform: "uppercase" }}>
+                    Permanent deletion
+                  </div>
+                  <div style={{ fontSize: "var(--text-xs)", color: "var(--clr-secondary)", lineHeight: "var(--lh-body)" }}>
+                    This action cannot be undone. All selected contacts will be permanently removed from the system.
+                  </div>
+                </div>
+              </div>
               {deleteModal.hasLinked ? (
                 <>
-                  <p style={{ marginBottom: "var(--sp-12)" }}>
+                  <p style={{ marginBottom: "var(--sp-12)", color: "var(--clr-secondary)" }}>
                     {deleteModal.contactIds.length > 1
                       ? `${deleteModal.contactIds.length} of these contacts have`
                       : "This contact has"}{" "}
-                    been linked to a client.
+                    been linked to a client. The links will also be removed.
                   </p>
-                  <p style={{ marginBottom: 0 }}>
-                    Removing {deleteModal.contactIds.length === 1 ? "it" : "them"} will only remove from this import list, not from your existing clients.
+                  <p style={{ marginBottom: 0, color: "var(--clr-secondary)" }}>
+                    Permanently delete {deleteModal.contactIds.length === 1 ? "this contact" : "these contacts"} and all associated data?
                   </p>
                 </>
               ) : (
-                <p style={{ marginBottom: 0 }}>
-                  Remove {deleteModal.contactIds.length} contact{deleteModal.contactIds.length === 1 ? "" : "s"} from the import list? This doesn't delete{" "}
-                  {deleteModal.contactIds.length === 1 ? "them" : "them"} from the system.
+                <p style={{ marginBottom: 0, color: "var(--clr-secondary)" }}>
+                  Permanently delete {deleteModal.contactIds.length} contact{deleteModal.contactIds.length === 1 ? "" : "s"} from the system? This cannot be reversed.
                 </p>
               )}
             </div>
@@ -991,7 +1013,7 @@ export function ContactReconciliationPanel({ embedded = false, onAllResolved }: 
                 className="btn btn-danger btn-sm"
                 onClick={() => handleDeleteConfirmed(deleteModal.contactIds)}
               >
-                Remove
+                Permanently Delete
               </button>
             </div>
           </div>
@@ -1154,7 +1176,7 @@ export function ContactReconciliationPanel({ embedded = false, onAllResolved }: 
                       style={{
                         display: "flex",
                         alignItems: "center",
-                        gap: "var(--sp-10)",
+                        gap: "var(--sp-8)",
                         padding: "var(--sp-8) var(--sp-12)",
                         background: "var(--clr-surface-subtle)",
                         borderRadius: "var(--r-md)",

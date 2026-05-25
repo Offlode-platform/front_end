@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { User, Lock, Shield, Bell, Plug, ChevronRight } from "lucide-react";
+import { User, Lock, Shield, Bell, Plug } from "lucide-react";
 import { useAuthStore } from "@/stores/auth-store";
 import { ProfileSection } from "./components/profile-section";
 import { PasswordSection } from "./components/password-section";
@@ -11,52 +11,16 @@ import { IntegrationsTestSection } from "./components/integrations-test-section"
 
 type Tab = "profile" | "password" | "two-factor" | "notifications" | "integrations";
 
-// All tabs share the brand accent (#357e92) to match the unified teal scheme
-// used across the rest of the app (dashboard, team, help). Hex kept so the
-// sidebar-item styles can append rgba-style opacity suffixes (`${color}40`).
-const TAB_ACCENT = "#357e92";
 const TABS: {
   key: Tab;
   label: string;
-  description: string;
-  icon: React.ComponentType<{ size?: number }>;
-  color: string;
+  icon: React.ComponentType<{ size?: number; style?: React.CSSProperties }>;
 }[] = [
-  {
-    key: "profile",
-    label: "Profile",
-    description: "Name & organization",
-    icon: User,
-    color: TAB_ACCENT,
-  },
-  {
-    key: "password",
-    label: "Password",
-    description: "Change sign-in password",
-    icon: Lock,
-    color: TAB_ACCENT,
-  },
-  {
-    key: "two-factor",
-    label: "Two-Factor Auth",
-    description: "Extra sign-in security",
-    icon: Shield,
-    color: TAB_ACCENT,
-  },
-  {
-    key: "notifications",
-    label: "Notifications",
-    description: "Email preferences",
-    icon: Bell,
-    color: TAB_ACCENT,
-  },
-  {
-    key: "integrations",
-    label: "Integrations",
-    description: "Test messaging services",
-    icon: Plug,
-    color: TAB_ACCENT,
-  },
+  { key: "profile", label: "Profile", icon: User },
+  { key: "password", label: "Password", icon: Lock },
+  { key: "two-factor", label: "Two-Factor Auth", icon: Shield },
+  { key: "notifications", label: "Notifications", icon: Bell },
+  { key: "integrations", label: "Integrations", icon: Plug },
 ];
 
 export function SettingsPageView() {
@@ -70,8 +34,6 @@ export function SettingsPageView() {
       void loadCurrentUser();
     }
   }, [accessToken, currentUser, loadCurrentUser]);
-
-  const activeTab = TABS.find((t) => t.key === tab);
 
   return (
     <div
@@ -87,50 +49,46 @@ export function SettingsPageView() {
       {/* Page bar */}
       <div className="page-bar" style={{ flexShrink: 0 }}>
         <div className="page-bar-left">
-          <div>
-            <div className="pg-title">Settings</div>
-            <div className="pg-subtitle">
-              Manage your profile, password, and security preferences.
-            </div>
-          </div>
+          <div className="pg-title">Settings</div>
         </div>
         <div className="page-bar-right" />
       </div>
 
-      {/* Content area — using plain div instead of dash-content to control padding */}
+      {/* Content area */}
       <div
         style={{
           flex: 1,
           overflowY: "auto",
-          padding: "24px 28px 40px",
+          padding: "28px 32px 48px",
           minHeight: 0,
-          background:
-            "radial-gradient(1200px 500px at 50% -100px, rgba(53,126,146,0.06), transparent 70%)",
+          background: "var(--canvas-bg)",
         }}
       >
         <div
           style={{
-            maxWidth: 1100,
+            maxWidth: 1020,
             margin: "0 auto",
             display: "grid",
-            gridTemplateColumns: "260px 1fr",
-            gap: 24,
+            gridTemplateColumns: "196px 1fr",
+            gap: 20,
             alignItems: "flex-start",
           }}
         >
-          {/* ===== Left sidebar nav ===== */}
-          <aside
-            style={{
-              position: "sticky",
-              top: 12,
-              padding: 8,
-              borderRadius: 14,
-              background: "var(--clr-surface-card)",
-              border: "1px solid var(--clr-divider)",
-              boxShadow: "var(--shadow-rest)",
-            }}
-          >
-            <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+          {/* ===== Left nav ===== */}
+          <aside style={{ position: "sticky", top: 0 }}>
+            <div
+              style={{
+                fontSize: 11,
+                fontWeight: 600,
+                letterSpacing: "0.055em",
+                textTransform: "uppercase",
+                color: "var(--clr-muted)",
+                padding: "0 8px 10px 14px",
+              }}
+            >
+              Account
+            </div>
+            <nav style={{ display: "flex", flexDirection: "column", gap: 1 }}>
               {TABS.map((t) => {
                 const Icon = t.icon;
                 const active = tab === t.key;
@@ -142,22 +100,23 @@ export function SettingsPageView() {
                     style={{
                       display: "flex",
                       alignItems: "center",
-                      gap: 12,
-                      padding: "11px 12px",
-                      borderRadius: 10,
-                      border: active
-                        ? `1px solid ${t.color}40`
-                        : "1px solid transparent",
-                      // Stronger tint so the active state reads well in dark mode
+                      gap: 9,
+                      padding: "7px 10px 7px 14px",
+                      borderRadius: 8,
+                      border: "none",
+                      position: "relative",
                       background: active
-                        ? `linear-gradient(135deg, ${t.color}26, ${t.color}12)`
+                        ? "rgba(53,126,146,0.08)"
                         : "transparent",
-                      color: "var(--clr-primary)",
+                      color: active
+                        ? "var(--clr-primary)"
+                        : "var(--clr-secondary)",
                       fontSize: 14,
+                      fontWeight: active ? 500 : 400,
                       textAlign: "left",
                       cursor: "pointer",
-                      transition: "background 0.15s, border-color 0.15s",
                       width: "100%",
+                      transition: "background 0.12s, color 0.12s",
                     }}
                     onMouseEnter={(e) => {
                       if (!active) {
@@ -172,66 +131,42 @@ export function SettingsPageView() {
                       }
                     }}
                   >
-                    <div
-                      style={{
-                        width: 32,
-                        height: 32,
-                        borderRadius: 9,
-                        background: active
-                          ? `linear-gradient(135deg, ${t.color}, ${t.color}cc)`
-                          : `${t.color}1f`,
-                        color: active ? "#fff" : t.color,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        flexShrink: 0,
-                        transition: "all 0.15s",
-                        boxShadow: active ? `0 2px 6px ${t.color}50` : "none",
-                      }}
-                    >
-                      <Icon size={15} />
-                    </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div
-                        style={{
-                          fontWeight: active ? 600 : 500,
-                          fontSize: 13.5,
-                          color: "var(--clr-primary)",
-                        }}
-                      >
-                        {t.label}
-                      </div>
-                      <div
-                        style={{
-                          fontSize: 11.5,
-                          color: "var(--clr-muted)",
-                          marginTop: 1,
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                          whiteSpace: "nowrap",
-                        }}
-                      >
-                        {t.description}
-                      </div>
-                    </div>
+                    {/* Active indicator bar */}
                     {active && (
-                      <ChevronRight
-                        size={14}
-                        color={t.color}
-                        style={{ flexShrink: 0, opacity: 0.6 }}
+                      <span
+                        style={{
+                          position: "absolute",
+                          left: 0,
+                          top: "50%",
+                          transform: "translateY(-50%)",
+                          width: 3,
+                          height: 16,
+                          background: "var(--brand)",
+                          borderRadius: "0 2px 2px 0",
+                        }}
                       />
                     )}
+                    <Icon
+                      size={15}
+                      style={{
+                        flexShrink: 0,
+                        opacity: active ? 0.85 : 0.45,
+                        color: active ? "var(--brand)" : "inherit",
+                        transition: "opacity 0.12s, color 0.12s",
+                      }}
+                    />
+                    {t.label}
                   </button>
                 );
               })}
-            </div>
+            </nav>
           </aside>
 
           {/* ===== Right content card ===== */}
           <div
             style={{
-              padding: "28px 32px 32px",
-              borderRadius: 14,
+              padding: "24px 28px 28px",
+              borderRadius: 12,
               background: "var(--clr-surface-card)",
               border: "1px solid var(--clr-divider)",
               boxShadow: "var(--shadow-rest)",
@@ -252,21 +187,6 @@ export function SettingsPageView() {
             )}
           </div>
         </div>
-
-        {/* Subtle footer */}
-        {activeTab && currentUser && (
-          <div
-            style={{
-              maxWidth: 1100,
-              margin: "24px auto 0",
-              textAlign: "center",
-              fontSize: 12,
-              color: "var(--clr-muted)",
-            }}
-          >
-            Changes are saved to your {currentUser.organization_name || "workspace"} profile.
-          </div>
-        )}
       </div>
     </div>
   );
@@ -274,20 +194,15 @@ export function SettingsPageView() {
 
 function LoadingState() {
   return (
-    <div
-      style={{
-        padding: "80px 24px",
-        textAlign: "center",
-      }}
-    >
+    <div style={{ padding: "72px 24px", textAlign: "center" }}>
       <div
         style={{
-          width: 36,
-          height: 36,
-          border: "3px solid var(--clr-divider)",
+          width: 26,
+          height: 26,
+          border: "2px solid var(--clr-divider)",
           borderTopColor: "var(--brand)",
           borderRadius: "50%",
-          margin: "0 auto 16px",
+          margin: "0 auto 14px",
           animation: "settings-spin 0.7s linear infinite",
         }}
       />

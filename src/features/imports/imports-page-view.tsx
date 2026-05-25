@@ -327,7 +327,7 @@ export function ImportsPageView() {
               </>
             )}
             {step === "done" && session && (
-              <div className="ws-card" style={{ padding: "var(--sp-40)", textAlign: "center" }}>
+              <div className="ws-card" style={{ padding: "var(--sp-48)", textAlign: "center" }}>
                 <div style={{
                   width: 56,
                   height: 56,

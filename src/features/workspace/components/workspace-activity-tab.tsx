@@ -66,8 +66,9 @@ function normalizeChaseHistory(data: ChaseHistoryResponse): {
     })),
     stats: {
       total: data.total_chases,
-      deliveryRate: data.delivery_rate,
-      clickRate: data.click_rate,
+      // API returns delivery_rate as a percentage (0-100); normalise to ratio
+      deliveryRate: data.delivery_rate > 1 ? data.delivery_rate / 100 : data.delivery_rate,
+      clickRate: data.click_rate > 1 ? data.click_rate / 100 : data.click_rate,
       lastChaseAt: data.last_chase_at,
     },
   };
@@ -241,14 +242,12 @@ export function WorkspaceActivityTab({ client }: Props) {
                     key={tx.id}
                     style={{
                       display: "flex",
-                      gap: "var(--sp-10)",
-                      padding: "var(--sp-10) var(--sp-12)",
+                      gap: "var(--sp-12)",
+                      padding: "var(--sp-12) var(--sp-14)",
                       background: "var(--clr-surface-card)",
                       borderRadius: "var(--r-md)",
-                      borderLeft: `3px solid ${color}`,
                       border: `1px solid var(--clr-divider)`,
-                      borderLeftWidth: 3,
-                      borderLeftColor: color,
+                      borderLeft: `3px solid ${color}`,
                       fontSize: "var(--text-sm)",
                     }}
                   >
@@ -290,14 +289,14 @@ export function WorkspaceActivityTab({ client }: Props) {
 
         {/* Summary bar */}
         {stats && (
-          <div style={{ display: "flex", gap: "var(--sp-16)", marginBottom: "var(--sp-16)", fontSize: "var(--text-sm)", color: "var(--clr-muted)" }}>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "var(--sp-4) var(--sp-16)", marginBottom: "var(--sp-16)", padding: "var(--sp-10) var(--sp-14)", background: "var(--clr-surface-card)", borderRadius: "var(--r-md)", border: "1px solid var(--clr-divider)", fontSize: "var(--text-sm)", color: "var(--clr-muted)" }}>
             <span>Total: <strong style={{ color: "var(--clr-primary)" }}>{stats.total}</strong></span>
-            <span>Delivery: <strong style={{ color: "var(--clr-primary)" }}>{(stats.deliveryRate * 100).toFixed(0)}%</strong></span>
+            <span>Delivered: <strong style={{ color: stats.deliveryRate >= 0.8 ? "var(--success)" : stats.deliveryRate >= 0.5 ? "var(--warning)" : "var(--danger)" }}>{Math.min(100, Math.round(stats.deliveryRate * 100))}%</strong></span>
             {stats.clickRate > 0 && (
-              <span>Clicks: <strong style={{ color: "var(--clr-primary)" }}>{(stats.clickRate * 100).toFixed(0)}%</strong></span>
+              <span>Clicked: <strong style={{ color: "var(--brand)" }}>{Math.min(100, Math.round(stats.clickRate * 100))}%</strong></span>
             )}
             {stats.lastChaseAt && (
-              <span>Last: <strong style={{ color: "var(--clr-primary)" }}>
+              <span>Last chase: <strong style={{ color: "var(--clr-primary)" }}>
                 {new Date(stats.lastChaseAt).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
               </strong></span>
             )}
@@ -319,17 +318,16 @@ export function WorkspaceActivityTab({ client }: Props) {
         </div>
 
         {/* Chase list */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "var(--sp-4)" }}>
-          {filtered.map((chase) => (
+        <div style={{ display: "flex", flexDirection: "column", gap: "var(--sp-2)", background: "var(--clr-surface-card)", borderRadius: "var(--r-md)", border: "1px solid var(--clr-divider)", overflow: "hidden" }}>
+          {filtered.map((chase, idx) => (
             <div
               key={chase.id}
               style={{
                 display: "flex",
                 alignItems: "flex-start",
                 gap: "var(--sp-12)",
-                padding: "var(--sp-10) var(--sp-12)",
-                background: "var(--canvas-bg)",
-                borderRadius: "var(--r-md)",
+                padding: "var(--sp-12) var(--sp-14)",
+                borderTop: idx > 0 ? "1px solid var(--clr-divider)" : "none",
               }}
             >
               <div style={{

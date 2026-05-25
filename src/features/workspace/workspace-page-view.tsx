@@ -22,6 +22,7 @@ export function WorkspacePageView() {
   const [showVipOnly, setShowVipOnly] = useState(false);
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<WorkspaceTab>("items");
+  const [vipToggling, setVipToggling] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -66,6 +67,19 @@ export function WorkspacePageView() {
     setClients((prev) =>
       prev.map((c) => (c.id === updated.id ? { ...c, ...updated } : c)),
     );
+  }
+
+  async function handleVipToggle() {
+    if (!selectedClient || vipToggling) return;
+    setVipToggling(true);
+    try {
+      const updated = await clientsApi.update(selectedClient.id, { is_vip: !selectedClient.is_vip });
+      handleClientUpdated({ ...selectedClient, ...updated });
+    } catch {
+      /* silent */
+    } finally {
+      setVipToggling(false);
+    }
   }
 
   return (
@@ -120,6 +134,8 @@ export function WorkspacePageView() {
                 }}
                 hasPrev={hasPrev}
                 hasNext={hasNext}
+                onVipToggle={handleVipToggle}
+                vipToggling={vipToggling}
               />
 
               <div style={{ flex: 1, overflow: "auto", minHeight: 0 }}>

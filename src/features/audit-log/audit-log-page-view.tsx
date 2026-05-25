@@ -15,19 +15,19 @@ type SeverityVisual = { bg: string; color: string; dot: string; label: string };
 
 const SEVERITY_STYLES: Record<string, SeverityVisual> = {
   info: {
-    bg: "rgba(96,165,250,0.12)",
-    color: "#60A5FA",
-    dot: "#60A5FA",
+    bg: "rgba(59,130,246,0.10)",
+    color: "var(--info)",
+    dot: "var(--info)",
     label: "Info",
   },
   warning: {
-    bg: "rgba(224,148,34,0.12)",
+    bg: "rgba(224,148,34,0.11)",
     color: "var(--warning)",
     dot: "var(--warning)",
     label: "Warning",
   },
   critical: {
-    bg: "rgba(239,68,68,0.14)",
+    bg: "rgba(239,68,68,0.11)",
     color: "var(--danger)",
     dot: "var(--danger)",
     label: "Critical",
@@ -194,8 +194,8 @@ export function AuditLogPageView() {
               display: "grid",
               gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
               gap: "var(--sp-12)",
-              padding: "var(--sp-20) var(--sp-24)",
-              borderBottom: "1px solid var(--clr-divider)",
+              padding: "var(--sp-16) var(--sp-20)",
+              borderBottom: "1px solid var(--clr-divider-strong)",
             }}
           >
             <FilterStat
@@ -207,7 +207,7 @@ export function AuditLogPageView() {
             <FilterStat
               label="Info"
               value={stats.info}
-              color="#60A5FA"
+              color="var(--info)"
               active={severity === "info"}
               onClick={() => setSeverity("info")}
             />
@@ -233,8 +233,8 @@ export function AuditLogPageView() {
               display: "grid",
               gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr)",
               gap: "var(--sp-12)",
-              padding: "var(--sp-16) var(--sp-24)",
-              borderBottom: "1px solid var(--clr-divider)",
+              padding: "var(--sp-12) var(--sp-20) var(--sp-16)",
+              borderBottom: "1px solid var(--clr-divider-strong)",
             }}
           >
             <SearchInput
@@ -274,10 +274,10 @@ export function AuditLogPageView() {
           {!loading && hasMore && logs.length > 0 && (
             <div
               style={{
-                padding: "var(--sp-16)",
+                padding: "var(--sp-14) var(--sp-24)",
                 textAlign: "center",
                 borderTop: "1px solid var(--clr-divider)",
-                background: "var(--clr-surface-subtle)",
+                background: "rgba(0,0,0,0.015)",
               }}
             >
               <button
@@ -303,15 +303,16 @@ export function AuditLogPageView() {
 const cardShell: CSSProperties = {
   background: "var(--clr-surface-card)",
   borderRadius: "var(--r-lg)",
-  border: "1px solid var(--clr-divider)",
+  border: "1px solid var(--clr-divider-strong)",
   overflow: "hidden",
+  boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.03)",
 };
 
 const rowBase: CSSProperties = {
   display: "grid",
   gridTemplateColumns: GRID_COLS,
   gap: "var(--sp-12)",
-  padding: "var(--sp-14) var(--sp-20)",
+  padding: "var(--sp-16) var(--sp-20)",
   borderBottom: "1px solid var(--clr-divider)",
   fontSize: "var(--text-sm)",
   alignItems: "center",
@@ -324,13 +325,13 @@ function TableHeader() {
         display: "grid",
         gridTemplateColumns: GRID_COLS,
         gap: "var(--sp-12)",
-        padding: "var(--sp-12) var(--sp-20)",
-        background: "var(--clr-surface-subtle)",
-        borderBottom: "1px solid var(--clr-divider)",
-        fontSize: "var(--text-xs)",
+        padding: "10px var(--sp-20)",
+        background: "rgba(0,0,0,0.03)",
+        borderBottom: "1px solid var(--clr-divider-strong)",
+        fontSize: "11px",
         fontWeight: "var(--fw-semibold)",
         textTransform: "uppercase",
-        letterSpacing: "0.06em",
+        letterSpacing: "0.07em",
         color: "var(--clr-muted)",
       }}
     >
@@ -369,19 +370,20 @@ function FilterStat({
         flexDirection: "column",
         alignItems: "flex-start",
         justifyContent: "center",
-        gap: "var(--sp-4)",
+        gap: "var(--sp-6)",
         padding: "var(--sp-12) var(--sp-16)",
         background: active
           ? "var(--clr-surface-subtle)"
           : hover
-          ? "var(--clr-surface-subtle)"
+          ? "var(--clr-surface-hover)"
           : "transparent",
-        border: `1px solid ${active ? "var(--brand)" : "var(--clr-divider)"}`,
+        border: `1px solid ${active ? "var(--brand)" : hover ? "rgba(0,0,0,0.18)" : "rgba(0,0,0,0.11)"}`,
         borderRadius: "var(--r-md)",
         cursor: "pointer",
         textAlign: "left",
-        transition: "border-color 0.15s, background-color 0.15s",
+        transition: "border-color 0.15s, background-color 0.15s, box-shadow 0.15s",
         fontFamily: "inherit",
+        boxShadow: active ? "0 0 0 3px rgba(53,126,146,0.12)" : "none",
       }}
     >
       <span
@@ -398,10 +400,12 @@ function FilterStat({
       <span
         style={{
           fontSize: "var(--text-stat)",
-          fontWeight: "var(--fw-semibold)",
+          fontWeight: "var(--fw-bold)",
           color: color ?? "var(--clr-primary)",
           lineHeight: 1,
           fontVariantNumeric: "tabular-nums",
+          fontFamily: "var(--font-display)",
+          letterSpacing: "var(--ls-snug)",
         }}
       >
         {value}
@@ -617,7 +621,7 @@ function LogRow({ log }: { log: AuditLogResponse }) {
       {/* Module */}
       <span
         style={{
-          color: "var(--clr-faint)",
+          color: log.module ? "var(--clr-secondary)" : "var(--clr-faint)",
           fontSize: "var(--text-xs)",
           overflow: "hidden",
           textOverflow: "ellipsis",

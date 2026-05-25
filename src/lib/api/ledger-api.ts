@@ -126,6 +126,15 @@ export const ledgerApi = {
     );
   },
 
+  autoLinkContacts(minScore: number = 0.9) {
+    return readData<BulkReconciliationResult>(
+      authenticatedApi.post(
+        withQuery(apiPaths.ledger.contactAutoLink, { min_score: minScore }),
+        {},
+      ),
+    );
+  },
+
   bulkLinkContacts(body: BulkLinkRequest) {
     return readData<BulkReconciliationResult>(
       authenticatedApi.post(apiPaths.ledger.contactBulkLink, body),
@@ -136,5 +145,15 @@ export const ledgerApi = {
     return readData<PaymentLinkResult>(
       authenticatedApi.post(apiPaths.ledger.paymentLinkInvoice(paymentId), body),
     );
+  },
+
+  bulkDeleteContacts(contactIds: string[]) {
+    return authenticatedApi.post(apiPaths.ledger.contactBulkDelete, {
+      contact_ids: contactIds,
+    });
+  },
+
+  deleteContact(contactId: string) {
+    return authenticatedApi.delete(apiPaths.ledger.contactDelete(contactId));
   },
 };
