@@ -295,8 +295,8 @@ export function WorkspaceItemsTab({ client }: Props) {
                               <div style={{ display: "flex", alignItems: "center", gap: 2, flexShrink: 0, marginLeft: "var(--sp-8)" }}>
                                 {(["email", "sms", "whatsapp"] as const).map((channel) => {
                                   const isSending = itemSending?.txId === txn.id && itemSending?.channel === channel;
-                                  const resultColor = itemSendResult?.txId === txn.id && itemSendResult.channel === channel
-                                    ? (itemSendResult.ok ? { email: "var(--info)", sms: "var(--brand)", whatsapp: "var(--success)" }[channel] : "var(--danger)")
+                                  const resultColor = itemSendResult?.txId === txn.id && itemSendResult?.channel === channel
+                                    ? (itemSendResult?.ok ? { email: "var(--info)", sms: "var(--brand)", whatsapp: "var(--success)" }[channel] : "var(--danger)")
                                     : undefined;
                                   const colors = { email: "var(--info)", sms: "var(--brand)", whatsapp: "var(--success)" };
                                   const icons = { email: <IconEmail />, sms: <IconSms />, whatsapp: <IconWhatsApp /> };
@@ -304,7 +304,7 @@ export function WorkspaceItemsTab({ client }: Props) {
                                     <button
                                       key={channel}
                                       type="button"
-                                      onClick={(e) => { e.stopPropagation(); handleSendChase(channel, txn.id); }}
+                                      onClick={(e) => { e.stopPropagation(); handleSendChase(channel, txn.id!); }}
                                       disabled={itemSending !== null}
                                       title={`Send ${CHANNEL_LABEL[channel]} chase for this item`}
                                       style={{
