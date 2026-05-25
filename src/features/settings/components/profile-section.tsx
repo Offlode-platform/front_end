@@ -37,20 +37,17 @@ export function ProfileSection({ user }: { user: CurrentUser }) {
         description="Your name is shown to teammates on chases, activity, and audit logs."
       />
 
-      {/* Hero profile card with gradient — tinted overlays work on both light and dark themes */}
+      {/* Profile identity row */}
       <div
         style={{
-          position: "relative",
-          padding: 20,
-          borderRadius: 16,
-          background:
-            "linear-gradient(135deg, rgba(53,126,146,0.08) 0%, rgba(98,190,208,0.05) 100%)",
-          border: "1px solid rgba(53,126,146,0.2)",
+          padding: "16px 18px",
+          borderRadius: 10,
+          background: "var(--clr-surface-subtle)",
+          border: "1px solid var(--clr-divider-strong)",
           marginBottom: 24,
           display: "flex",
           alignItems: "center",
-          gap: 16,
-          overflow: "hidden",
+          gap: 14,
         }}
       >
         <Avatar name={user.name} />
@@ -205,11 +202,11 @@ export function SectionHeader({
     <div style={{ marginBottom: 24 }}>
       <div
         style={{
-          fontSize: 22,
-          fontWeight: 700,
+          fontSize: 17,
+          fontWeight: 600,
           color: "var(--clr-primary)",
-          marginBottom: description ? 6 : 0,
-          letterSpacing: "-0.015em",
+          marginBottom: description ? 5 : 0,
+          letterSpacing: "-0.01em",
         }}
       >
         {title}
@@ -506,19 +503,18 @@ function Avatar({ name }: { name: string }) {
   return (
     <div
       style={{
-        width: 64,
-        height: 64,
+        width: 52,
+        height: 52,
         borderRadius: "50%",
-        background: "linear-gradient(135deg, var(--brand), var(--brand-electric))",
+        background: "var(--brand)",
         color: "#fff",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        fontSize: 22,
-        fontWeight: 700,
-        letterSpacing: 0.5,
+        fontSize: 18,
+        fontWeight: 600,
+        letterSpacing: 0.3,
         flexShrink: 0,
-        boxShadow: "0 4px 14px rgba(53,126,146,0.45)",
       }}
     >
       {initials}

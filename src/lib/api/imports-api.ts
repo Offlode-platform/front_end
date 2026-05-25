@@ -66,6 +66,15 @@ export const importsApi = {
     );
   },
 
+  setExcludedRows(sessionId: string, excludedRows: number[]) {
+    return readData<ImportSessionResponse>(
+      authenticatedApi.post(
+        `${apiPaths.imports.base}/${encodeURIComponent(sessionId)}/excluded-rows`,
+        { excluded_rows: excludedRows },
+      ),
+    );
+  },
+
   confirm(sessionId: string) {
     return readData<ImportSessionResponse>(
       authenticatedApi.post(

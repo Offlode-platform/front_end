@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, ChevronUp, ChevronDown } from "lucide-react";
+import { ArrowLeft, ChevronUp, ChevronDown, Star } from "lucide-react";
 import type { ListedClient } from "@/types/clients";
 
 export type WorkspaceTab = "overview" | "contact" | "items" | "activity" | "settings";
@@ -14,6 +14,8 @@ type Props = {
   onNext: () => void;
   hasPrev: boolean;
   hasNext: boolean;
+  onVipToggle?: () => void;
+  vipToggling?: boolean;
 };
 
 const TABS: { key: WorkspaceTab; label: string }[] = [
@@ -47,6 +49,8 @@ export function WorkspaceFocusHeader({
   onNext,
   hasPrev,
   hasNext,
+  onVipToggle,
+  vipToggling,
 }: Props) {
   return (
     <div className="ws-focus-header ws-fade">
@@ -68,6 +72,30 @@ export function WorkspaceFocusHeader({
           </div>
         </div>
         <div className="ws-header-right">
+          {onVipToggle && (
+            <button
+              type="button"
+              onClick={onVipToggle}
+              disabled={vipToggling}
+              title={isVip(client) ? "Remove VIP status" : "Mark as VIP"}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                width: 30,
+                height: 30,
+                borderRadius: "var(--r-sm)",
+                border: "none",
+                background: isVip(client) ? "rgba(184,134,11,0.1)" : "transparent",
+                color: isVip(client) ? "var(--vip)" : "var(--clr-tertiary)",
+                cursor: vipToggling ? "not-allowed" : "pointer",
+                opacity: vipToggling ? 0.5 : 1,
+                transition: "all var(--dur)",
+              }}
+            >
+              <Star size={15} fill={isVip(client) ? "currentColor" : "none"} />
+            </button>
+          )}
           <div className="ws-client-nav">
             <button
               type="button"

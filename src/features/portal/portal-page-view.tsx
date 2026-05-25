@@ -25,6 +25,8 @@ export function PortalPageView() {
   const [missing, setMissing] = useState<TransactionListResponse | null>(null);
   const [uploading, setUploading] = useState<UploadingState>({});
   const [expandedSupplier, setExpandedSupplier] = useState<string | null>(null);
+  const [confirmTxId, setConfirmTxId] = useState<string | null>(null);
+  const [confirming, setConfirming] = useState(false);
   const fileInputs = useRef<Record<string, HTMLInputElement | null>>({});
 
   // Resolve the token on mount
@@ -124,17 +126,21 @@ export function PortalPageView() {
     }
   }
 
-  async function handleCantProvide(transactionId: string) {
-    if (!session || !token) return;
-    const confirmed = window.confirm(
-      "Mark this document as 'cannot provide'? Your accountant will be notified.",
-    );
-    if (!confirmed) return;
+  function handleCantProvide(transactionId: string) {
+    setConfirmTxId(transactionId);
+  }
+
+  async function confirmCantProvide() {
+    if (!session || !token || !confirmTxId) return;
+    setConfirming(true);
     try {
-      await portalApi.cantProvide(session.client_id, transactionId, token);
+      await portalApi.cantProvide(session.client_id, confirmTxId, token);
+      setConfirmTxId(null);
       await refreshMissing();
     } catch {
-      alert("Failed to update. Please try again.");
+      setConfirmTxId(null);
+    } finally {
+      setConfirming(false);
     }
   }
 
@@ -179,6 +185,97 @@ export function PortalPageView() {
 
   return (
     <PortalShell>
+      {/* Custom "Can't provide" confirmation dialog */}
+      {confirmTxId && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0,0,0,0.4)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 9999,
+            padding: "0 16px",
+          }}
+          onClick={() => { if (!confirming) setConfirmTxId(null); }}
+        >
+          <div
+            style={{
+              background: "#fff",
+              borderRadius: 14,
+              padding: "28px 28px 24px",
+              maxWidth: 400,
+              width: "100%",
+              boxShadow: "0 20px 60px rgba(0,0,0,0.18)",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ marginBottom: 8 }}>
+              <div style={{
+                width: 44,
+                height: 44,
+                borderRadius: "50%",
+                background: "#fef3c7",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                marginBottom: 16,
+              }}>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                  <line x1="12" y1="9" x2="12" y2="13" />
+                  <line x1="12" y1="17" x2="12.01" y2="17" />
+                </svg>
+              </div>
+              <div style={{ fontSize: 17, fontWeight: 600, color: "#111827", marginBottom: 8 }}>
+                Can&apos;t provide this document?
+              </div>
+              <div style={{ fontSize: 14, color: "#6b7280", lineHeight: 1.5 }}>
+                Your accountant will be notified that you&apos;re unable to provide this document. You can still upload it later if you find it.
+              </div>
+            </div>
+            <div style={{ display: "flex", gap: 10, marginTop: 24, justifyContent: "flex-end" }}>
+              <button
+                type="button"
+                disabled={confirming}
+                onClick={() => setConfirmTxId(null)}
+                style={{
+                  background: "none",
+                  border: "1px solid #e5e7eb",
+                  borderRadius: 8,
+                  padding: "9px 18px",
+                  fontSize: 14,
+                  fontWeight: 500,
+                  color: "#374151",
+                  cursor: "pointer",
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={confirming}
+                onClick={confirmCantProvide}
+                style={{
+                  background: "#d97706",
+                  border: "none",
+                  borderRadius: 8,
+                  padding: "9px 18px",
+                  fontSize: 14,
+                  fontWeight: 500,
+                  color: "#fff",
+                  cursor: confirming ? "not-allowed" : "pointer",
+                  opacity: confirming ? 0.7 : 1,
+                }}
+              >
+                {confirming ? "Confirming…" : "Yes, can't provide"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div
         style={{

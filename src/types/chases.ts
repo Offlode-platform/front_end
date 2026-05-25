@@ -44,6 +44,7 @@ export type ChaseHistoryResponse = {
 export type ChaseManualSendRequest = {
   client_id: string;
   chase_type: "email" | "sms" | "whatsapp";
+  transaction_id?: string | null;
   custom_message?: string | null;
 };
 

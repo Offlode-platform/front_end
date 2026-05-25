@@ -68,7 +68,7 @@ export function ImportConfirmStep({ session, preview, onComplete, onBack }: Prop
         background: "var(--clr-surface-card)",
         borderRadius: "var(--r-lg)",
         border: "1px solid var(--clr-divider)",
-        padding: "var(--sp-40)",
+        padding: "var(--sp-48)",
         textAlign: "center",
       }}>
         <div style={{
@@ -110,7 +110,10 @@ export function ImportConfirmStep({ session, preview, onComplete, onBack }: Prop
           <InfoRow label="Total Rows" value={String(preview.total_rows)} />
           <InfoRow label="Valid" value={String(preview.valid_rows)} valueColor="var(--success)" />
           {preview.error_rows > 0 && (
-            <InfoRow label="Will be skipped" value={String(preview.error_rows)} valueColor="var(--danger)" />
+            <InfoRow label="Errors (will be skipped)" value={String(preview.error_rows)} valueColor="var(--danger)" />
+          )}
+          {preview.excluded_rows && preview.excluded_rows.length > 0 && (
+            <InfoRow label="Manually excluded" value={String(preview.excluded_rows.length)} valueColor="var(--clr-muted)" />
           )}
         </div>
       </div>

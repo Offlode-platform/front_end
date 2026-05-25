@@ -143,7 +143,7 @@ export function XeroSyncPanel({ onComplete }: Props) {
 
   if (!status?.connected) {
     return (
-      <div className="ws-card " style={{ padding: "var(--sp-40) var(--sp-0)", textAlign: "center" }}>
+      <div className="ws-card" style={{ padding: "var(--sp-48) 0", textAlign: "center" }}>
         {/* Xero logo placeholder — keeps the visual weight without depending on assets */}
         <div style={{
           width: 56,
@@ -182,7 +182,7 @@ export function XeroSyncPanel({ onComplete }: Props) {
           </div>
         )}
         {error && (
-          <div style={{ marginTop: "var(--sp-16)", padding: "var(--sp-10) var(--sp-12)", background: "rgba(239,68,68,0.08)", borderRadius: "var(--r-md)", color: "var(--danger)", fontSize: "var(--text-xs)" }}>
+          <div style={{ marginTop: "var(--sp-16)", padding: "var(--sp-8) var(--sp-12)", background: "rgba(239,68,68,0.08)", borderRadius: "var(--r-md)", color: "var(--danger)", fontSize: "var(--text-xs)" }}>
             {error}
           </div>
         )}

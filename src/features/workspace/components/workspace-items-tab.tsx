@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { transactionsApi } from "@/lib/api/transactions-api";
 import { dashboardApi } from "@/lib/api/dashboard-api";
 import { chasesApi } from "@/lib/api/chases-api";
@@ -21,7 +21,7 @@ type Props = {
 
 type MissingData = {
   total: number;
-  grouped: [string, { date: string; amount: number | string; description: string }[]][];
+  grouped: [string, { id?: string; date: string; amount: number | string; description: string }[]][];
 };
 
 type ViewMode = "missing" | "all" | "imported" | "documents" | "queried";
@@ -40,8 +40,8 @@ function normalizeTransactionData(d: TransactionListResponse): MissingData {
   const grouped = Object.entries(d.grouped_by_supplier).map(
     ([supplier, txns]) => [
       supplier,
-      txns.map((t) => ({ date: t.date, amount: t.amount, description: t.description || t.supplier_name || "Transaction" })),
-    ] as [string, { date: string; amount: number | string; description: string }[]],
+      txns.map((t) => ({ id: t.id, date: t.date, amount: t.amount, description: t.description || t.supplier_name || "Transaction" })),
+    ] as [string, { id: string; date: string; amount: number | string; description: string }[]],
   );
   return { total: d.total_missing, grouped };
 }
@@ -93,9 +93,10 @@ export function WorkspaceItemsTab({ client }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [expandedSupplier, setExpandedSupplier] = useState<string | null>(null);
   const [view, setView] = useState<ViewMode>("missing");
-  const [sendingType, setSendingType] = useState<"email" | "sms" | "whatsapp" | null>(null);
-  const [sendResult, setSendResult] = useState<{ channel: string; ok: boolean; msg: string } | null>(null);
+  const [itemSending, setItemSending] = useState<{ txId: string; channel: string } | null>(null);
+  const [itemSendResult, setItemSendResult] = useState<{ txId: string; channel: string; ok: boolean } | null>(null);
   const [resolvingId, setResolvingId] = useState<string | null>(null);
+  const [viewingDoc, setViewingDoc] = useState<Document | null>(null);
 
   // Transactions the client has responded to — these are hidden from the
   // default missing view (per backend chase filters) so we surface them in
@@ -174,17 +175,33 @@ export function WorkspaceItemsTab({ client }: Props) {
     }
   }
 
-  async function handleSendChase(channel: "email" | "sms" | "whatsapp") {
-    setSendingType(channel);
-    setSendResult(null);
+  const handleDownloadDoc = useCallback(async (doc: Document) => {
     try {
-      await chasesApi.send(client.id, { client_id: client.id, chase_type: channel });
-      setSendResult({ channel, ok: true, msg: `${CHANNEL_LABEL[channel]} chase sent.` });
+      const { blob, filename } = await documentsApi.fetchBlob(doc.id);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename || doc.original_filename || doc.filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
     } catch {
-      setSendResult({ channel, ok: false, msg: `${CHANNEL_LABEL[channel]} failed.` });
+      /* silent — user can retry */
+    }
+  }, []);
+
+  async function handleSendChase(channel: "email" | "sms" | "whatsapp", transactionId: string) {
+    setItemSending({ txId: transactionId, channel });
+    setItemSendResult(null);
+    try {
+      await chasesApi.send(client.id, { client_id: client.id, chase_type: channel, transaction_id: transactionId });
+      setItemSendResult({ txId: transactionId, channel, ok: true });
+    } catch {
+      setItemSendResult({ txId: transactionId, channel, ok: false });
     } finally {
-      setSendingType(null);
-      setTimeout(() => setSendResult(null), 3500);
+      setItemSending(null);
+      setTimeout(() => setItemSendResult(null), 3500);
     }
   }
 
@@ -207,88 +224,36 @@ export function WorkspaceItemsTab({ client }: Props) {
   return (
     <div className="ws-panel active">
       <div style={{ padding: "var(--sp-16)" }}>
-        {/* Header: title + send chase + view toggle */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "var(--sp-12)" }}>
-          <div className="ws-issue-filters">
-            <button type="button" className={`ws-issue-filter${view === "missing" ? " active" : ""}`} onClick={() => setView("missing")}>
-              Missing{missingData && missingData.total > 0 ? ` (${missingData.total})` : ""}
+        {/* View filter pills */}
+        <div className="ws-issue-filters">
+          <button type="button" className={`ws-issue-filter${view === "missing" ? " active" : ""}`} onClick={() => setView("missing")}>
+            Missing{missingData && missingData.total > 0 ? ` (${missingData.total})` : ""}
+          </button>
+          {allTransactions && (
+            <button type="button" className={`ws-issue-filter${view === "all" ? " active" : ""}`} onClick={() => setView("all")}>
+              All ({allTransactions.length})
             </button>
-            {allTransactions && (
-              <button type="button" className={`ws-issue-filter${view === "all" ? " active" : ""}`} onClick={() => setView("all")}>
-                All ({allTransactions.length})
-              </button>
-            )}
-            {importedInvoices && importedInvoices.length > 0 && (
-              <button type="button" className={`ws-issue-filter${view === "imported" ? " active" : ""}`} onClick={() => setView("imported")}>
-                Imported ({importedInvoices.length})
-              </button>
-            )}
-            {clientDocs && clientDocs.length > 0 && (
-              <button type="button" className={`ws-issue-filter${view === "documents" ? " active" : ""}`} onClick={() => setView("documents")}>
-                Docs ({clientDocs.length})
-              </button>
-            )}
-            {queriedTransactions.length > 0 && (
-              <button
-                type="button"
-                className={`ws-issue-filter${view === "queried" ? " active" : ""}`}
-                onClick={() => setView("queried")}
-                style={{ color: "var(--warning)" }}
-              >
-                Queried ({queriedTransactions.length})
-              </button>
-            )}
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: "var(--sp-8)" }}>
-            {sendResult && (
-              <span style={{ fontSize: "var(--text-xs)", color: sendResult.ok ? "var(--success)" : "var(--danger)", whiteSpace: "nowrap" }}>
-                {sendResult.msg}
-              </span>
-            )}
-            {missingData && missingData.total > 0 && (
-              <div style={{ display: "flex", alignItems: "center", gap: "var(--sp-4)", background: "var(--clr-surface-card)", border: "1px solid var(--clr-divider)", borderRadius: "var(--r-md)", padding: "2px 4px" }}>
-                {(["email", "sms", "whatsapp"] as const).map((channel) => {
-                  const isSending = sendingType === channel;
-                  const icons = { email: <IconEmail />, sms: <IconSms />, whatsapp: <IconWhatsApp /> };
-                  const colors = { email: "#4f46e5", sms: "#0891b2", whatsapp: "#16a34a" };
-                  return (
-                    <button
-                      key={channel}
-                      type="button"
-                      onClick={() => handleSendChase(channel)}
-                      disabled={sendingType !== null}
-                      title={`Send ${CHANNEL_LABEL[channel]} chase`}
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "var(--sp-4)",
-                        padding: "4px 8px",
-                        fontSize: "var(--text-xs)",
-                        fontWeight: "var(--fw-medium)",
-                        color: sendingType !== null && !isSending ? "var(--clr-muted)" : colors[channel],
-                        background: isSending ? `${colors[channel]}15` : "transparent",
-                        border: "none",
-                        borderRadius: "var(--r-sm)",
-                        cursor: sendingType !== null ? "not-allowed" : "pointer",
-                        transition: "background 0.15s, color 0.15s",
-                        opacity: sendingType !== null && !isSending ? 0.5 : 1,
-                      }}
-                    >
-                      {isSending ? (
-                        <span style={{ width: 13, height: 13, display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true" style={{ animation: "spin 0.7s linear infinite" }}>
-                            <circle cx="12" cy="12" r="10" strokeOpacity="0.25" />
-                            <path d="M12 2a10 10 0 0 1 10 10" strokeLinecap="round" />
-                          </svg>
-                        </span>
-                      ) : icons[channel]}
-                      {CHANNEL_LABEL[channel]}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-          </div>
+          )}
+          {importedInvoices && importedInvoices.length > 0 && (
+            <button type="button" className={`ws-issue-filter${view === "imported" ? " active" : ""}`} onClick={() => setView("imported")}>
+              Imported ({importedInvoices.length})
+            </button>
+          )}
+          {clientDocs && clientDocs.length > 0 && (
+            <button type="button" className={`ws-issue-filter${view === "documents" ? " active" : ""}`} onClick={() => setView("documents")}>
+              Docs ({clientDocs.length})
+            </button>
+          )}
+          {queriedTransactions.length > 0 && (
+            <button
+              type="button"
+              className={`ws-issue-filter${view === "queried" ? " active" : ""}`}
+              onClick={() => setView("queried")}
+              style={{ color: "var(--warning)" }}
+            >
+              Queried ({queriedTransactions.length})
+            </button>
+          )}
         </div>
 
         {/* Missing view */}
@@ -326,7 +291,50 @@ export function WorkspaceItemsTab({ client }: Props) {
                                 {new Date(txn.date).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
                               </div>
                             </div>
-                            <div style={{ fontWeight: "var(--fw-medium)", color: "var(--clr-primary)", flexShrink: 0, marginLeft: "var(--sp-12)" }}>{txn.amount}</div>
+                            {txn.id && (
+                              <div style={{ display: "flex", alignItems: "center", gap: 2, flexShrink: 0, marginLeft: "var(--sp-8)" }}>
+                                {(["email", "sms", "whatsapp"] as const).map((channel) => {
+                                  const isSending = itemSending?.txId === txn.id && itemSending.channel === channel;
+                                  const resultColor = itemSendResult?.txId === txn.id && itemSendResult.channel === channel
+                                    ? (itemSendResult.ok ? { email: "var(--info)", sms: "var(--brand)", whatsapp: "var(--success)" }[channel] : "var(--danger)")
+                                    : undefined;
+                                  const colors = { email: "var(--info)", sms: "var(--brand)", whatsapp: "var(--success)" };
+                                  const icons = { email: <IconEmail />, sms: <IconSms />, whatsapp: <IconWhatsApp /> };
+                                  return (
+                                    <button
+                                      key={channel}
+                                      type="button"
+                                      onClick={(e) => { e.stopPropagation(); handleSendChase(channel, txn.id); }}
+                                      disabled={itemSending !== null}
+                                      title={`Send ${CHANNEL_LABEL[channel]} chase for this item`}
+                                      style={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        width: 26,
+                                        height: 26,
+                                        padding: 0,
+                                        color: resultColor ?? (isSending ? colors[channel] : "var(--clr-tertiary)"),
+                                        background: isSending ? `color-mix(in srgb, ${colors[channel]} 10%, transparent)` : "transparent",
+                                        border: "none",
+                                        borderRadius: "var(--r-sm)",
+                                        cursor: itemSending !== null ? "not-allowed" : "pointer",
+                                        opacity: itemSending !== null && !isSending ? 0.35 : 1,
+                                        transition: "color var(--dur)",
+                                      }}
+                                    >
+                                      {isSending ? (
+                                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true" style={{ animation: "spin 0.7s linear infinite" }}>
+                                          <circle cx="12" cy="12" r="10" strokeOpacity="0.25" />
+                                          <path d="M12 2a10 10 0 0 1 10 10" strokeLinecap="round" />
+                                        </svg>
+                                      ) : icons[channel]}
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            )}
+                            <div style={{ fontWeight: "var(--fw-medium)", color: "var(--clr-primary)", flexShrink: 0, marginLeft: "var(--sp-8)" }}>{txn.amount}</div>
                           </div>
                         ))}
                       </div>
@@ -347,7 +355,7 @@ export function WorkspaceItemsTab({ client }: Props) {
                 <div style={{ fontSize: "var(--text-sm)", color: "var(--clr-muted)" }}>Imported invoices for this client will appear here.</div>
               </div>
             ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: "var(--sp-4)" }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: "var(--sp-6)" }}>
                 {importedInvoices.map((inv) => {
                   const linked = inv.transaction_id !== null;
                   const dotColor = inv.document_received
@@ -361,7 +369,7 @@ export function WorkspaceItemsTab({ client }: Props) {
                       ? "In chase queue"
                       : "Pending link";
                   return (
-                    <div key={inv.id} style={{ display: "flex", alignItems: "center", gap: "var(--sp-10)", padding: "var(--sp-10) var(--sp-12)", background: "var(--clr-surface-card)", borderRadius: "var(--r-md)", border: "1px solid var(--clr-divider)", fontSize: "var(--text-sm)" }}>
+                    <div key={inv.id} style={{ display: "flex", alignItems: "center", gap: "var(--sp-12)", padding: "var(--sp-12) var(--sp-16)", background: "var(--clr-surface-card)", borderRadius: "var(--r-md)", border: "1px solid var(--clr-divider)", fontSize: "var(--text-sm)" }}>
                       <div style={{ width: 8, height: 8, borderRadius: "50%", flexShrink: 0, background: dotColor }} title={statusLabel} />
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ color: "var(--clr-primary)", fontWeight: "var(--fw-medium)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
@@ -395,11 +403,11 @@ export function WorkspaceItemsTab({ client }: Props) {
                 <div style={{ fontSize: "var(--text-sm)", color: "var(--clr-muted)" }}>No transactions found for this client.</div>
               </div>
             ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: "var(--sp-4)" }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: "var(--sp-6)" }}>
                 {allTransactions.map((txn) => {
                   const status = docStatusDot(txn);
                   return (
-                    <div key={txn.id} style={{ display: "flex", alignItems: "center", gap: "var(--sp-10)", padding: "var(--sp-10) var(--sp-12)", background: "var(--clr-surface-card)", borderRadius: "var(--r-md)", border: "1px solid var(--clr-divider)", fontSize: "var(--text-sm)" }}>
+                    <div key={txn.id} style={{ display: "flex", alignItems: "center", gap: "var(--sp-12)", padding: "var(--sp-12) var(--sp-16)", background: "var(--clr-surface-card)", borderRadius: "var(--r-md)", border: "1px solid var(--clr-divider)", fontSize: "var(--text-sm)" }}>
                       <div style={{ width: 8, height: 8, borderRadius: "50%", flexShrink: 0, background: status.color }} title={status.label} />
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ color: "var(--clr-primary)", fontWeight: "var(--fw-medium)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
@@ -409,6 +417,47 @@ export function WorkspaceItemsTab({ client }: Props) {
                           {new Date(txn.date).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
                           <span style={{ marginLeft: "var(--sp-8)", color: status.color }}>{status.label}</span>
                         </div>
+                      </div>
+                      <div style={{ display: "flex", alignItems: "center", gap: 2, flexShrink: 0 }}>
+                        {(["email", "sms", "whatsapp"] as const).map((channel) => {
+                          const isSending = itemSending?.txId === txn.id && itemSending.channel === channel;
+                          const colors = { email: "var(--info)", sms: "var(--brand)", whatsapp: "var(--success)" };
+                          const resultColor = itemSendResult?.txId === txn.id && itemSendResult.channel === channel
+                            ? (itemSendResult.ok ? colors[channel] : "var(--danger)")
+                            : undefined;
+                          const icons = { email: <IconEmail />, sms: <IconSms />, whatsapp: <IconWhatsApp /> };
+                          return (
+                            <button
+                              key={channel}
+                              type="button"
+                              onClick={() => handleSendChase(channel, txn.id)}
+                              disabled={itemSending !== null}
+                              title={`Send ${CHANNEL_LABEL[channel]} chase for this item`}
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                width: 26,
+                                height: 26,
+                                padding: 0,
+                                color: resultColor ?? (isSending ? colors[channel] : "var(--clr-tertiary)"),
+                                background: isSending ? `color-mix(in srgb, ${colors[channel]} 10%, transparent)` : "transparent",
+                                border: "none",
+                                borderRadius: "var(--r-sm)",
+                                cursor: itemSending !== null ? "not-allowed" : "pointer",
+                                opacity: itemSending !== null && !isSending ? 0.35 : 1,
+                                transition: "color var(--dur)",
+                              }}
+                            >
+                              {isSending ? (
+                                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true" style={{ animation: "spin 0.7s linear infinite" }}>
+                                  <circle cx="12" cy="12" r="10" strokeOpacity="0.25" />
+                                  <path d="M12 2a10 10 0 0 1 10 10" strokeLinecap="round" />
+                                </svg>
+                              ) : icons[channel]}
+                            </button>
+                          );
+                        })}
                       </div>
                       <div style={{ fontWeight: "var(--fw-medium)", color: "var(--clr-primary)", flexShrink: 0 }}>{txn.amount}</div>
                     </div>
@@ -428,11 +477,29 @@ export function WorkspaceItemsTab({ client }: Props) {
                 <div style={{ fontSize: "var(--text-sm)", color: "var(--clr-muted)" }}>No documents uploaded for this client yet.</div>
               </div>
             ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: "var(--sp-4)" }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: "var(--sp-6)" }}>
                 {clientDocs.map((doc) => {
                   const docState = docStateBadge(doc);
+                  const canView = doc.virus_scan_status !== "infected" && !!doc.s3_url;
                   return (
-                    <div key={doc.id} style={{ display: "flex", alignItems: "center", gap: "var(--sp-10)", padding: "var(--sp-10) var(--sp-12)", background: "var(--clr-surface-card)", borderRadius: "var(--r-md)", border: "1px solid var(--clr-divider)", fontSize: "var(--text-sm)" }}>
+                    <div
+                      key={doc.id}
+                      onClick={canView ? () => setViewingDoc(doc) : undefined}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "var(--sp-12)",
+                        padding: "var(--sp-12) var(--sp-16)",
+                        background: "var(--clr-surface-card)",
+                        borderRadius: "var(--r-md)",
+                        border: "1px solid var(--clr-divider)",
+                        fontSize: "var(--text-sm)",
+                        cursor: canView ? "pointer" : "default",
+                        transition: "border-color var(--dur)",
+                      }}
+                      onMouseEnter={canView ? (e) => { (e.currentTarget as HTMLDivElement).style.borderColor = "var(--clr-divider-strong)"; } : undefined}
+                      onMouseLeave={canView ? (e) => { (e.currentTarget as HTMLDivElement).style.borderColor = "var(--clr-divider)"; } : undefined}
+                    >
                       <div style={{ width: 8, height: 8, borderRadius: "50%", flexShrink: 0, background: docState.color }} title={docState.label} />
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ display: "flex", alignItems: "center", gap: "var(--sp-6)" }}>
@@ -552,6 +619,147 @@ export function WorkspaceItemsTab({ client }: Props) {
             )}
           </>
         )}
+      </div>
+
+      {/* File viewer modal */}
+      {viewingDoc && (
+        <div
+          className="modal-overlay open"
+          onClick={() => setViewingDoc(null)}
+        >
+          <div
+            className="modal"
+            style={{ width: "min(900px, calc(100vw - 48px))", height: "calc(100vh - 80px)", maxHeight: "calc(100vh - 80px)", display: "flex", flexDirection: "column" }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="modal-header" style={{ borderBottom: "1px solid var(--clr-divider)", padding: "var(--sp-16) var(--sp-20)" }}>
+              <div style={{ minWidth: 0, flex: 1 }}>
+                <div className="modal-title" style={{ fontSize: "var(--text-sm)", fontWeight: "var(--fw-semibold)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  {viewingDoc.original_filename || viewingDoc.filename}
+                </div>
+                {viewingDoc.extracted_supplier && (
+                  <div style={{ fontSize: "var(--text-xs)", color: "var(--clr-muted)", marginTop: 2 }}>
+                    {viewingDoc.extracted_supplier}
+                    {viewingDoc.extracted_amount && (
+                      <span style={{ marginLeft: "var(--sp-8)" }}>
+                        · {new Intl.NumberFormat("en-GB", { style: "currency", currency: "GBP" }).format(Number(viewingDoc.extracted_amount))}
+                      </span>
+                    )}
+                  </div>
+                )}
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: "var(--sp-8)", flexShrink: 0, marginLeft: "var(--sp-16)" }}>
+                <button
+                  type="button"
+                  className="btn btn-ghost btn-sm"
+                  onClick={() => handleDownloadDoc(viewingDoc)}
+                  style={{ display: "inline-flex", alignItems: "center", gap: "var(--sp-4)", fontSize: "var(--text-xs)", color: "var(--brand)" }}
+                >
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                    <polyline points="7 10 12 15 17 10" />
+                    <line x1="12" y1="15" x2="12" y2="3" />
+                  </svg>
+                  Download
+                </button>
+                <button type="button" className="modal-close" onClick={() => setViewingDoc(null)} aria-label="Close">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+                </button>
+              </div>
+            </div>
+
+            <div className="modal-body" style={{ padding: 0, flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", background: "var(--clr-surface-subtle)" }}>
+              <DocViewer doc={viewingDoc} />
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function DocViewer({ doc }: { doc: Document }) {
+  const [blobUrl, setBlobUrl] = useState<string | null>(null);
+  const [loadState, setLoadState] = useState<"loading" | "ready" | "error">("loading");
+
+  useEffect(() => {
+    let url: string | null = null;
+    setLoadState("loading");
+    setBlobUrl(null);
+
+    documentsApi.fetchBlob(doc.id).then(
+      ({ blob }) => {
+        url = URL.createObjectURL(blob);
+        setBlobUrl(url);
+        setLoadState("ready");
+      },
+      () => setLoadState("error"),
+    );
+
+    return () => {
+      if (url) URL.revokeObjectURL(url);
+    };
+  }, [doc.id]);
+
+  const mime = doc.mime_type || "";
+  const name = (doc.original_filename || doc.filename).toLowerCase();
+  const isImage = mime.startsWith("image/") || /\.(jpg|jpeg|png|gif|webp|svg|bmp)$/.test(name);
+  const isPdf = mime === "application/pdf" || name.endsWith(".pdf");
+
+  if (loadState === "loading") {
+    return (
+      <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--clr-muted)", fontSize: "var(--text-sm)" }}>
+        Loading…
+      </div>
+    );
+  }
+
+  if (loadState === "error" || !blobUrl) {
+    return (
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "var(--sp-12)", padding: "var(--sp-48)", textAlign: "center" }}>
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--clr-muted)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="10" />
+          <line x1="12" y1="8" x2="12" y2="12" />
+          <line x1="12" y1="16" x2="12.01" y2="16" />
+        </svg>
+        <div style={{ fontSize: "var(--text-sm)", color: "var(--clr-secondary)" }}>
+          Unable to load file preview.
+        </div>
+      </div>
+    );
+  }
+
+  if (isImage) {
+    return (
+      <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: "var(--sp-24)", overflow: "auto" }}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={blobUrl}
+          alt={doc.original_filename || doc.filename}
+          style={{ maxWidth: "100%", maxHeight: "65vh", objectFit: "contain", borderRadius: "var(--r-md)", boxShadow: "var(--shadow-md)" }}
+        />
+      </div>
+    );
+  }
+
+  if (isPdf) {
+    return (
+      <iframe
+        src={blobUrl}
+        title={doc.original_filename || doc.filename}
+        style={{ display: "block", flex: 1, width: "100%", height: 0, minHeight: 0, border: "none" }}
+      />
+    );
+  }
+
+  return (
+    <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "var(--sp-12)", padding: "var(--sp-48)", textAlign: "center" }}>
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--clr-muted)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+        <polyline points="14 2 14 8 20 8" />
+      </svg>
+      <div style={{ fontSize: "var(--text-sm)", color: "var(--clr-secondary)" }}>
+        Preview not available for this file type.
       </div>
     </div>
   );
