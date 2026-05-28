@@ -1,18 +1,81 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { portalApi } from "@/lib/api/portal-api";
 import type { PortalResolveResponse } from "@/types/portal";
 import type { TransactionListResponse, Transaction } from "@/types/transactions";
 
-type UploadingState = {
-  [transactionId: string]: {
-    filename: string;
-    progress: "uploading" | "done" | "error";
-    error?: string;
-  };
+// ── types ──────────────────────────────────────────────────────────────────
+
+type UploadStatus = "idle" | "uploading" | "done" | "error";
+
+type UploadState = {
+  filename: string;
+  status: UploadStatus;
+  progress: number; // 0–100 simulated
+  error?: string;
 };
+
+type UploadMap = Record<string, UploadState>;
+
+// ── helpers ────────────────────────────────────────────────────────────────
+
+const MAX_FILE_BYTES = 20 * 1024 * 1024; // 20 MB
+
+function formatAmount(raw: string | number | null | undefined): string {
+  if (raw == null) return "";
+  const n = typeof raw === "number" ? raw : parseFloat(String(raw));
+  if (isNaN(n)) return String(raw);
+  return new Intl.NumberFormat("en-GB", { style: "currency", currency: "GBP" }).format(n);
+}
+
+// ── sub-components ─────────────────────────────────────────────────────────
+
+function ProgressBar({ value }: { value: number }) {
+  return (
+    <div style={{ height: 4, background: "#e5e7eb", borderRadius: 99, overflow: "hidden", marginTop: 8 }}>
+      <div
+        style={{
+          height: "100%",
+          width: `${value}%`,
+          background: "#2563eb",
+          borderRadius: 99,
+          transition: "width 0.2s ease",
+        }}
+      />
+    </div>
+  );
+}
+
+function UploadIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="16 16 12 12 8 16" />
+      <line x1="12" y1="12" x2="12" y2="21" />
+      <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3" />
+    </svg>
+  );
+}
+
+function CheckIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="20 6 9 17 4 12" />
+    </svg>
+  );
+}
+
+function CameraIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+      <circle cx="12" cy="13" r="4" />
+    </svg>
+  );
+}
+
+// ── main component ─────────────────────────────────────────────────────────
 
 export function PortalPageView() {
   const searchParams = useSearchParams();
@@ -23,16 +86,19 @@ export function PortalPageView() {
   const [resolveError, setResolveError] = useState<string | null>(null);
   const [session, setSession] = useState<PortalResolveResponse | null>(null);
   const [missing, setMissing] = useState<TransactionListResponse | null>(null);
-  const [uploading, setUploading] = useState<UploadingState>({});
+  const [uploads, setUploads] = useState<UploadMap>({});
   const [expandedSupplier, setExpandedSupplier] = useState<string | null>(null);
   const [confirmTxId, setConfirmTxId] = useState<string | null>(null);
   const [confirming, setConfirming] = useState(false);
-  const fileInputs = useRef<Record<string, HTMLInputElement | null>>({});
 
-  // Resolve the token on mount
+  const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
+  const cameraInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
+  const progressTimers = useRef<Record<string, ReturnType<typeof setInterval>>>({});
+
+  // Resolve token on mount
   useEffect(() => {
     if (!token) {
-      setResolveError("No magic link provided.");
+      setResolveError("No upload link provided.");
       setResolving(false);
       return;
     }
@@ -45,7 +111,12 @@ export function PortalPageView() {
         return portalApi.missingDocs(res.client_id, token);
       })
       .then((list) => {
-        if (list) setMissing(list);
+        if (list) {
+          setMissing(list);
+          // Auto-expand the first supplier group
+          const firstSupplier = Object.keys(list.grouped_by_supplier ?? {})[0];
+          if (firstSupplier) setExpandedSupplier(firstSupplier);
+        }
       })
       .catch((err) => {
         const msg =
@@ -57,77 +128,67 @@ export function PortalPageView() {
       });
   }, [token]);
 
-  async function refreshMissing() {
+  const refreshMissing = useCallback(async () => {
     if (!session || !token) return;
     try {
       const list = await portalApi.missingDocs(session.client_id, token);
       setMissing(list);
     } catch {
-      /* keep existing view */
+      // keep existing view
     }
+  }, [session, token]);
+
+  function simulateProgress(txId: string) {
+    let value = 10;
+    progressTimers.current[txId] = setInterval(() => {
+      value = Math.min(value + Math.random() * 15, 85);
+      setUploads((prev) => {
+        if (prev[txId]?.status !== "uploading") {
+          clearInterval(progressTimers.current[txId]);
+          return prev;
+        }
+        return { ...prev, [txId]: { ...prev[txId], progress: Math.round(value) } };
+      });
+    }, 250);
   }
 
-  async function handleFileSelected(
-    transactionId: string,
-    file: File,
-  ) {
+  async function handleFileSelected(txId: string, file: File) {
     if (!session || !token) return;
 
-    // Reject files larger than 20MB
-    if (file.size > 20 * 1024 * 1024) {
-      setUploading((prev) => ({
+    if (file.size > MAX_FILE_BYTES) {
+      setUploads((prev) => ({
         ...prev,
-        [transactionId]: {
-          filename: file.name,
-          progress: "error",
-          error: "File too large (max 20MB)",
-        },
+        [txId]: { filename: file.name, status: "error", progress: 0, error: "File too large (max 20 MB)" },
       }));
       return;
     }
 
-    setUploading((prev) => ({
+    setUploads((prev) => ({
       ...prev,
-      [transactionId]: { filename: file.name, progress: "uploading" },
+      [txId]: { filename: file.name, status: "uploading", progress: 10 },
     }));
 
-    try {
-      // Single-shot multipart upload — the backend stores the file locally
-      // and creates the Document record in one call.
-      await portalApi.directUpload(
-        session.client_id,
-        token,
-        file,
-        transactionId,
-      );
+    simulateProgress(txId);
 
-      setUploading((prev) => ({
+    try {
+      await portalApi.directUpload(session.client_id, token, file, txId);
+
+      clearInterval(progressTimers.current[txId]);
+      setUploads((prev) => ({
         ...prev,
-        [transactionId]: { filename: file.name, progress: "done" },
+        [txId]: { filename: file.name, status: "done", progress: 100 },
       }));
 
-      // Refresh the missing docs list so the uploaded row disappears
       await refreshMissing();
     } catch (err) {
-      const detail =
-        (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
-      const msg =
-        detail ||
-        (err as { message?: string })?.message ||
-        "Upload failed. Please try again.";
-      setUploading((prev) => ({
+      clearInterval(progressTimers.current[txId]);
+      const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
+      const msg = detail || (err as { message?: string })?.message || "Upload failed. Please try again.";
+      setUploads((prev) => ({
         ...prev,
-        [transactionId]: {
-          filename: file.name,
-          progress: "error",
-          error: msg,
-        },
+        [txId]: { filename: file.name, status: "error", progress: 0, error: msg },
       }));
     }
-  }
-
-  function handleCantProvide(transactionId: string) {
-    setConfirmTxId(transactionId);
   }
 
   async function confirmCantProvide() {
@@ -144,38 +205,43 @@ export function PortalPageView() {
     }
   }
 
-  // Loading state
+  const doneCount = Object.values(uploads).filter((u) => u.status === "done").length;
+  const totalMissing = missing?.total_missing ?? 0;
+  const remaining = Math.max(0, totalMissing - doneCount);
+
+  // ── loading ──────────────────────────────────────────────────────────────
+
   if (resolving) {
     return (
       <PortalShell>
-        <div style={centerText}>
-          <div style={{ fontSize: 16, color: "#6b7280" }}>
-            Loading your upload portal…
+        <div style={centerFlex}>
+          <div style={{ textAlign: "center" }}>
+            <div style={spinner} />
+            <div style={{ fontSize: 15, color: "#6b7280", marginTop: 16 }}>Loading your upload portal…</div>
           </div>
         </div>
       </PortalShell>
     );
   }
 
-  // Error state (invalid/expired token)
+  // ── error / expired ───────────────────────────────────────────────────────
+
   if (resolveError || !session) {
     return (
       <PortalShell>
-        <div style={centerCard}>
-          <div style={{ fontSize: 28, fontWeight: 600, marginBottom: 8, color: "#111827" }}>
-            Link expired or invalid
+        <div style={{ ...centerFlex, padding: "0 16px" }}>
+          <div style={errorCard}>
+            <div style={{ fontSize: 40, marginBottom: 12 }}>⛔</div>
+            <div style={{ fontSize: 20, fontWeight: 700, color: "#111827", marginBottom: 8 }}>
+              Link expired or invalid
+            </div>
+            <div style={{ fontSize: 14, color: "#6b7280", lineHeight: 1.6, marginBottom: 24 }}>
+              {resolveError || "This upload link is no longer valid. Please request a new one from your accountant."}
+            </div>
+            <button type="button" onClick={() => router.push("/login")} style={primaryBtn}>
+              Go to Sign In
+            </button>
           </div>
-          <div style={{ fontSize: 15, color: "#6b7280", marginBottom: 24 }}>
-            {resolveError ||
-              "This upload link is no longer valid. Please request a new one from your accountant."}
-          </div>
-          <button
-            type="button"
-            onClick={() => router.push("/login")}
-            style={primaryBtn}
-          >
-            Go to Sign In
-          </button>
         </div>
       </PortalShell>
     );
@@ -185,71 +251,32 @@ export function PortalPageView() {
 
   return (
     <PortalShell>
-      {/* Custom "Can't provide" confirmation dialog */}
+      {/* Confirm "can't provide" dialog */}
       {confirmTxId && (
         <div
-          style={{
-            position: "fixed",
-            inset: 0,
-            background: "rgba(0,0,0,0.4)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            zIndex: 9999,
-            padding: "0 16px",
-          }}
+          style={overlayStyle}
           onClick={() => { if (!confirming) setConfirmTxId(null); }}
         >
-          <div
-            style={{
-              background: "#fff",
-              borderRadius: 14,
-              padding: "28px 28px 24px",
-              maxWidth: 400,
-              width: "100%",
-              boxShadow: "0 20px 60px rgba(0,0,0,0.18)",
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div style={{ marginBottom: 8 }}>
-              <div style={{
-                width: 44,
-                height: 44,
-                borderRadius: "50%",
-                background: "#fef3c7",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                marginBottom: 16,
-              }}>
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
-                  <line x1="12" y1="9" x2="12" y2="13" />
-                  <line x1="12" y1="17" x2="12.01" y2="17" />
-                </svg>
-              </div>
-              <div style={{ fontSize: 17, fontWeight: 600, color: "#111827", marginBottom: 8 }}>
-                Can&apos;t provide this document?
-              </div>
-              <div style={{ fontSize: 14, color: "#6b7280", lineHeight: 1.5 }}>
-                Your accountant will be notified that you&apos;re unable to provide this document. You can still upload it later if you find it.
-              </div>
+          <div style={dialogCard} onClick={(e) => e.stopPropagation()}>
+            <div style={{ width: 44, height: 44, borderRadius: "50%", background: "#fef3c7", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 16 }}>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                <line x1="12" y1="9" x2="12" y2="13" />
+                <line x1="12" y1="17" x2="12.01" y2="17" />
+              </svg>
+            </div>
+            <div style={{ fontSize: 17, fontWeight: 600, color: "#111827", marginBottom: 8 }}>
+              Can&apos;t provide this document?
+            </div>
+            <div style={{ fontSize: 14, color: "#6b7280", lineHeight: 1.6 }}>
+              Your accountant will be notified. You can still upload it later if you find it.
             </div>
             <div style={{ display: "flex", gap: 10, marginTop: 24, justifyContent: "flex-end" }}>
               <button
                 type="button"
                 disabled={confirming}
                 onClick={() => setConfirmTxId(null)}
-                style={{
-                  background: "none",
-                  border: "1px solid #e5e7eb",
-                  borderRadius: 8,
-                  padding: "9px 18px",
-                  fontSize: 14,
-                  fontWeight: 500,
-                  color: "#374151",
-                  cursor: "pointer",
-                }}
+                style={ghostBtn}
               >
                 Cancel
               </button>
@@ -257,17 +284,7 @@ export function PortalPageView() {
                 type="button"
                 disabled={confirming}
                 onClick={confirmCantProvide}
-                style={{
-                  background: "#d97706",
-                  border: "none",
-                  borderRadius: 8,
-                  padding: "9px 18px",
-                  fontSize: 14,
-                  fontWeight: 500,
-                  color: "#fff",
-                  cursor: confirming ? "not-allowed" : "pointer",
-                  opacity: confirming ? 0.7 : 1,
-                }}
+                style={{ ...primaryBtn, background: "#d97706", opacity: confirming ? 0.7 : 1 }}
               >
                 {confirming ? "Confirming…" : "Yes, can't provide"}
               </button>
@@ -276,190 +293,147 @@ export function PortalPageView() {
         </div>
       )}
 
-      {/* Header */}
-      <div
-        style={{
-          background: "#fff",
-          borderBottom: "1px solid #e5e7eb",
-          padding: "16px 24px",
-        }}
-      >
-        <div style={{ maxWidth: 720, margin: "0 auto" }}>
-          <div style={{ fontSize: 13, color: "#6b7280" }}>
+      {/* Sticky header */}
+      <div style={headerStyle}>
+        <div style={{ maxWidth: 640, margin: "0 auto", padding: "0 16px" }}>
+          <div style={{ fontSize: 12, color: "#9ca3af" }}>
             {session.organization_name || "Document Portal"}
           </div>
-          <div
-            style={{
-              fontSize: 22,
-              fontWeight: 600,
-              color: "#111827",
-              marginTop: 2,
-            }}
-          >
-            Hello, {session.client_name}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
+            <div style={{ fontSize: 20, fontWeight: 700, color: "#111827" }}>
+              Hello, {session.client_name}
+            </div>
+            {remaining > 0 && (
+              <div style={{ fontSize: 13, fontWeight: 600, color: "#2563eb", background: "#eff6ff", border: "1px solid #bfdbfe", borderRadius: 99, padding: "3px 12px", whiteSpace: "nowrap" }}>
+                {remaining} remaining
+              </div>
+            )}
           </div>
         </div>
       </div>
 
       {/* Body */}
-      <div style={{ maxWidth: 720, margin: "0 auto", padding: "24px" }}>
-        {!missing || missing.total_missing === 0 ? (
-          <div
-            style={{
-              background: "#fff",
-              border: "1px solid #e5e7eb",
-              borderRadius: 12,
-              padding: 48,
-              textAlign: "center",
-            }}
-          >
-            <div style={{ fontSize: 48, marginBottom: 12 }}>🎉</div>
-            <div
-              style={{
-                fontSize: 20,
-                fontWeight: 600,
-                color: "#111827",
-                marginBottom: 6,
-              }}
-            >
+      <div style={{ maxWidth: 640, margin: "0 auto", padding: "20px 16px 100px" }}>
+
+        {/* All done */}
+        {(!missing || totalMissing === 0) ? (
+          <div style={allDoneCard}>
+            <div style={{ fontSize: 52, marginBottom: 12 }}>🎉</div>
+            <div style={{ fontSize: 22, fontWeight: 700, color: "#111827", marginBottom: 6 }}>
               All caught up!
             </div>
-            <div style={{ color: "#6b7280", fontSize: 14 }}>
-              There are no documents outstanding. Thank you.
+            <div style={{ color: "#6b7280", fontSize: 14, lineHeight: 1.6 }}>
+              There are no documents outstanding. Thank you for keeping your records up to date.
             </div>
           </div>
         ) : (
           <>
-            <div
-              style={{
-                fontSize: 16,
-                color: "#111827",
-                marginBottom: 16,
-                fontWeight: 500,
-              }}
-            >
-              Please upload the following {missing.total_missing} document
-              {missing.total_missing !== 1 ? "s" : ""}:
+            <div style={{ fontSize: 14, color: "#374151", marginBottom: 16, fontWeight: 500 }}>
+              Please upload the following {totalMissing} document{totalMissing !== 1 ? "s" : ""}:
             </div>
 
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-              {grouped.map(([supplier, txns]) => (
-                <div
-                  key={supplier}
-                  style={{
-                    background: "#fff",
-                    border: "1px solid #e5e7eb",
-                    borderRadius: 12,
-                    overflow: "hidden",
-                  }}
-                >
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setExpandedSupplier(
-                        expandedSupplier === supplier ? null : supplier,
-                      )
-                    }
-                    style={{
-                      width: "100%",
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      padding: "14px 16px",
-                      background: "none",
-                      border: "none",
-                      cursor: "pointer",
-                      textAlign: "left",
-                      fontSize: 15,
-                      fontWeight: 500,
-                      color: "#111827",
-                    }}
-                  >
-                    <span>{supplier}</span>
-                    <span style={{ color: "#6b7280", fontSize: 13 }}>
-                      {(txns as unknown as Transaction[]).length} item
-                      {(txns as unknown as Transaction[]).length !== 1 ? "s" : ""}{" "}
-                      {expandedSupplier === supplier ? "▲" : "▼"}
-                    </span>
-                  </button>
+              {grouped.map(([supplier, txns]) => {
+                const isOpen = expandedSupplier === supplier;
+                const txList = txns as unknown as Transaction[];
+                const groupDone = txList.filter((tx) => uploads[tx.id]?.status === "done").length;
 
-                  {expandedSupplier === supplier && (
-                    <div
-                      style={{
-                        borderTop: "1px solid #e5e7eb",
-                        padding: "8px 0",
-                      }}
+                return (
+                  <div key={supplier} style={groupCard}>
+                    {/* Group header */}
+                    <button
+                      type="button"
+                      onClick={() => setExpandedSupplier(isOpen ? null : supplier)}
+                      style={groupHeaderBtn}
                     >
-                      {(txns as unknown as Transaction[]).map((tx) => {
-                        const uploadState = uploading[tx.id];
-                        return (
-                          <div
-                            key={tx.id}
-                            style={{
-                              padding: "12px 16px",
-                              borderBottom: "1px solid #f3f4f6",
-                            }}
-                          >
-                            <div
-                              style={{
-                                display: "flex",
-                                justifyContent: "space-between",
-                                alignItems: "center",
-                                gap: 12,
-                              }}
-                            >
-                              <div style={{ flex: 1, minWidth: 0 }}>
-                                <div
-                                  style={{
-                                    fontSize: 14,
-                                    color: "#111827",
-                                    fontWeight: 500,
-                                  }}
-                                >
-                                  {tx.description ||
-                                    tx.supplier_name ||
-                                    "Transaction"}
-                                </div>
-                                <div
-                                  style={{
-                                    fontSize: 12,
-                                    color: "#6b7280",
-                                    marginTop: 2,
-                                  }}
-                                >
-                                  {new Date(tx.date).toLocaleDateString("en-GB", {
-                                    day: "numeric",
-                                    month: "short",
-                                    year: "numeric",
-                                  })}
-                                </div>
-                              </div>
-                              <div
-                                style={{
-                                  fontSize: 15,
-                                  fontWeight: 600,
-                                  color: "#111827",
-                                  flexShrink: 0,
-                                }}
-                              >
-                                {tx.amount}
-                              </div>
-                            </div>
+                      <div style={{ display: "flex", flexDirection: "column", gap: 2, textAlign: "left" }}>
+                        <span style={{ fontSize: 15, fontWeight: 600, color: "#111827" }}>{supplier}</span>
+                        <span style={{ fontSize: 12, color: "#9ca3af" }}>
+                          {txList.length} item{txList.length !== 1 ? "s" : ""}
+                          {groupDone > 0 ? ` · ${groupDone} uploaded` : ""}
+                        </span>
+                      </div>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        {groupDone === txList.length && txList.length > 0 && (
+                          <span style={{ fontSize: 12, color: "#16a34a", fontWeight: 600 }}>✓ Done</span>
+                        )}
+                        <svg
+                          width="16"
+                          height="16"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="#9ca3af"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          style={{ transform: isOpen ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.2s" }}
+                        >
+                          <polyline points="6 9 12 15 18 9" />
+                        </svg>
+                      </div>
+                    </button>
 
+                    {/* Transaction rows */}
+                    {isOpen && (
+                      <div style={{ borderTop: "1px solid #f3f4f6" }}>
+                        {txList.map((tx) => {
+                          const up = uploads[tx.id];
+                          const isDone = up?.status === "done";
+                          const isUploading = up?.status === "uploading";
+                          const isError = up?.status === "error";
+
+                          return (
                             <div
+                              key={tx.id}
                               style={{
-                                display: "flex",
-                                gap: 8,
-                                marginTop: 10,
-                                alignItems: "center",
+                                padding: "16px",
+                                borderBottom: "1px solid #f9fafb",
+                                background: isDone ? "#f0fdf4" : "transparent",
+                                transition: "background 0.3s",
                               }}
                             >
+                              {/* Transaction info */}
+                              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, marginBottom: 12 }}>
+                                <div style={{ flex: 1, minWidth: 0 }}>
+                                  <div style={{ fontSize: 14, fontWeight: 500, color: "#111827", lineHeight: 1.4 }}>
+                                    {tx.description || tx.supplier_name || "Transaction"}
+                                  </div>
+                                  <div style={{ fontSize: 12, color: "#9ca3af", marginTop: 3 }}>
+                                    {new Date(tx.date).toLocaleDateString("en-GB", {
+                                      day: "numeric",
+                                      month: "short",
+                                      year: "numeric",
+                                    })}
+                                  </div>
+                                </div>
+                                <div style={{ fontSize: 16, fontWeight: 700, color: "#111827", flexShrink: 0 }}>
+                                  {formatAmount(tx.amount)}
+                                </div>
+                              </div>
+
+                              {/* Upload progress bar */}
+                              {isUploading && <ProgressBar value={up.progress} />}
+
+                              {/* Filename when uploading/done */}
+                              {(isUploading || isDone || isError) && up.filename && (
+                                <div style={{ fontSize: 12, color: isDone ? "#16a34a" : isError ? "#dc2626" : "#6b7280", marginTop: 6, display: "flex", alignItems: "center", gap: 4 }}>
+                                  {isDone && <CheckIcon />}
+                                  <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                    {isDone ? `Uploaded: ${up.filename}` : isUploading ? `Uploading ${up.filename}…` : up.filename}
+                                  </span>
+                                </div>
+                              )}
+
+                              {/* Error message */}
+                              {isError && up.error && (
+                                <div style={{ fontSize: 12, color: "#dc2626", marginTop: 4 }}>{up.error}</div>
+                              )}
+
+                              {/* Hidden file inputs */}
                               <input
-                                ref={(el) => {
-                                  fileInputs.current[tx.id] = el;
-                                }}
+                                ref={(el) => { fileInputRefs.current[tx.id] = el; }}
                                 type="file"
-                                accept=".pdf,.jpg,.jpeg,.png,.heic"
+                                accept=".pdf,.jpg,.jpeg,.png,.heic,.heif"
                                 style={{ display: "none" }}
                                 onChange={(e) => {
                                   const file = e.target.files?.[0];
@@ -467,111 +441,298 @@ export function PortalPageView() {
                                   if (e.target) e.target.value = "";
                                 }}
                               />
-                              <button
-                                type="button"
-                                disabled={uploadState?.progress === "uploading"}
-                                onClick={() =>
-                                  fileInputs.current[tx.id]?.click()
-                                }
-                                style={{
-                                  ...primaryBtn,
-                                  fontSize: 13,
-                                  padding: "6px 14px",
+                              {/* Camera input — only appears on mobile, captures directly from camera */}
+                              <input
+                                ref={(el) => { cameraInputRefs.current[tx.id] = el; }}
+                                type="file"
+                                accept="image/*"
+                                capture="environment"
+                                style={{ display: "none" }}
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0];
+                                  if (file) handleFileSelected(tx.id, file);
+                                  if (e.target) e.target.value = "";
                                 }}
-                              >
-                                {uploadState?.progress === "uploading" &&
-                                  "Uploading…"}
-                                {uploadState?.progress === "done" && "Uploaded ✓"}
-                                {(!uploadState ||
-                                  uploadState.progress === "error" ||
-                                  (uploadState?.progress !== "uploading" &&
-                                    uploadState?.progress !== "done")) &&
-                                  "Upload receipt"}
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => handleCantProvide(tx.id)}
-                                style={{
-                                  background: "none",
-                                  border: "1px solid #e5e7eb",
-                                  borderRadius: 6,
-                                  padding: "6px 12px",
-                                  fontSize: 13,
-                                  color: "#6b7280",
-                                  cursor: "pointer",
-                                }}
-                              >
-                                Can&apos;t provide
-                              </button>
-                              {uploadState?.progress === "error" &&
-                                uploadState.error && (
-                                  <span
+                              />
+
+                              {/* Action buttons */}
+                              {!isDone && (
+                                <div style={{ display: "flex", gap: 8, marginTop: 12, flexWrap: "wrap" }}>
+                                  {/* Primary: upload file */}
+                                  <button
+                                    type="button"
+                                    disabled={isUploading}
+                                    onClick={() => fileInputRefs.current[tx.id]?.click()}
                                     style={{
-                                      fontSize: 12,
-                                      color: "#dc2626",
-                                      marginLeft: 6,
+                                      ...uploadBtn,
+                                      flex: 1,
+                                      opacity: isUploading ? 0.7 : 1,
+                                      cursor: isUploading ? "not-allowed" : "pointer",
                                     }}
                                   >
-                                    {uploadState.error}
-                                  </span>
-                                )}
+                                    <UploadIcon />
+                                    <span>
+                                      {isUploading ? "Uploading…" : isError ? "Try again" : "Upload file"}
+                                    </span>
+                                  </button>
+
+                                  {/* Camera shortcut — visible on all devices, especially useful on mobile */}
+                                  <button
+                                    type="button"
+                                    disabled={isUploading}
+                                    onClick={() => cameraInputRefs.current[tx.id]?.click()}
+                                    title="Take a photo with your camera"
+                                    style={{
+                                      ...cameraBtn,
+                                      opacity: isUploading ? 0.7 : 1,
+                                      cursor: isUploading ? "not-allowed" : "pointer",
+                                    }}
+                                  >
+                                    <CameraIcon />
+                                  </button>
+
+                                  {/* Can't provide */}
+                                  <button
+                                    type="button"
+                                    disabled={isUploading}
+                                    onClick={() => setConfirmTxId(tx.id)}
+                                    style={cantProvideBtn}
+                                  >
+                                    Can&apos;t provide
+                                  </button>
+                                </div>
+                              )}
+
+                              {/* Done state */}
+                              {isDone && (
+                                <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 10, color: "#16a34a", fontSize: 13, fontWeight: 600 }}>
+                                  <CheckIcon />
+                                  Document received — thank you!
+                                </div>
+                              )}
                             </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-              ))}
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </>
         )}
       </div>
+
+      {/* Sticky footer progress bar */}
+      {totalMissing > 0 && (
+        <div style={stickyFooter}>
+          <div style={{ maxWidth: 640, margin: "0 auto", padding: "0 16px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+              <span style={{ fontSize: 13, fontWeight: 500, color: "#374151" }}>
+                {doneCount} of {totalMissing} uploaded
+              </span>
+              <span style={{ fontSize: 12, color: "#9ca3af" }}>
+                {Math.round((doneCount / totalMissing) * 100)}%
+              </span>
+            </div>
+            <div style={{ height: 6, background: "#e5e7eb", borderRadius: 99, overflow: "hidden" }}>
+              <div
+                style={{
+                  height: "100%",
+                  width: `${(doneCount / totalMissing) * 100}%`,
+                  background: doneCount === totalMissing ? "#16a34a" : "#2563eb",
+                  borderRadius: 99,
+                  transition: "width 0.4s ease",
+                }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </PortalShell>
   );
 }
 
-// ---- Styling helpers ----
+// ── layout wrappers ────────────────────────────────────────────────────────
 
 function PortalShell({ children }: { children: React.ReactNode }) {
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        background: "#f9fafb",
-        fontFamily:
-          "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
-      }}
-    >
+    <div style={{
+      minHeight: "100vh",
+      background: "#f9fafb",
+      fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+      WebkitFontSmoothing: "antialiased",
+    }}>
       {children}
     </div>
   );
 }
 
-const centerText: React.CSSProperties = {
+// ── style constants ────────────────────────────────────────────────────────
+
+const centerFlex: React.CSSProperties = {
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
   minHeight: "100vh",
 };
 
-const centerCard: React.CSSProperties = {
-  maxWidth: 440,
-  margin: "10vh auto",
+const errorCard: React.CSSProperties = {
+  maxWidth: 420,
   background: "#fff",
-  borderRadius: 12,
+  borderRadius: 16,
   border: "1px solid #e5e7eb",
-  padding: 32,
+  padding: "36px 32px",
   textAlign: "center",
+  boxShadow: "0 4px 24px rgba(0,0,0,0.06)",
+};
+
+const headerStyle: React.CSSProperties = {
+  background: "#fff",
+  borderBottom: "1px solid #e5e7eb",
+  padding: "16px 0",
+  position: "sticky",
+  top: 0,
+  zIndex: 10,
+};
+
+const allDoneCard: React.CSSProperties = {
+  background: "#fff",
+  border: "1px solid #e5e7eb",
+  borderRadius: 16,
+  padding: "56px 24px",
+  textAlign: "center",
+};
+
+const groupCard: React.CSSProperties = {
+  background: "#fff",
+  border: "1px solid #e5e7eb",
+  borderRadius: 14,
+  overflow: "hidden",
+};
+
+const groupHeaderBtn: React.CSSProperties = {
+  width: "100%",
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
+  padding: "16px",
+  background: "none",
+  border: "none",
+  cursor: "pointer",
+  textAlign: "left",
+  minHeight: 64,
+  WebkitTapHighlightColor: "transparent",
+};
+
+const uploadBtn: React.CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  gap: 8,
+  background: "#111827",
+  color: "#fff",
+  border: "none",
+  borderRadius: 10,
+  padding: "12px 16px",
+  fontSize: 14,
+  fontWeight: 600,
+  minHeight: 48,
+  WebkitTapHighlightColor: "transparent",
+};
+
+const cameraBtn: React.CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  background: "#f3f4f6",
+  color: "#374151",
+  border: "1px solid #e5e7eb",
+  borderRadius: 10,
+  padding: "12px 14px",
+  fontSize: 14,
+  minHeight: 48,
+  minWidth: 48,
+  WebkitTapHighlightColor: "transparent",
+};
+
+const cantProvideBtn: React.CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  background: "none",
+  color: "#6b7280",
+  border: "1px solid #e5e7eb",
+  borderRadius: 10,
+  padding: "12px 14px",
+  fontSize: 13,
+  minHeight: 48,
+  cursor: "pointer",
+  WebkitTapHighlightColor: "transparent",
 };
 
 const primaryBtn: React.CSSProperties = {
   background: "#111827",
   color: "#fff",
   border: "none",
-  borderRadius: 6,
-  padding: "10px 20px",
+  borderRadius: 10,
+  padding: "12px 24px",
+  fontSize: 14,
+  fontWeight: 600,
+  cursor: "pointer",
+  minHeight: 48,
+  WebkitTapHighlightColor: "transparent",
+};
+
+const ghostBtn: React.CSSProperties = {
+  background: "none",
+  color: "#374151",
+  border: "1px solid #e5e7eb",
+  borderRadius: 10,
+  padding: "10px 18px",
   fontSize: 14,
   fontWeight: 500,
   cursor: "pointer",
+  minHeight: 48,
+};
+
+const overlayStyle: React.CSSProperties = {
+  position: "fixed",
+  inset: 0,
+  background: "rgba(0,0,0,0.45)",
+  display: "flex",
+  alignItems: "flex-end",
+  justifyContent: "center",
+  zIndex: 9999,
+  padding: "0 0 env(safe-area-inset-bottom, 0)",
+};
+
+const dialogCard: React.CSSProperties = {
+  background: "#fff",
+  borderRadius: "20px 20px 0 0",
+  padding: "28px 24px 32px",
+  width: "100%",
+  maxWidth: 480,
+  boxShadow: "0 -8px 40px rgba(0,0,0,0.15)",
+};
+
+const stickyFooter: React.CSSProperties = {
+  position: "fixed",
+  bottom: 0,
+  left: 0,
+  right: 0,
+  background: "#fff",
+  borderTop: "1px solid #e5e7eb",
+  padding: "12px 0 calc(12px + env(safe-area-inset-bottom, 0))",
+  zIndex: 10,
+};
+
+const spinner: React.CSSProperties = {
+  width: 36,
+  height: 36,
+  border: "3px solid #e5e7eb",
+  borderTop: "3px solid #2563eb",
+  borderRadius: "50%",
+  animation: "spin 0.8s linear infinite",
+  margin: "0 auto",
 };
