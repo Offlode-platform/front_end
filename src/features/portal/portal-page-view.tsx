@@ -8,13 +8,20 @@ import type { TransactionListResponse, Transaction } from "@/types/transactions"
 
 // ── types ──────────────────────────────────────────────────────────────────
 
-type UploadStatus = "idle" | "uploading" | "done" | "error";
+type UploadStatus = "idle" | "uploading" | "processing" | "done" | "error";
+
+type OcrPreview = {
+  extracted_amount?: string | null;
+  extracted_date?: string | null;
+  extracted_supplier?: string | null;
+};
 
 type UploadState = {
   filename: string;
   status: UploadStatus;
-  progress: number; // 0–100 simulated
+  progress: number; // 0–100 real
   error?: string;
+  ocr?: OcrPreview; // set after OCR polling completes
 };
 
 type UploadMap = Record<string, UploadState>;
@@ -93,7 +100,6 @@ export function PortalPageView() {
 
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
   const cameraInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
-  const progressTimers = useRef<Record<string, ReturnType<typeof setInterval>>>({});
 
   // Resolve token on mount
   useEffect(() => {
@@ -138,20 +144,6 @@ export function PortalPageView() {
     }
   }, [session, token]);
 
-  function simulateProgress(txId: string) {
-    let value = 10;
-    progressTimers.current[txId] = setInterval(() => {
-      value = Math.min(value + Math.random() * 15, 85);
-      setUploads((prev) => {
-        if (prev[txId]?.status !== "uploading") {
-          clearInterval(progressTimers.current[txId]);
-          return prev;
-        }
-        return { ...prev, [txId]: { ...prev[txId], progress: Math.round(value) } };
-      });
-    }, 250);
-  }
-
   async function handleFileSelected(txId: string, file: File) {
     if (!session || !token) return;
 
@@ -165,23 +157,48 @@ export function PortalPageView() {
 
     setUploads((prev) => ({
       ...prev,
-      [txId]: { filename: file.name, status: "uploading", progress: 10 },
+      [txId]: { filename: file.name, status: "uploading", progress: 0 },
     }));
 
-    simulateProgress(txId);
-
     try {
-      await portalApi.directUpload(session.client_id, token, file, txId);
+      const doc = await portalApi.directUpload(
+        session.client_id,
+        token,
+        file,
+        txId,
+        (percent) => {
+          setUploads((prev) => ({
+            ...prev,
+            [txId]: { ...prev[txId], progress: percent },
+          }));
+        },
+      );
 
-      clearInterval(progressTimers.current[txId]);
+      // Upload done — now poll for OCR result (non-blocking)
       setUploads((prev) => ({
         ...prev,
-        [txId]: { filename: file.name, status: "done", progress: 100 },
+        [txId]: { filename: file.name, status: "processing", progress: 95 },
       }));
+
+      // Poll in background; don't block the UI
+      portalApi.pollDocumentOcr(doc.id, token).then((result) => {
+        const ocr: OcrPreview | undefined =
+          result?.ocr_status === "completed"
+            ? {
+                extracted_amount: result.extracted_amount != null ? String(result.extracted_amount) : null,
+                extracted_date: result.extracted_date ?? null,
+                extracted_supplier: result.extracted_supplier ?? null,
+              }
+            : undefined;
+
+        setUploads((prev) => ({
+          ...prev,
+          [txId]: { filename: file.name, status: "done", progress: 100, ocr },
+        }));
+      });
 
       await refreshMissing();
     } catch (err) {
-      clearInterval(progressTimers.current[txId]);
       const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
       const msg = detail || (err as { message?: string })?.message || "Upload failed. Please try again.";
       setUploads((prev) => ({
@@ -205,7 +222,7 @@ export function PortalPageView() {
     }
   }
 
-  const doneCount = Object.values(uploads).filter((u) => u.status === "done").length;
+  const doneCount = Object.values(uploads).filter((u) => u.status === "done" || u.status === "processing").length;
   const totalMissing = missing?.total_missing ?? 0;
   const remaining = Math.max(0, totalMissing - doneCount);
 
@@ -336,7 +353,7 @@ export function PortalPageView() {
               {grouped.map(([supplier, txns]) => {
                 const isOpen = expandedSupplier === supplier;
                 const txList = txns as unknown as Transaction[];
-                const groupDone = txList.filter((tx) => uploads[tx.id]?.status === "done").length;
+                const groupDone = txList.filter((tx) => uploads[tx.id]?.status === "done" || uploads[tx.id]?.status === "processing").length;
 
                 return (
                   <div key={supplier} style={groupCard}>
@@ -380,6 +397,7 @@ export function PortalPageView() {
                           const up = uploads[tx.id];
                           const isDone = up?.status === "done";
                           const isUploading = up?.status === "uploading";
+                          const isProcessing = up?.status === "processing";
                           const isError = up?.status === "error";
 
                           return (
@@ -388,7 +406,7 @@ export function PortalPageView() {
                               style={{
                                 padding: "16px",
                                 borderBottom: "1px solid #f9fafb",
-                                background: isDone ? "#f0fdf4" : "transparent",
+                                background: isDone ? "#f0fdf4" : isProcessing ? "#eff6ff" : "transparent",
                                 transition: "background 0.3s",
                               }}
                             >
@@ -411,15 +429,21 @@ export function PortalPageView() {
                                 </div>
                               </div>
 
-                              {/* Upload progress bar */}
-                              {isUploading && <ProgressBar value={up.progress} />}
+                              {/* Upload / processing progress bar */}
+                              {(isUploading || isProcessing) && <ProgressBar value={up.progress} />}
 
-                              {/* Filename when uploading/done */}
-                              {(isUploading || isDone || isError) && up.filename && (
+                              {/* Filename when uploading/processing/done */}
+                              {(isUploading || isProcessing || isDone || isError) && up.filename && (
                                 <div style={{ fontSize: 12, color: isDone ? "#16a34a" : isError ? "#dc2626" : "#6b7280", marginTop: 6, display: "flex", alignItems: "center", gap: 4 }}>
                                   {isDone && <CheckIcon />}
                                   <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                                    {isDone ? `Uploaded: ${up.filename}` : isUploading ? `Uploading ${up.filename}…` : up.filename}
+                                    {isDone
+                                      ? `Uploaded: ${up.filename}`
+                                      : isProcessing
+                                        ? `Processing ${up.filename}…`
+                                        : isUploading
+                                          ? `Uploading ${up.filename}…`
+                                          : up.filename}
                                   </span>
                                 </div>
                               )}
@@ -456,7 +480,7 @@ export function PortalPageView() {
                               />
 
                               {/* Action buttons */}
-                              {!isDone && (
+                              {!isDone && !isProcessing && (
                                 <div style={{ display: "flex", gap: 8, marginTop: 12, flexWrap: "wrap" }}>
                                   {/* Primary: upload file */}
                                   <button
@@ -503,11 +527,38 @@ export function PortalPageView() {
                                 </div>
                               )}
 
-                              {/* Done state */}
+                              {/* Done state + OCR preview */}
                               {isDone && (
-                                <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 10, color: "#16a34a", fontSize: 13, fontWeight: 600 }}>
-                                  <CheckIcon />
-                                  Document received — thank you!
+                                <div style={{ marginTop: 10 }}>
+                                  <div style={{ display: "flex", alignItems: "center", gap: 6, color: "#16a34a", fontSize: 13, fontWeight: 600 }}>
+                                    <CheckIcon />
+                                    Document received — thank you!
+                                  </div>
+                                  {up?.ocr && (up.ocr.extracted_amount || up.ocr.extracted_supplier || up.ocr.extracted_date) && (
+                                    <div
+                                      style={{
+                                        marginTop: 8,
+                                        padding: "10px 12px",
+                                        background: "#f0fdf4",
+                                        border: "1px solid #bbf7d0",
+                                        borderRadius: 8,
+                                        fontSize: 12,
+                                        color: "#15803d",
+                                        lineHeight: 1.6,
+                                      }}
+                                    >
+                                      <div style={{ fontWeight: 600, marginBottom: 4 }}>We extracted:</div>
+                                      {up.ocr.extracted_supplier && <div>Supplier: <strong>{up.ocr.extracted_supplier}</strong></div>}
+                                      {up.ocr.extracted_amount && (
+                                        <div>
+                                          Amount: <strong>
+                                            {new Intl.NumberFormat("en-GB", { style: "currency", currency: "GBP" }).format(Number(up.ocr.extracted_amount))}
+                                          </strong>
+                                        </div>
+                                      )}
+                                      {up.ocr.extracted_date && <div>Date: <strong>{up.ocr.extracted_date}</strong></div>}
+                                    </div>
+                                  )}
                                 </div>
                               )}
                             </div>

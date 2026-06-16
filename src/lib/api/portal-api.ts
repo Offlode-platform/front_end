@@ -94,6 +94,7 @@ export const portalApi = {
     token: string,
     file: File,
     transactionId?: string,
+    onProgress?: (percent: number) => void,
   ) {
     const formData = new FormData();
     formData.append("file", file);
@@ -107,9 +108,45 @@ export const portalApi = {
           { token },
         ),
         formData,
-        { headers: { "Content-Type": "multipart/form-data" } },
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+          onUploadProgress: onProgress
+            ? (e: { loaded: number; total?: number }) => {
+                if (e.total) {
+                  // Cap real progress at 90% — reserve last 10% for server processing
+                  onProgress(Math.min(90, Math.round((e.loaded / e.total) * 90)));
+                }
+              }
+            : undefined,
+        },
       ),
     );
+  },
+
+  // Poll a document until OCR is done or max attempts exhausted.
+  // Passes the magic-link token so the backend accepts portal auth.
+  async pollDocumentOcr(
+    documentId: string,
+    token: string,
+    maxAttempts = 10,
+    intervalMs = 3000,
+  ): Promise<Document | null> {
+    for (let i = 0; i < maxAttempts; i++) {
+      await new Promise((r) => setTimeout(r, intervalMs));
+      try {
+        const res = await readData<Document>(
+          publicApi.get(
+            withQuery(`/api/v1/documents/${encodeURIComponent(documentId)}`, { token }),
+          ),
+        );
+        if (res.ocr_status === "completed" || res.ocr_status === "failed") {
+          return res;
+        }
+      } catch {
+        // transient error — keep polling
+      }
+    }
+    return null;
   },
 
   cantProvide(

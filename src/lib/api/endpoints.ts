@@ -57,6 +57,12 @@ export const apiPaths = {
       `/api/v1/documents/${encodeURIComponent(id)}/reject-match`,
     manualMatch: (id: string) =>
       `/api/v1/documents/${encodeURIComponent(id)}/manual-match`,
+    ocrCorrections: (id: string) =>
+      `/api/v1/documents/${encodeURIComponent(id)}/ocr-corrections`,
+    retryOcr: (id: string) =>
+      `/api/v1/documents/${encodeURIComponent(id)}/retry-ocr`,
+    flagUpdate: (id: string) =>
+      `/api/v1/documents/${encodeURIComponent(id)}/flag`,
   },
   clientAssignments: {
     base: "/api/v1/client-assignments",
