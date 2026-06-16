@@ -561,7 +561,7 @@ export function DocumentReviewDrawer({ document: doc, onClose, onResolved }: Pro
 
 // ─── sub-components ──────────────────────────────────────────────────────────
 
-function FileTypeIcon({ mimeType }: { mimeType?: string }) {
+function FileTypeIcon({ mimeType }: { mimeType?: string | null }) {
   const isPdf = mimeType === "application/pdf";
   const isImage = mimeType?.startsWith("image/");
   const label = isPdf ? "PDF" : isImage ? "IMG" : "DOC";
