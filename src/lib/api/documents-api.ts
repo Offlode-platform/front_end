@@ -9,6 +9,15 @@ import type {
 } from "@/types/documents";
 import type { TransactionListResponse } from "@/types/transactions";
 
+export type AuditLogEntry = {
+  id: string;
+  action: string;
+  user_id: string | null;
+  severity: string;
+  details: Record<string, unknown> | null;
+  timestamp: string;
+};
+
 type QueryValue = string | number | boolean | undefined | null;
 
 function withQuery(
@@ -135,7 +144,16 @@ export const documentsApi = {
 
   // Phase 2: Review queue methods
 
-  reviewQueue(params?: { skip?: number; limit?: number; client_id?: string }) {
+  reviewQueue(params?: {
+    skip?: number;
+    limit?: number;
+    client_id?: string;
+    validation_status?: string;
+    min_confidence?: number;
+    max_confidence?: number;
+    sort_by?: string;
+    sort_order?: string;
+  }) {
     return readData<ReviewQueueResponse>(
       authenticatedApi.get(
         withQuery(apiPaths.documents.reviewQueue, params),
@@ -165,6 +183,48 @@ export const documentsApi = {
       authenticatedApi.post(
         apiPaths.documents.manualMatch(documentId),
         { transaction_id: transactionId },
+      ),
+    );
+  },
+
+  updateOcrFields(
+    documentId: string,
+    body: { extracted_amount?: string; extracted_date?: string; extracted_supplier?: string },
+  ) {
+    return readData<Document>(
+      authenticatedApi.patch(
+        apiPaths.documents.ocrCorrections(documentId),
+        body,
+      ),
+    );
+  },
+
+  retryOcr(documentId: string) {
+    return readData<{ status: string; document_id: string; ocr_status: string }>(
+      authenticatedApi.post(apiPaths.documents.retryOcr(documentId)),
+    );
+  },
+
+  updateFlag(
+    documentId: string,
+    body: { flagged: boolean; flag_reason?: string; flag_category?: string },
+  ) {
+    return readData<{ status: string; document_id: string; flagged: boolean }>(
+      authenticatedApi.patch(
+        apiPaths.documents.flagUpdate(documentId),
+        body,
+      ),
+    );
+  },
+
+  fetchAuditLog(documentId: string) {
+    return readData<AuditLogEntry[]>(
+      authenticatedApi.get(
+        withQuery("/api/v1/audit-logs", {
+          resource_type: "document",
+          resource_id: documentId,
+          limit: 30,
+        }),
       ),
     );
   },
