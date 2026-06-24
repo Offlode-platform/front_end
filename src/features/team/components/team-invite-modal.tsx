@@ -26,16 +26,6 @@ const ROLE_DESCS: Record<InviteRole, { title: string; text: string }> = {
   },
 };
 
-function generateTempPassword(): string {
-  const chars =
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%";
-  let pwd = "";
-  for (let i = 0; i < 16; i++) {
-    pwd += chars[Math.floor(Math.random() * chars.length)];
-  }
-  return pwd;
-}
-
 export function TeamInviteModal({
   organizationId,
   onClose,
@@ -76,15 +66,16 @@ export function TeamInviteModal({
     setIsSubmitting(true);
     try {
       const name = `${firstName.trim()} ${lastName.trim()}`;
-      const password = generateTempPassword();
 
+      // No password is set here. The backend creates the account without a
+      // password and emails a one-time activation link so the member sets
+      // their own. (See /activate.)
       const newUser = await usersApi.create({
         user: {
           email: email.trim(),
           name,
           role,
           organization_id: organizationId,
-          password,
         },
       });
 
@@ -346,8 +337,9 @@ export function TeamInviteModal({
           >
             <span style={{ color: "var(--brand)", flexShrink: 0 }}>&#10022;</span>
             <span>
-              A new account will be created with a temporary password. The team
-              member will need to reset their password on first login.
+              We&apos;ll email this person a secure activation link. They set
+              their own password to finish creating their account — no password
+              is ever sent by email.
             </span>
           </div>
         </div>

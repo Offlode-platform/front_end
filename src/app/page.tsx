@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { routes } from "@/config/routes";
+import { HomeRedirect } from "@/features/auth/components/home-redirect";
 
 type SearchParams = {
   magic_link?: string | string[];
@@ -13,13 +13,17 @@ export default async function HomePage({
 }) {
   const params = await searchParams;
 
-  // If a magic link token is present, send the user to the client portal
-  // instead of the accountant dashboard.
+  // A magic-link token rides in the URL, so the server can read it: clients
+  // landing here with one go straight to their portal, not the staff app.
   const rawToken = params.magic_link ?? params.token;
   const token = Array.isArray(rawToken) ? rawToken[0] : rawToken;
   if (token) {
     redirect(`/portal?magic_link=${encodeURIComponent(token)}`);
   }
 
-  redirect(routes.dashboard);
+  // The session token lives in localStorage, which the server can't see, so we
+  // can't decide dashboard-vs-login here. Hand off to a client gate that reads
+  // the real auth state — logged-out visitors go to /login without ever
+  // flashing the dashboard.
+  return <HomeRedirect />;
 }

@@ -16,6 +16,7 @@ export function AppRouteShell({ children }: AppRouteShellProps) {
     return (
       pathname === routes.login ||
       pathname === routes.signup ||
+      pathname === routes.activate ||
       pathname === routes.twoFaBootstrapSetup ||
       pathname === routes.portal ||
       pathname?.startsWith(`${routes.portal}/`)

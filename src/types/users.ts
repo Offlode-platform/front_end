@@ -36,7 +36,11 @@ export type CreateUserRequestUser = {
   name: string;
   role: string;
   organization_id: string;
-  password: string;
+  /**
+   * Deprecated / ignored by the server. Team members are created without a
+   * password and set their own via the emailed activation link.
+   */
+  password?: string;
 };
 
 export type CreateUserRequestPermissions = {

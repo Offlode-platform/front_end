@@ -98,5 +98,11 @@ export const usersApi = {
       )
     );
   },
+
+  resendInvite(userId: string) {
+    return readData<{ status: string }>(
+      authenticatedApi.post(apiPaths.users.resendInvite(userId))
+    );
+  },
 };
 

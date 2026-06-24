@@ -10,6 +10,18 @@ export type LoginRequest = {
   two_factor_code?: string;
 };
 
+export type ActivationVerifyResponse = {
+  email: string;
+  name: string;
+  organization_name: string;
+  already_activated: boolean;
+};
+
+export type ActivationCompleteRequest = {
+  token: string;
+  password: string;
+};
+
 export type SignupRequest = {
   organization_name: string;
   organization_slug: string;
