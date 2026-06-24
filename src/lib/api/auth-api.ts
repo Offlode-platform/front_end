@@ -2,6 +2,8 @@ import { authenticatedApi } from "./authenticated-client";
 import { apiPaths } from "./endpoints";
 import { publicApi } from "./public-client";
 import type {
+  ActivationCompleteRequest,
+  ActivationVerifyResponse,
   Bootstrap2faSetupRequest,
   Bootstrap2faSetupResponse,
   Bootstrap2faVerifyRequest,
@@ -73,6 +75,21 @@ export const authApi = {
   requestMagicLink(body: MagicLinkRequest) {
     return readData(
       publicApi.post<string>(apiPaths.auth.magicLink, body)
+    );
+  },
+
+  // Team-member account activation (set-your-own-password invite flow)
+  verifyActivation(token: string) {
+    return readData(
+      publicApi.get<ActivationVerifyResponse>(
+        `${apiPaths.auth.activateVerify}?token=${encodeURIComponent(token)}`
+      )
+    );
+  },
+
+  completeActivation(body: ActivationCompleteRequest) {
+    return readData(
+      publicApi.post<TokenResponse>(apiPaths.auth.activateComplete, body)
     );
   },
 

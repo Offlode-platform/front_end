@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { portalApi } from "@/lib/api/portal-api";
 import type { PortalResolveResponse } from "@/types/portal";
 import type { TransactionListResponse, Transaction } from "@/types/transactions";
+import { usePortalContext } from "./portal-layout-chrome";
 
 // ── types ──────────────────────────────────────────────────────────────────
 
@@ -85,9 +86,9 @@ function CameraIcon() {
 // ── main component ─────────────────────────────────────────────────────────
 
 export function PortalPageView() {
-  const searchParams = useSearchParams();
+  // Token comes from the shared portal layout (no per-page token gate / flash).
+  const { token } = usePortalContext();
   const router = useRouter();
-  const token = searchParams.get("magic_link");
 
   const [resolving, setResolving] = useState(true);
   const [resolveError, setResolveError] = useState<string | null>(null);
@@ -104,8 +105,8 @@ export function PortalPageView() {
   // Resolve token on mount
   useEffect(() => {
     if (!token) {
-      setResolveError("No upload link provided.");
-      setResolving(false);
+      // The token effect above will redirect to /portal/login; stay in the
+      // loading state rather than flashing an error.
       return;
     }
 
@@ -226,18 +227,21 @@ export function PortalPageView() {
   const totalMissing = missing?.total_missing ?? 0;
   const remaining = Math.max(0, totalMissing - doneCount);
 
-  // ── loading ──────────────────────────────────────────────────────────────
+  // ── loading (rendered inside the persistent layout chrome) ────────────────
 
   if (resolving) {
     return (
-      <PortalShell>
-        <div style={centerFlex}>
-          <div style={{ textAlign: "center" }}>
-            <div style={spinner} />
-            <div style={{ fontSize: 15, color: "#6b7280", marginTop: 16 }}>Loading your upload portal…</div>
-          </div>
+      <>
+        <div style={{ height: 24, width: 180, borderRadius: 8, background: "#e2e8f0", marginBottom: 20 }} />
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          {[0, 1].map((i) => (
+            <div key={i} style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 14, padding: 16, height: 70 }}>
+              <div style={{ height: 12, width: "60%", borderRadius: 6, background: "#eef2f6" }} />
+              <div style={{ height: 12, width: "30%", borderRadius: 6, background: "#eef2f6", marginTop: 10 }} />
+            </div>
+          ))}
         </div>
-      </PortalShell>
+      </>
     );
   }
 
@@ -245,29 +249,27 @@ export function PortalPageView() {
 
   if (resolveError || !session) {
     return (
-      <PortalShell>
-        <div style={{ ...centerFlex, padding: "0 16px" }}>
-          <div style={errorCard}>
-            <div style={{ fontSize: 40, marginBottom: 12 }}>⛔</div>
-            <div style={{ fontSize: 20, fontWeight: 700, color: "#111827", marginBottom: 8 }}>
-              Link expired or invalid
-            </div>
-            <div style={{ fontSize: 14, color: "#6b7280", lineHeight: 1.6, marginBottom: 24 }}>
-              {resolveError || "This upload link is no longer valid. Please request a new one from your accountant."}
-            </div>
-            <button type="button" onClick={() => router.push("/login")} style={primaryBtn}>
-              Go to Sign In
-            </button>
+      <div style={{ ...centerFlex, minHeight: "50vh", padding: "0 16px" }}>
+        <div style={errorCard}>
+          <div style={{ fontSize: 40, marginBottom: 12 }}>⛔</div>
+          <div style={{ fontSize: 20, fontWeight: 700, color: "#0f172a", marginBottom: 8 }}>
+            Session expired
           </div>
+          <div style={{ fontSize: 14, color: "#475569", lineHeight: 1.6, marginBottom: 24 }}>
+            {resolveError || "Your session is no longer valid. Please sign in again."}
+          </div>
+          <button type="button" onClick={() => router.push("/portal/login")} style={primaryBtn}>
+            Go to Sign In
+          </button>
         </div>
-      </PortalShell>
+      </div>
     );
   }
 
   const grouped = missing ? Object.entries(missing.grouped_by_supplier) : [];
 
   return (
-    <PortalShell>
+    <>
       {/* Confirm "can't provide" dialog */}
       {confirmTxId && (
         <div
@@ -310,27 +312,20 @@ export function PortalPageView() {
         </div>
       )}
 
-      {/* Sticky header */}
-      <div style={headerStyle}>
-        <div style={{ maxWidth: 640, margin: "0 auto", padding: "0 16px" }}>
-          <div style={{ fontSize: 12, color: "#9ca3af" }}>
-            {session.organization_name || "Document Portal"}
+      {/* Heading + progress chip */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, marginBottom: 18 }}>
+        <h1 style={{ fontSize: 22, fontWeight: 800, color: "#0f172a", margin: 0 }}>
+          Hello, {session.client_name}
+        </h1>
+        {remaining > 0 && (
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#357e92", background: "#e6f1f4", border: "1px solid #b9d9e2", borderRadius: 99, padding: "4px 14px", whiteSpace: "nowrap" }}>
+            {remaining} remaining
           </div>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
-            <div style={{ fontSize: 20, fontWeight: 700, color: "#111827" }}>
-              Hello, {session.client_name}
-            </div>
-            {remaining > 0 && (
-              <div style={{ fontSize: 13, fontWeight: 600, color: "#2563eb", background: "#eff6ff", border: "1px solid #bfdbfe", borderRadius: 99, padding: "3px 12px", whiteSpace: "nowrap" }}>
-                {remaining} remaining
-              </div>
-            )}
-          </div>
-        </div>
+        )}
       </div>
 
       {/* Body */}
-      <div style={{ maxWidth: 640, margin: "0 auto", padding: "20px 16px 100px" }}>
+      <div>
 
         {/* All done */}
         {(!missing || totalMissing === 0) ? (
@@ -600,22 +595,7 @@ export function PortalPageView() {
           </div>
         </div>
       )}
-    </PortalShell>
-  );
-}
-
-// ── layout wrappers ────────────────────────────────────────────────────────
-
-function PortalShell({ children }: { children: React.ReactNode }) {
-  return (
-    <div style={{
-      minHeight: "100vh",
-      background: "#f9fafb",
-      fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
-      WebkitFontSmoothing: "antialiased",
-    }}>
-      {children}
-    </div>
+    </>
   );
 }
 

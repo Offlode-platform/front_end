@@ -3,6 +3,11 @@ import { apiPaths } from "./endpoints";
 import type {
   PortalActionResponse,
   PortalResolveResponse,
+  PortalLoginRequest,
+  PortalLoginResponse,
+  PortalProfile,
+  PortalProfileUpdate,
+  PortalDocumentList,
 } from "@/types/portal";
 import type { TransactionListResponse } from "@/types/transactions";
 import type { S3PresignedUrlResponse, Document } from "@/types/documents";
@@ -29,10 +34,59 @@ async function readData<T>(p: Promise<{ data: T }>): Promise<T> {
 }
 
 export const portalApi = {
-  // Resolve a magic link token -> client info
+  // Client portal login (email + password) -> session token + client info
+  login(body: PortalLoginRequest) {
+    return readData<PortalLoginResponse>(
+      publicApi.post(`${apiPaths.portal.base}/login`, body),
+    );
+  },
+
+  // Resolve the logged-in client's session token -> client info
   resolve(token: string) {
     return readData<PortalResolveResponse>(
       publicApi.get(withQuery(apiPaths.portal.resolve, { token })),
+    );
+  },
+
+  // Profile / settings
+  getProfile(token: string) {
+    return readData<PortalProfile>(
+      publicApi.get(withQuery(`${apiPaths.portal.base}/me`, { token })),
+    );
+  },
+
+  updateProfile(token: string, body: PortalProfileUpdate) {
+    return readData<PortalProfile>(
+      publicApi.patch(withQuery(`${apiPaths.portal.base}/me`, { token }), body),
+    );
+  },
+
+  changePassword(token: string, current_password: string, new_password: string) {
+    return readData<{ status: string }>(
+      publicApi.post(
+        withQuery(`${apiPaths.portal.base}/change-password`, { token }),
+        { current_password, new_password },
+      ),
+    );
+  },
+
+  // Uploaded documents history
+  listUploaded(token: string) {
+    return readData<PortalDocumentList>(
+      publicApi.get(withQuery(`${apiPaths.portal.base}/documents`, { token })),
+    );
+  },
+
+  // Password reset
+  forgotPassword(email: string) {
+    return readData<{ status: string }>(
+      publicApi.post(`${apiPaths.portal.base}/forgot-password`, { email }),
+    );
+  },
+
+  resetPassword(token: string, new_password: string) {
+    return readData<PortalLoginResponse>(
+      publicApi.post(`${apiPaths.portal.base}/reset-password`, { token, new_password }),
     );
   },
 

@@ -15,6 +15,8 @@ export const apiPaths = {
     twoFaVerify: "/api/v1/auth/2fa/verify",
     twoFaDisable: "/api/v1/auth/2fa/disable",
     magicLink: "/api/v1/auth/magic-link",
+    activateVerify: "/api/v1/auth/activate/verify",
+    activateComplete: "/api/v1/auth/activate/complete",
   },
   dashboard: {
     summary: "/api/v1/dashboard/summary",
@@ -32,6 +34,8 @@ export const apiPaths = {
   },
   users: {
     base: "/api/v1/users",
+    resendInvite: (id: string) =>
+      `/api/v1/users/${encodeURIComponent(id)}/resend-invite`,
   },
   organizations: {
     base: "/api/v1/organizations",
